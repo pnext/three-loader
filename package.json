@@ -9,7 +9,7 @@
       "email": "hugo.campos@pix4d.com"
     }
   ],
-  "license": "BSD-2-CLAUSE",
+  "license": "MIT",
   "keywords": [
     "three",
     "threejs",
