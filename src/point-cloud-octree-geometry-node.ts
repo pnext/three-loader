@@ -130,8 +130,8 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
     Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
       .then(url => fetch(url, { mode: 'cors' }))
-      .then(res => res.json())
-      .then(json => this.loadHierarchy(this, json));
+      .then(res => res.arrayBuffer())
+      .then(data => this.loadHierarchy(this, data));
   }
 
   /**
