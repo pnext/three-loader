@@ -9,29 +9,24 @@
       "email": "hugo.campos@pix4d.com"
     }
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pix4D/three-potree-loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pix4D/three-potree-loader/issues"
+  },
   "license": "MIT",
-  "keywords": [
-    "three",
-    "threejs",
-    "potree",
-    "pointcloud",
-    "point cloud",
-    "points",
-    "gis",
-    "loader",
-    "3d",
-    "webgl",
-    "geo",
-    "photogrammetry",
-    "pix4d"
-  ],
   "main": "build/potree.js",
   "typings": "build/declarations/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
     "dev": "npm run clean && webpack --mode development --progress",
-    "build": "npm run clean && webpack --mode production --progress --config webpack.config.prod.js"
+    "build":
+      "npm run clean && webpack --mode production --progress --config webpack.config.prod.js",
+    "prettier":
+      "prettier --write --print-width 100 \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
   },
   "dependencies": {
     "@types/three": "^0.89.11",
@@ -48,12 +43,6 @@
     "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
     "circular-dependency-plugin": "^4.4.0",
-    "eslint": "^4.18.2",
-    "eslint-config-happiness": "^10.2.1",
-    "eslint-plugin-import": "^2.9.0",
-    "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1",
     "install": "^0.10.4",
     "raw-loader": "^0.5.1",
     "rimraf": "^2.6.2",
@@ -65,5 +54,20 @@
     "webpack-cli": "^2.0.10",
     "webpack-dev-server": "^3.1.0",
     "worker-loader": "^1.1.1"
-  }
+  },
+  "keywords": [
+    "three",
+    "threejs",
+    "potree",
+    "pointcloud",
+    "point cloud",
+    "points",
+    "gis",
+    "loader",
+    "3d",
+    "webgl",
+    "geo",
+    "photogrammetry",
+    "pix4d"
+  ]
 }
