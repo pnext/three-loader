@@ -1,17 +1,12 @@
 {
-  "name": "three-potree-loader",
-  "private": true,
+  "name": "@pix4d/three-potree-loader",
+  "private": false,
   "version": "0.0.1",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
-  "contributors": [
-    {
-      "name": "Hugo Campos",
-      "email": "hugo.campos@pix4d.com"
-    }
-  ],
+  "contributors": ["Hugo Campos <hugo.campos@pix4d.com>"],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Pix4D/three-potree-loader.git"
+    "url": "git+https://github.com/Pix4D/three-potree-loader.git"
   },
   "bugs": {
     "url": "https://github.com/Pix4D/three-potree-loader/issues"
@@ -69,5 +64,7 @@
     "geo",
     "photogrammetry",
     "pix4d"
-  ]
+  ],
+  "homepage": "https://github.com/Pix4D/three-potree-loader#readme",
+  "author": ""
 }
