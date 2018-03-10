@@ -1,6 +1,7 @@
 import { Matrix4, Vector3 } from 'three';
 import { PointCloudOctree } from '../point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
+import { isGeometryNode } from '../type-predicates';
 import { Points } from './points';
 import { ProfileData } from './profile-data';
 import { IProfile, IProfileData, IProfileRequest, IProfileRequestCallbacks } from './types';
@@ -57,8 +58,8 @@ export class ProfileRequest implements IProfileRequest {
     node: PointCloudOctreeGeometryNode,
     stack: PointCloudOctreeGeometryNode[],
   ) {
-    node.getChildren().forEach(child => {
-      if (child && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
+    node.children.forEach(child => {
+      if (isGeometryNode(child) && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
         stack.push(child);
       }
     });

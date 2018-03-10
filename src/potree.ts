@@ -151,9 +151,11 @@ export class Potree implements IPotree {
       }
 
       // add child nodes to priorityQueue
-      const children = node.getChildren();
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
+      for (let i = 0; i < 8; i++) {
+        const child = node.children[i];
+        if (child === null) {
+          continue;
+        }
 
         const sphere = child.boundingSphere;
         const distance = sphere.center.distanceTo(camObjPos);
@@ -243,10 +245,10 @@ export class Potree implements IPotree {
     pointClouds: PointCloudOctree[],
     camera: PerspectiveCamera,
   ): {
-    frustums: Frustum[];
-    camObjPositions: Vector3[];
-    priorityQueue: BinaryHeap<IQueueItem>;
-  } {
+      frustums: Frustum[];
+      camObjPositions: Vector3[];
+      priorityQueue: BinaryHeap<IQueueItem>;
+    } {
     const frustums: Frustum[] = [];
     const camObjPositions = [];
     const priorityQueue = new BinaryHeap<IQueueItem>(x => 1 / x.weight);

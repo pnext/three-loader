@@ -26,6 +26,10 @@ export interface IPointCloudMaterialParameters {
   treeType: TreeType;
 }
 
+const DEFAULT_RGB_GAMMA = 1;
+const DEFAULT_RGB_CONTRAST = 0;
+const DEFAULT_RGB_BRIGHTNESS = 0;
+
 export interface IPointCloudMaterialUniforms {
   level: IUniform<number>;
   vnStart: IUniform<number>;
@@ -122,9 +126,9 @@ export class PointCloudMaterial extends RawShaderMaterial {
     intensityGamma: { type: 'f', value: 1 },
     intensityContrast: { type: 'f', value: 0 },
     intensityBrightness: { type: 'f', value: 0 },
-    rgbGamma: { type: 'f', value: 1 },
-    rgbContrast: { type: 'f', value: 0 },
-    rgbBrightness: { type: 'f', value: 0 },
+    rgbGamma: { type: 'f', value: DEFAULT_RGB_GAMMA },
+    rgbContrast: { type: 'f', value: DEFAULT_RGB_CONTRAST },
+    rgbBrightness: { type: 'f', value: DEFAULT_RGB_BRIGHTNESS },
     wRGB: { type: 'f', value: 1 },
     wIntensity: { type: 'f', value: 0 },
     wElevation: { type: 'f', value: 0 },
@@ -263,6 +267,15 @@ export class PointCloudMaterial extends RawShaderMaterial {
       parts.push('#define color_type_rgb_height');
     } else if (this._pointColorType === PointColorType.COMPOSITE) {
       parts.push('#define color_type_composite');
+    }
+
+    // We only perform gamma and brightness/contrast calculations per point if values are specified.
+    if (
+      this.rgbGamma !== DEFAULT_RGB_GAMMA ||
+      this.rgbBrightness !== DEFAULT_RGB_BRIGHTNESS ||
+      this.rgbContrast !== DEFAULT_RGB_CONTRAST
+    ) {
+      parts.push('#define use_rgb_gamma_contrast_brightness');
     }
 
     if (this.clipMode === ClipMode.DISABLED) {
@@ -627,7 +640,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   }
 
   set rgbGamma(value: number) {
-    this.setUniform('rgbGamma', value);
+    if (value !== this.rgbGamma) {
+      this.setUniform('rgbGamma', value);
+      this.updateShaderSource();
+    }
   }
 
   get rgbContrast(): number {
@@ -635,7 +651,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   }
 
   set rgbContrast(value: number) {
-    this.setUniform('rgbContrast', value);
+    if (value !== this.rgbContrast) {
+      this.setUniform('rgbContrast', value);
+      this.updateShaderSource();
+    }
   }
 
   get rgbBrightness(): number {
@@ -643,7 +662,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   }
 
   set rgbBrightness(value: number) {
-    this.setUniform('rgbBrightness', value);
+    if (value !== this.rgbBrightness) {
+      this.setUniform('rgbBrightness', value);
+      this.updateShaderSource();
+    }
   }
 
   get weightRGB(): number {

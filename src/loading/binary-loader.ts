@@ -40,11 +40,11 @@ export class BinaryLoader {
     boundingBox,
     scale,
   }: {
-    getUrl?: GetUrlFn;
-    version: string;
-    boundingBox: Box3;
-    scale: number;
-  }) {
+      getUrl?: GetUrlFn;
+      version: string;
+      boundingBox: Box3;
+      scale: number;
+    }) {
     if (typeof version === 'string') {
       this.version = new Version(version);
     } else {
@@ -120,6 +120,8 @@ export class BinaryLoader {
       min: node.boundingBox.min.toArray(),
       offset: node.pcoGeometry.offset.toArray(),
       scale: this.scale,
+      spacing: node.spacing,
+      hasChildren: node.hasChildren,
     };
 
     worker.postMessage(message, [message.buffer]);

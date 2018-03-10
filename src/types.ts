@@ -4,6 +4,7 @@ import { PointCloudOctree } from './point-cloud-octree';
 import { LRU } from './utils/lru';
 
 export interface IPointCloudTreeNode {
+  id: number;
   name: string;
   level: number;
   index: number;
@@ -12,8 +13,9 @@ export interface IPointCloudTreeNode {
   boundingSphere: Sphere;
   loaded: boolean;
   numPoints: number;
+  children: (IPointCloudTreeNode | null)[];
 
-  getChildren(): IPointCloudTreeNode[];
+  dispose(): void;
 }
 
 export interface IVisibilityUpdateResult {

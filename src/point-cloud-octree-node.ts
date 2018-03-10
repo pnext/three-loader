@@ -3,29 +3,34 @@ import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node
 import { IPointCloudTreeNode } from './types';
 
 export class PointCloudOctreeNode extends EventDispatcher implements IPointCloudTreeNode {
-  children: (IPointCloudTreeNode | undefined)[] = [];
+  geometryNode: PointCloudOctreeGeometryNode;
+  sceneNode: Points;
+  pcIndex: number | undefined = undefined;
   boundingBoxNode: Object3D | null = null;
-  pcIndex?: number;
+  readonly children: (IPointCloudTreeNode | null)[] = [null, null, null, null, null, null, null, null];
   readonly loaded = true;
+  readonly isTreeNode: boolean = true;
+  readonly isGeometryNode: boolean = false;
 
-  isTreeNode: boolean = true;
-  isGeometryNode: boolean = false;
-
-  constructor(public geometryNode: PointCloudOctreeGeometryNode, public sceneNode: Points) {
+  constructor(geometryNode: PointCloudOctreeGeometryNode, sceneNode: Points) {
     super();
+
+    this.geometryNode = geometryNode;
+    this.sceneNode = sceneNode;
   }
 
-  getChildren(): IPointCloudTreeNode[] {
-    const children: IPointCloudTreeNode[] = [];
-
-    for (let i = 0; i < 8; i++) {
-      const child = this.children[i];
-      if (child) {
-        children.push(child);
-      }
+  copyChildren(children: (IPointCloudTreeNode | null)[]) {
+    for (let i = 0; i < 8; ++i) {
+      this.children[i] = children[i];
     }
+  }
 
-    return children;
+  dispose(): void {
+    this.geometryNode.dispose();
+  }
+
+  get id() {
+    return this.geometryNode.id;
   }
 
   get name() {

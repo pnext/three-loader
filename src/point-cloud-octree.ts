@@ -51,15 +51,14 @@ export class PointCloudOctree extends PointCloudTree {
   level: number = 0;
   maxLevel: number = Infinity;
   minimumNodePixelSize: number = 150;
-  showBoundingBox: boolean = false;
-  boundingBoxNodes: Object3D[] = [];
-  visibleBounds: Box3 = new Box3();
-  visibleNodes: PointCloudOctreeNode[] = [];
-  numVisiblePoints: number = 0;
-  visibleGeometry: PointCloudOctreeGeometry[] = [];
-  profileRequests: ProfileRequest[] = [];
   root: IPointCloudTreeNode | null = null;
-
+  boundingBoxNodes: Object3D[] = [];
+  visibleNodes: PointCloudOctreeNode[] = [];
+  visibleGeometry: PointCloudOctreeGeometry[] = [];
+  numVisiblePoints: number = 0;
+  showBoundingBox: boolean = false;
+  profileRequests: ProfileRequest[] = [];
+  private visibleBounds: Box3 = new Box3();
   private visibleNodeTextureOffsets: Map<string, number> = new Map<string, number>();
   private pickState: IPickState | undefined;
 
@@ -72,6 +71,7 @@ export class PointCloudOctree extends PointCloudTree {
 
     this.name = '';
     this.potree = potree;
+    this.root = pcoGeometry.root;
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = pcoGeometry.boundingBox;
     this.boundingSphere = this.boundingBox.getBoundingSphere();
@@ -82,7 +82,6 @@ export class PointCloudOctree extends PointCloudTree {
     this.material = material || new PointCloudMaterial();
     this.initMaterial(this.material);
 
-    this.root = this.pcoGeometry.root;
   }
 
   private initMaterial(material: PointCloudMaterial): void {
@@ -113,7 +112,7 @@ export class PointCloudOctree extends PointCloudTree {
     sceneNode.frustumCulled = false;
 
     const node = new PointCloudOctreeNode(geometryNode, sceneNode);
-    node.children = geometryNode.children.slice();
+    node.copyChildren(geometryNode.children);
 
     sceneNode.onBeforeRender = this.makeOnBeforeRender(node);
 
@@ -121,9 +120,9 @@ export class PointCloudOctree extends PointCloudTree {
       parent.sceneNode.add(sceneNode);
       parent.children[geometryNode.index] = node;
 
-      geometryNode.oneTimeDisposeHandlers.push(function() {
+      geometryNode.oneTimeDisposeHandlers.push(function () {
         parent.sceneNode.remove(node.sceneNode);
-        parent.children[geometryNode.index] = geometryNode;
+        parent.children[geometryNode.index] = null;
       });
     } else {
       this.root = node;
@@ -177,9 +176,8 @@ export class PointCloudOctree extends PointCloudTree {
       const node = this.visibleNodes[i];
       let isLeaf = true;
 
-      const children = node.getChildren();
-      for (let j = 0; j < children.length; j++) {
-        const child = children[j];
+      for (let j = 0; j < 8; j++) {
+        const child = node.children[j];
         if (isTreeNode(child)) {
           isLeaf = Boolean(isLeaf && (!child.sceneNode || !child.sceneNode.visible));
         } else if (isGeometryNode(child)) {
@@ -192,8 +190,8 @@ export class PointCloudOctree extends PointCloudTree {
       }
     }
 
-    this.visibleBounds.min = new Vector3(Infinity, Infinity, Infinity);
-    this.visibleBounds.max = new Vector3(-Infinity, -Infinity, -Infinity);
+    this.visibleBounds.min.set(Infinity, Infinity, Infinity);
+    this.visibleBounds.max.set(-Infinity, -Infinity, -Infinity);
     for (let i = 0; i < leafNodes.length; i++) {
       const node = leafNodes[i];
 

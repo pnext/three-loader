@@ -25,8 +25,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   level: number = 0;
   spacing: number = 0;
   hasChildren: boolean = false;
+  readonly children: (IPointCloudTreeNode | null)[] = [null, null, null, null, null, null, null, null];
   boundingBox: Box3;
-  tightBoundingBox!: Box3;
+  tightBoundingBox: Box3;
   boundingSphere: Sphere;
   mean: Vector3 = new Vector3();
   numPoints: number = 0;
@@ -34,7 +35,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   loaded: boolean = false;
   loading: boolean = false;
   parent: PointCloudOctreeGeometryNode | null = null;
-  children: (PointCloudOctreeGeometryNode | undefined)[] = [];
   oneTimeDisposeHandlers: (() => void)[] = [];
 
   isTreeNode: boolean = false;
@@ -49,20 +49,8 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     this.index = getIndexFromName(name);
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = boundingBox;
+    this.tightBoundingBox = boundingBox.clone();
     this.boundingSphere = boundingBox.getBoundingSphere();
-  }
-
-  getChildren(): PointCloudOctreeGeometryNode[] {
-    const children: PointCloudOctreeGeometryNode[] = [];
-
-    for (let i = 0; i < 8; i++) {
-      const child = this.children[i];
-      if (child) {
-        children.push(child);
-      }
-    }
-
-    return children;
   }
 
   /**
