@@ -24,16 +24,16 @@
       "prettier --write --print-width 100 \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
   },
   "dependencies": {
-    "@types/three": "^0.89.11",
+    "@types/three": "^0.89.12",
     "process-nextick-args": "^2.0.0",
     "safe-buffer": "^5.1.1",
     "three": "^0.90.0",
     "util-deprecate": "^1.0.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0-beta.40",
-    "@babel/preset-env": "^7.0.0-beta.40",
-    "@types/node": "^9.4.6",
+    "@babel/core": "^7.0.0-beta.42",
+    "@babel/preset-env": "^7.0.0-beta.42",
+    "@types/node": "^9.4.7",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
@@ -41,13 +41,13 @@
     "install": "^0.10.4",
     "raw-loader": "^0.5.1",
     "rimraf": "^2.6.2",
-    "ts-loader": "^4.0.1",
+    "ts-loader": "^4.1.0",
     "tslint": "^5.9.1",
     "typescript": "^2.7.2",
-    "webpack": "^4.1.0",
+    "webpack": "^4.1.1",
     "webpack-bundle-analyzer": "^2.11.1",
-    "webpack-cli": "^2.0.10",
-    "webpack-dev-server": "^3.1.0",
+    "webpack-cli": "^2.0.12",
+    "webpack-dev-server": "^3.1.1",
     "worker-loader": "^1.1.1"
   },
   "keywords": [
