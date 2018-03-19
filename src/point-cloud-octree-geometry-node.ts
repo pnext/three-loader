@@ -25,8 +25,18 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   level: number = 0;
   spacing: number = 0;
   hasChildren: boolean = false;
+  readonly children: (PointCloudOctreeGeometryNode | null)[] = [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  ];
   boundingBox: Box3;
-  tightBoundingBox!: Box3;
+  tightBoundingBox: Box3;
   boundingSphere: Sphere;
   mean: Vector3 = new Vector3();
   numPoints: number = 0;
@@ -34,7 +44,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   loaded: boolean = false;
   loading: boolean = false;
   parent: PointCloudOctreeGeometryNode | null = null;
-  children: (PointCloudOctreeGeometryNode | undefined)[] = [];
   oneTimeDisposeHandlers: (() => void)[] = [];
 
   isTreeNode: boolean = false;
@@ -49,20 +58,8 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     this.index = getIndexFromName(name);
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = boundingBox;
+    this.tightBoundingBox = boundingBox.clone();
     this.boundingSphere = boundingBox.getBoundingSphere();
-  }
-
-  getChildren(): PointCloudOctreeGeometryNode[] {
-    const children: PointCloudOctreeGeometryNode[] = [];
-
-    for (let i = 0; i < 8; i++) {
-      const child = this.children[i];
-      if (child) {
-        children.push(child);
-      }
-    }
-
-    return children;
   }
 
   /**
@@ -92,18 +89,50 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     return `${this.pcoGeometry.octreeDir}/${this.getHierarchyBaseUrl()}/${this.name}.hrc`;
   }
 
+  /**
+   * Adds the specified node as a child of the current node.
+   *
+   * @param child
+   *    The node which is to be added as a child.
+   */
   addChild(child: PointCloudOctreeGeometryNode): void {
     this.children[child.index] = child;
     child.parent = this;
   }
 
+  /**
+   * Calls the specified callback for the current node (if includeSelf is set to true) and all its
+   * children.
+   *
+   * @param cb
+   *    The function which is to be called for each node.
+   */
+  traverse(cb: (node: PointCloudOctreeGeometryNode) => void, includeSelf = true): void {
+    const stack: PointCloudOctreeGeometryNode[] = includeSelf ? [this] : [];
+
+    let current: PointCloudOctreeGeometryNode | undefined;
+
+    while ((current = stack.pop()) !== undefined) {
+      cb(current);
+
+      for (const child of current.children) {
+        if (child !== null) {
+          stack.push(child);
+        }
+      }
+    }
+  }
+
   load(): void {
-    if (this.loading === true || this.loaded === true || this.pcoGeometry.numNodesLoading > 3) {
+    if (
+      this.loading === true ||
+      this.loaded === true ||
+      this.pcoGeometry.numNodesLoading > this.pcoGeometry.maxNumNodesLoading
+    ) {
       return;
     }
 
     this.loading = true;
-
     this.pcoGeometry.numNodesLoading++;
     this.pcoGeometry.needsUpdate = true;
 

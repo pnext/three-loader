@@ -9,6 +9,7 @@ export class PointCloudOctreeGeometry {
   hierarchyStepSize: number = -1;
   nodes: Record<string, PointCloudOctreeGeometryNode> = {};
   numNodesLoading: number = 0;
+  maxNumNodesLoading: number = 3;
   spacing: number = 0;
   pointAttributes: PointAttributes = new PointAttributes([]);
   projection: any = null;

@@ -18,6 +18,8 @@ export interface IQueueItem {
   parent?: IPointCloudTreeNode | null;
 }
 
+const MAX_LOADS_TO_GPU = 2;
+
 export class Potree implements IPotree {
   private _pointBudget: number = 1_000_000;
   maxNodesLoading: number = 5;
@@ -91,19 +93,13 @@ export class Potree implements IPotree {
     );
 
     let loadedToGPUThisFrame = 0;
-    const domHeight = renderer.domElement.clientHeight;
+    const height = renderer.getSize().height;
+    let element: IQueueItem | undefined;
 
-    while (priorityQueue.size() > 0) {
-      const element = priorityQueue.pop()!;
+    while ((element = priorityQueue.pop()) !== undefined) {
       let node = element.node;
       const parentNode = element.parent;
       const pointCloud = pointClouds[element.pointCloudIndex];
-
-      // // restrict to certain nodes for debugging
-      // const allowedNodes = ['r', 'r0', 'r1', 'r2', 'r3', 'r4', 'r5'];
-      // if (!allowedNodes.includes(node.name)) {
-      //   continue;
-      // }
 
       if (numVisiblePoints + node.numPoints > this.pointBudget) {
         break;
@@ -126,7 +122,7 @@ export class Potree implements IPotree {
       pointCloud.numVisiblePoints += node.numPoints;
 
       if (isGeometryNode(node) && (!parentNode || isTreeNode(parentNode))) {
-        if (node.loaded && loadedToGPUThisFrame < 2) {
+        if (node.loaded && loadedToGPUThisFrame < MAX_LOADS_TO_GPU) {
           node = pointCloud.toTreeNode(node, parentNode);
           loadedToGPUThisFrame++;
         } else {
@@ -150,10 +146,11 @@ export class Potree implements IPotree {
         this.updateBoundingBoxVisibility(pointCloud, node);
       }
 
-      // add child nodes to priorityQueue
-      const children = node.getChildren();
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
+      // Add child nodes to priorityQueue
+      for (const child of node.children) {
+        if (child === null) {
+          continue;
+        }
 
         const sphere = child.boundingSphere;
         const distance = sphere.center.distanceTo(camObjPos);
@@ -161,7 +158,7 @@ export class Potree implements IPotree {
 
         const fov = camera.fov * Math.PI / 180;
         const slope = Math.tan(fov / 2);
-        const projFactor = 0.5 * domHeight / (slope * distance);
+        const projFactor = 0.5 * height / (slope * distance);
         const screenPixelRadius = radius * projFactor;
 
         if (screenPixelRadius < pointCloud.minimumNodePixelSize) {

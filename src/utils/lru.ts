@@ -1,10 +1,6 @@
-export type Node = {
-  id: number;
-  loaded: boolean;
-  numPoints: number;
-  children: (Node | undefined)[];
-  dispose(): void;
-};
+import { IPointCloudTreeNode } from '../types';
+
+export type Node = IPointCloudTreeNode;
 
 export class LRUItem {
   next: LRUItem | null = null;
@@ -145,22 +141,11 @@ export class LRU {
   }
 
   disposeDescendants(node: Node): void {
-    const stack: Node[] = [node];
-
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-
-      current.dispose();
-      this.remove(current);
-
-      for (const key in current.children) {
-        if (current.children.hasOwnProperty(key)) {
-          const child = current.children[key];
-          if (child && child.loaded) {
-            stack.push(child);
-          }
-        }
+    node.traverse(n => {
+      if (n.loaded) {
+        n.dispose();
+        this.remove(n);
       }
-    }
+    });
   }
 }
