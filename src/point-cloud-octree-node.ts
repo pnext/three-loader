@@ -7,7 +7,16 @@ export class PointCloudOctreeNode extends EventDispatcher implements IPointCloud
   sceneNode: Points;
   pcIndex: number | undefined = undefined;
   boundingBoxNode: Object3D | null = null;
-  readonly children: (IPointCloudTreeNode | null)[] = [null, null, null, null, null, null, null, null];
+  readonly children: (IPointCloudTreeNode | null)[] = [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  ];
   readonly loaded = true;
   readonly isTreeNode: boolean = true;
   readonly isGeometryNode: boolean = false;
@@ -27,6 +36,10 @@ export class PointCloudOctreeNode extends EventDispatcher implements IPointCloud
 
   dispose(): void {
     this.geometryNode.dispose();
+  }
+
+  traverse(cb: (node: IPointCloudTreeNode) => void, includeSelf?: boolean): void {
+    this.geometryNode.traverse(cb, includeSelf);
   }
 
   get id() {

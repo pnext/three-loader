@@ -120,7 +120,7 @@ export class PointCloudOctree extends PointCloudTree {
       parent.sceneNode.add(sceneNode);
       parent.children[geometryNode.index] = node;
 
-      geometryNode.oneTimeDisposeHandlers.push(function () {
+      geometryNode.oneTimeDisposeHandlers.push(() => {
         parent.sceneNode.remove(node.sceneNode);
         parent.children[geometryNode.index] = null;
       });

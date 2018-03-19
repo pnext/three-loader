@@ -2,12 +2,17 @@ import { Matrix4, Vector3 } from 'three';
 import { PointCloudOctree } from '../point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
 import { isGeometryNode } from '../type-predicates';
+import { BinaryHeap } from '../utils/binary-heap';
 import { Points } from './points';
 import { ProfileData } from './profile-data';
 import { IProfile, IProfileData, IProfileRequest, IProfileRequestCallbacks } from './types';
 
-// const makePriorityQueue = () => new BinaryHeap(x => 1 / x.weight);
-const makePriorityQueue = () => null as any;
+export interface IQueueElement {
+  node: PointCloudOctreeGeometryNode;
+  weight: number;
+}
+
+const makePriorityQueue = () => new BinaryHeap<IQueueElement>(x => 1 / x.weight);
 
 export class ProfileRequest implements IProfileRequest {
   pointsServed: number = 0;
@@ -73,13 +78,17 @@ export class ProfileRequest implements IProfileRequest {
 
     const maxNodesPerUpdate = 1;
     const intersectedNodes: PointCloudOctreeGeometryNode[] = [];
+    const numItems = Math.min(maxNodesPerUpdate, this.priorityQueue.size());
 
-    for (let i = 0; i < Math.min(maxNodesPerUpdate, this.priorityQueue.size()); i++) {
+    for (let i = 0; i < numItems; i++) {
       const element = this.priorityQueue.pop();
+      if (!element) {
+        continue;
+      }
+
       const node = element.node;
 
       if (node.loaded) {
-        // add points to result
         intersectedNodes.push(node);
         this.pointcloud.potree.lru.touch(node);
         this.highestLevelServed = node.level;

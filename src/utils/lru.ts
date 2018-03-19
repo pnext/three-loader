@@ -1,11 +1,11 @@
-import {  IPointCloudTreeNode } from '../types';
+import { IPointCloudTreeNode } from '../types';
 
 export type Node = IPointCloudTreeNode;
 
 export class LRUItem {
   next: LRUItem | null = null;
   previous: LRUItem | null = null;
-  constructor(public node: Node) { }
+  constructor(public node: Node) {}
 }
 
 /**
@@ -20,7 +20,7 @@ export class LRU {
 
   private items = new Map<number, LRUItem>();
 
-  constructor(public pointBudget: number = 1_000_000) { }
+  constructor(public pointBudget: number = 1_000_000) {}
 
   get size(): number {
     return this.items.size;
@@ -141,20 +141,11 @@ export class LRU {
   }
 
   disposeDescendants(node: Node): void {
-    const stack: Node[] = [node];
-
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-
-      current.dispose();
-      this.remove(current);
-
-      for (let i = 0; i < 8; ++i) {
-        const child = current.children[i];
-        if (child !== null && child.loaded) {
-          stack.push(child);
-        }
+    node.traverse(n => {
+      if (n.loaded) {
+        n.dispose();
+        this.remove(n);
       }
-    }
+    });
   }
 }

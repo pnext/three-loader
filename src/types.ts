@@ -16,6 +16,8 @@ export interface IPointCloudTreeNode {
   children: (IPointCloudTreeNode | null)[];
 
   dispose(): void;
+
+  traverse(cb: (node: IPointCloudTreeNode) => void, includeSelf?: boolean): void;
 }
 
 export interface IVisibilityUpdateResult {
