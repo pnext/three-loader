@@ -20,8 +20,7 @@
     "dev": "npm run clean && webpack --mode development --progress",
     "build":
       "npm run clean && webpack --mode production --progress --config webpack.config.prod.js",
-    "prettier":
-      "prettier --write --print-width 100 \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
+    "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
   },
   "dependencies": {
     "@types/three": "^0.89.12",
