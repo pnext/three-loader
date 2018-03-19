@@ -1,7 +1,7 @@
 {
   "name": "@pix4d/three-potree-loader",
   "private": false,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": ["Hugo Campos <hugo.campos@pix4d.com>"],
   "repository": {
@@ -23,16 +23,18 @@
     "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
   },
   "dependencies": {
-    "@types/three": "^0.89.12",
     "process-nextick-args": "^2.0.0",
     "safe-buffer": "^5.1.1",
-    "three": "^0.90.0",
     "util-deprecate": "^1.0.2"
+  },
+  "peerDependencies": {
+    "three": "^0.91.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.42",
     "@babel/preset-env": "^7.0.0-beta.42",
     "@types/node": "^9.4.7",
+    "@types/three": "^0.89.12",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
