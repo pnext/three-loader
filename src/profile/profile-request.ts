@@ -63,11 +63,11 @@ export class ProfileRequest implements IProfileRequest {
     node: PointCloudOctreeGeometryNode,
     stack: PointCloudOctreeGeometryNode[],
   ) {
-    node.children.forEach(child => {
+    for (const child of node.children) {
       if (isGeometryNode(child) && this.pointcloud.nodeIntersectsProfile(child, this.profile)) {
         stack.push(child);
       }
-    });
+    }
   }
 
   update() {
@@ -78,9 +78,8 @@ export class ProfileRequest implements IProfileRequest {
 
     const maxNodesPerUpdate = 1;
     const intersectedNodes: PointCloudOctreeGeometryNode[] = [];
-    const numItems = Math.min(maxNodesPerUpdate, this.priorityQueue.size());
 
-    for (let i = 0; i < numItems; i++) {
+    for (let i = 0; i < Math.min(maxNodesPerUpdate, this.priorityQueue.size()); i++) {
       const element = this.priorityQueue.pop();
       if (!element) {
         continue;

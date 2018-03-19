@@ -81,7 +81,6 @@ export class PointCloudOctree extends PointCloudTree {
 
     this.material = material || new PointCloudMaterial();
     this.initMaterial(this.material);
-
   }
 
   private initMaterial(material: PointCloudMaterial): void {
@@ -107,13 +106,10 @@ export class PointCloudOctree extends PointCloudTree {
 
   toTreeNode(geometryNode: PointCloudOctreeGeometryNode, parent?: PointCloudOctreeNode | null) {
     const sceneNode = new Points(geometryNode.geometry, this.material);
+    const node = new PointCloudOctreeNode(geometryNode, sceneNode);
     sceneNode.name = geometryNode.name;
     sceneNode.position.copy(geometryNode.boundingBox.min);
     sceneNode.frustumCulled = false;
-
-    const node = new PointCloudOctreeNode(geometryNode, sceneNode);
-    node.copyChildren(geometryNode.children);
-
     sceneNode.onBeforeRender = this.makeOnBeforeRender(node);
 
     if (parent) {
@@ -122,7 +118,8 @@ export class PointCloudOctree extends PointCloudTree {
 
       geometryNode.oneTimeDisposeHandlers.push(() => {
         parent.sceneNode.remove(node.sceneNode);
-        parent.children[geometryNode.index] = null;
+        // Replace the tree node (rendered and in the GPU) with the geometry node.
+        parent.children[geometryNode.index] = geometryNode;
       });
     } else {
       this.root = node;
@@ -172,12 +169,10 @@ export class PointCloudOctree extends PointCloudTree {
 
   updateVisibleBounds() {
     const leafNodes = [];
-    for (let i = 0; i < this.visibleNodes.length; i++) {
-      const node = this.visibleNodes[i];
+    for (const node of this.visibleNodes) {
       let isLeaf = true;
 
-      for (let j = 0; j < 8; j++) {
-        const child = node.children[j];
+      for (const child of node.children) {
         if (isTreeNode(child)) {
           isLeaf = Boolean(isLeaf && (!child.sceneNode || !child.sceneNode.visible));
         } else if (isGeometryNode(child)) {
@@ -243,8 +238,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.visibleNodeTextureOffsets.set(node.name, i);
 
       const visibleChildren: PointCloudOctreeNode[] = [];
-      for (let j = 0; j < 8; j++) {
-        const child = node.children[j];
+      for (const child of node.children) {
         if (isTreeNode(child) && child.sceneNode.visible && nodes.indexOf(child) > -1) {
           visibleChildren.push(child);
         }

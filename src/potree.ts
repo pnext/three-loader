@@ -94,18 +94,12 @@ export class Potree implements IPotree {
 
     let loadedToGPUThisFrame = 0;
     const height = renderer.getSize().height;
+    let element: IQueueItem | undefined;
 
-    while (priorityQueue.size() > 0) {
-      const element = priorityQueue.pop()!;
+    while ((element = priorityQueue.pop()) !== undefined) {
       let node = element.node;
       const parentNode = element.parent;
       const pointCloud = pointClouds[element.pointCloudIndex];
-
-      // // restrict to certain nodes for debugging
-      // const allowedNodes = ['r', 'r0', 'r1', 'r2', 'r3', 'r4', 'r5'];
-      // if (!allowedNodes.includes(node.name)) {
-      //   continue;
-      // }
 
       if (numVisiblePoints + node.numPoints > this.pointBudget) {
         break;
@@ -152,9 +146,8 @@ export class Potree implements IPotree {
         this.updateBoundingBoxVisibility(pointCloud, node);
       }
 
-      // add child nodes to priorityQueue
-      for (let i = 0; i < 8; i++) {
-        const child = node.children[i];
+      // Add child nodes to priorityQueue
+      for (const child of node.children) {
         if (child === null) {
           continue;
         }

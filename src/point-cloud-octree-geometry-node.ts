@@ -110,13 +110,12 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   traverse(cb: (node: PointCloudOctreeGeometryNode) => void, includeSelf = true): void {
     const stack: PointCloudOctreeGeometryNode[] = includeSelf ? [this] : [];
 
-    while (stack.length > 0) {
-      const current = stack.pop()!;
+    let current: PointCloudOctreeGeometryNode | undefined;
 
+    while ((current = stack.pop()) !== undefined) {
       cb(current);
 
-      for (let i = 0; i < 8; ++i) {
-        const child = current.children[i];
+      for (const child of current.children) {
         if (child !== null) {
           stack.push(child);
         }
