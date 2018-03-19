@@ -18,6 +18,8 @@ export interface IQueueItem {
   parent?: IPointCloudTreeNode | null;
 }
 
+const MAX_LOADS_TO_GPU = 2;
+
 export class Potree implements IPotree {
   private _pointBudget: number = 1_000_000;
   maxNodesLoading: number = 5;
@@ -91,7 +93,7 @@ export class Potree implements IPotree {
     );
 
     let loadedToGPUThisFrame = 0;
-    const domHeight = renderer.domElement.clientHeight;
+    const height = renderer.getSize().height;
 
     while (priorityQueue.size() > 0) {
       const element = priorityQueue.pop()!;
@@ -126,7 +128,7 @@ export class Potree implements IPotree {
       pointCloud.numVisiblePoints += node.numPoints;
 
       if (isGeometryNode(node) && (!parentNode || isTreeNode(parentNode))) {
-        if (node.loaded && loadedToGPUThisFrame < 2) {
+        if (node.loaded && loadedToGPUThisFrame < MAX_LOADS_TO_GPU) {
           node = pointCloud.toTreeNode(node, parentNode);
           loadedToGPUThisFrame++;
         } else {
@@ -163,7 +165,7 @@ export class Potree implements IPotree {
 
         const fov = camera.fov * Math.PI / 180;
         const slope = Math.tan(fov / 2);
-        const projFactor = 0.5 * domHeight / (slope * distance);
+        const projFactor = 0.5 * height / (slope * distance);
         const screenPixelRadius = radius * projFactor;
 
         if (screenPixelRadius < pointCloud.minimumNodePixelSize) {
@@ -245,10 +247,10 @@ export class Potree implements IPotree {
     pointClouds: PointCloudOctree[],
     camera: PerspectiveCamera,
   ): {
-      frustums: Frustum[];
-      camObjPositions: Vector3[];
-      priorityQueue: BinaryHeap<IQueueItem>;
-    } {
+    frustums: Frustum[];
+    camObjPositions: Vector3[];
+    priorityQueue: BinaryHeap<IQueueItem>;
+  } {
     const frustums: Frustum[] = [];
     const camObjPositions = [];
     const priorityQueue = new BinaryHeap<IQueueItem>(x => 1 / x.weight);
