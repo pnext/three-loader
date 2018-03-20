@@ -42,6 +42,8 @@ interface IPickState {
   scene: Scene;
 }
 
+const helperVec3 = new Vector3();
+
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
   pcoGeometry: PointCloudOctreeGeometry;
@@ -74,7 +76,7 @@ export class PointCloudOctree extends PointCloudTree {
     this.root = pcoGeometry.root;
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = pcoGeometry.boundingBox;
-    this.boundingSphere = this.boundingBox.getBoundingSphere();
+    this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
 
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
@@ -208,8 +210,8 @@ export class PointCloudOctree extends PointCloudTree {
     material.screenHeight = renderer.domElement.clientHeight;
     material.near = camera.near;
     material.far = camera.far;
-    material.uniforms.octreeSize.value = this.pcoGeometry.boundingBox.getSize().x;
     material.spacing = this.pcoGeometry.spacing * maxScale;
+    material.uniforms.octreeSize.value = this.pcoGeometry.boundingBox.getSize(helperVec3).x;
 
     if (
       material.pointSizeType === PointSizeType.ADAPTIVE ||
@@ -284,7 +286,7 @@ export class PointCloudOctree extends PointCloudTree {
 
   nodeIntersectsProfile(node: IPointCloudTreeNode, profile: IProfile) {
     const bbWorld = node.boundingBox.clone().applyMatrix4(this.matrixWorld);
-    const bsWorld = bbWorld.getBoundingSphere();
+    const bsWorld = bbWorld.getBoundingSphere(new Sphere());
 
     let intersects = false;
 
@@ -305,10 +307,7 @@ export class PointCloudOctree extends PointCloudTree {
     const nodesOnRay: PointCloudOctreeNode[] = [];
 
     const rayClone = ray.clone();
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      // let inverseWorld = new Matrix4().getInverse(node.matrixWorld);
-      // let sphere = node.getBoundingSphere().clone().applyMatrix4(node.sceneNode.matrixWorld);
+    for (const node of nodes) {
       const sphere = node.boundingSphere.clone().applyMatrix4(this.matrixWorld);
 
       if (rayClone.intersectsSphere(sphere)) {
@@ -348,8 +347,7 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     function addVisibleChildren(obj: Object3D) {
-      for (let i = 0; i < obj.children.length; i++) {
-        const child = obj.children[i];
+      for (const child of obj.children) {
         if (child.visible) {
           toHide.push(child);
         }
@@ -359,7 +357,7 @@ export class PointCloudOctree extends PointCloudTree {
 
   moveToOrigin(): void {
     this.position.set(0, 0, 0); // Reset, then the matrix will be updated in getBoundingBoxWorld()
-    this.position.set(0, 0, 0).sub(this.getBoundingBoxWorld().getCenter());
+    this.position.set(0, 0, 0).sub(this.getBoundingBoxWorld().getCenter(new Vector3()));
   }
 
   moveToGroundPlane(): void {
@@ -403,7 +401,8 @@ export class PointCloudOctree extends PointCloudTree {
       pickState.renderTarget.setSize(width, height);
     }
 
-    const pixelPos = new Vector3()
+    const pixelPos = helperVec3; // Use helper vector to prevent extra allocations.
+    pixelPos
       .addVectors(camera.position, ray.direction)
       .project(camera)
       .addScalar(1)
@@ -509,10 +508,8 @@ export class PointCloudOctree extends PointCloudTree {
             // tslint:disable-next-line:no-shadowed-variable
             const y = positionArray[3 * hit.pIndex + 1];
             const z = positionArray[3 * hit.pIndex + 2];
-            const position = new Vector3(x, y, z);
-            position.applyMatrix4(pc.matrixWorld);
 
-            point[property] = position;
+            point[property] = new Vector3(x, y, z).applyMatrix4(pc.matrixWorld);
           } else if (property === 'indices') {
           } else {
             if (values.itemSize === 1) {

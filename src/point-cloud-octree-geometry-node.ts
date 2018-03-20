@@ -59,7 +59,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = boundingBox;
     this.tightBoundingBox = boundingBox.clone();
-    this.boundingSphere = boundingBox.getBoundingSphere();
+    this.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
   }
 
   /**

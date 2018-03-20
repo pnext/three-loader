@@ -1,4 +1,4 @@
-import { Box3, Vector2 } from 'three';
+import { Box3, Vector2, Vector3 } from 'three';
 
 export class DEMNode {
   level: number;
@@ -71,7 +71,8 @@ export class DEMNode {
   }
 
   uv(position: Vector2): [number, number] {
-    const boxSize = this.box.getSize();
+    const boxSize = new Vector3();
+    this.box.getSize(boxSize);
 
     const u = (position.x - this.box.min.x) / boxSize.x;
     const v = (position.y - this.box.min.y) / boxSize.y;
