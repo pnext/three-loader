@@ -25,7 +25,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   level: number = 0;
   spacing: number = 0;
   hasChildren: boolean = false;
-  readonly children: (PointCloudOctreeGeometryNode | null)[] = [
+  readonly children: ReadonlyArray<PointCloudOctreeGeometryNode | null> = [
     null,
     null,
     null,
@@ -45,9 +45,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   loading: boolean = false;
   parent: PointCloudOctreeGeometryNode | null = null;
   oneTimeDisposeHandlers: (() => void)[] = [];
-
-  isTreeNode: boolean = false;
-  isGeometryNode: boolean = true;
+  isLeafNode: boolean = true;
+  readonly isTreeNode: boolean = false;
+  readonly isGeometryNode: boolean = true;
 
   private static idCount = 0;
 
@@ -96,7 +96,8 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
    *    The node which is to be added as a child.
    */
   addChild(child: PointCloudOctreeGeometryNode): void {
-    this.children[child.index] = child;
+    (this.children as any)[child.index] = child;
+    this.isLeafNode = false;
     child.parent = this;
   }
 

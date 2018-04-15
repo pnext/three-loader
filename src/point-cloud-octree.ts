@@ -1,9 +1,12 @@
 import {
   Box3,
   BufferAttribute,
+  BufferGeometry,
   Camera,
+  Geometry,
   Line3,
   LinearFilter,
+  Material,
   NearestFilter,
   NoBlending,
   Object3D,
@@ -14,6 +17,7 @@ import {
   Scene,
   Sphere,
   Vector3,
+  WebGLProgram,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
@@ -25,7 +29,7 @@ import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PointCloudTree } from './point-cloud-tree';
 import { IProfile, IProfileRequestCallbacks, ProfileRequest } from './profile';
-import { isGeometryNode, isTreeNode } from './type-predicates';
+import { isTreeNode } from './type-predicates';
 import { IPointCloudTreeNode, IPotree } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { clamp } from './utils/math';
@@ -52,7 +56,7 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
-  minimumNodePixelSize: number = 150;
+  minimumNodePixelSize: number = 50;
   root: IPointCloudTreeNode | null = null;
   boundingBoxNodes: Object3D[] = [];
   visibleNodes: PointCloudOctreeNode[] = [];
@@ -61,7 +65,7 @@ export class PointCloudOctree extends PointCloudTree {
   showBoundingBox: boolean = false;
   profileRequests: ProfileRequest[] = [];
   private visibleBounds: Box3 = new Box3();
-  private visibleNodeTextureOffsets: Map<string, number> = new Map<string, number>();
+  private visibleNodeTextureOffsets = new Map<string, number>();
   private pickState: IPickState | undefined;
 
   constructor(
@@ -136,65 +140,94 @@ export class PointCloudOctree extends PointCloudTree {
       renderer: WebGLRenderer,
       _scene: Scene,
       _camera: Camera,
-      _geometry: any,
-      material: any,
+      _geometry: Geometry | BufferGeometry,
+      material: Material,
     ) => {
-      if (!material.program) {
+      const program = (material as any).program as WebGLProgram;
+      if (program === undefined) {
         return;
       }
 
       const ctx = renderer.getContext();
-      const program = material.program;
-      const uniforms = program.getUniforms();
-
       ctx.useProgram(program.program);
+      const uniformsMap = (program.getUniforms() as any).map;
+      const materialUniforms = (material as PointCloudMaterial).uniforms;
 
-      if (uniforms.map.level) {
+      if (uniformsMap.level !== undefined) {
         const level = node.level;
-        material.uniforms.level.value = level;
-        uniforms.map.level.setValue(ctx, level);
+        materialUniforms.level.value = level;
+        uniformsMap.level.setValue(ctx, level);
       }
 
-      if (this.visibleNodeTextureOffsets && uniforms.map.vnStart) {
-        const vnStart = this.visibleNodeTextureOffsets.get(node.name);
-        material.uniforms.vnStart.value = vnStart;
-        uniforms.map.vnStart.setValue(ctx, vnStart);
+      if (uniformsMap.isLeafNode !== undefined) {
+        const isLeafNode = node.isLeafNode;
+        uniformsMap.isLeafNode.setValue(ctx, isLeafNode);
+        materialUniforms.isLeafNode.value = isLeafNode;
       }
 
-      if (uniforms.map.pcIndex) {
+      const vnStart = this.visibleNodeTextureOffsets.get(node.name);
+      if (vnStart !== undefined && uniformsMap.vnStart !== undefined) {
+        materialUniforms.vnStart.value = vnStart;
+        uniformsMap.vnStart.setValue(ctx, vnStart);
+      }
+
+      if (uniformsMap.pcIndex !== undefined) {
         const i = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
-        material.uniforms.pcIndex.value = i;
-        material.program.getUniforms().map.pcIndex.setValue(ctx, i);
+        materialUniforms.pcIndex.value = i;
+        uniformsMap.pcIndex.setValue(ctx, i);
       }
     };
   }
 
   updateVisibleBounds() {
-    const leafNodes = [];
-    for (const node of this.visibleNodes) {
-      let isLeaf = true;
-
-      for (const child of node.children) {
-        if (isTreeNode(child)) {
-          isLeaf = Boolean(isLeaf && (!child.sceneNode || !child.sceneNode.visible));
-        } else if (isGeometryNode(child)) {
-          isLeaf = true;
-        }
-      }
-
-      if (isLeaf) {
-        leafNodes.push(node);
-      }
-    }
-
     this.visibleBounds.min.set(Infinity, Infinity, Infinity);
     this.visibleBounds.max.set(-Infinity, -Infinity, -Infinity);
-    for (let i = 0; i < leafNodes.length; i++) {
-      const node = leafNodes[i];
 
+    const leafNodes = this.getLeafNodes();
+    for (const node of leafNodes) {
       this.visibleBounds.expandByPoint(node.boundingBox.min);
       this.visibleBounds.expandByPoint(node.boundingBox.max);
     }
+  }
+
+  private getLeafNodes(): IPointCloudTreeNode[] {
+    const result: IPointCloudTreeNode[] = [];
+    for (const node of this.visibleNodes) {
+      if (node.isLeafNode) {
+        result.push(node);
+      }
+    }
+
+    return result;
+  }
+
+  updateBoundingBoxes(): void {
+    if (!this.showBoundingBox) {
+      return;
+    }
+
+    const parent = this.parent;
+    if (!parent) {
+      return;
+    }
+
+    let bbRoot: any = parent.getObjectByName('bbroot');
+    if (!bbRoot) {
+      bbRoot = new Object3D();
+      bbRoot.name = 'bbroot';
+      this.parent!.add(bbRoot);
+    }
+
+    const visibleBoxes = [];
+    for (const node of this.visibleNodes) {
+      if (node.boundingBoxNode === undefined || !node.isLeafNode) {
+        continue;
+      }
+      const box = node.boundingBoxNode;
+      visibleBoxes.push(box);
+    }
+
+    bbRoot.children = visibleBoxes;
   }
 
   updateMaterial(
@@ -217,57 +250,101 @@ export class PointCloudOctree extends PointCloudTree {
       material.pointSizeType === PointSizeType.ADAPTIVE ||
       material.pointColorType === PointColorType.LOD
     ) {
-      this.updateVisibilityTexture(material, visibleNodes);
+      this.updateVisibilityTexture(material, camera, visibleNodes);
     }
   }
 
-  updateVisibilityTexture(material: PointCloudMaterial, visibleNodes: PointCloudOctreeNode[]) {
-    if (!material) {
-      return;
-    }
+  updateVisibilityTexture = (() => {
+    const bSphere = new Sphere();
+    const bBox = new Box3();
 
-    const texture = material.visibleNodesTexture;
-    const data = texture.image.data;
-    data.fill(0);
+    return (
+      material: PointCloudMaterial,
+      camera: PerspectiveCamera,
+      visibleNodes: PointCloudOctreeNode[],
+    ) => {
+      if (!material) {
+        return;
+      }
 
-    this.visibleNodeTextureOffsets.clear();
+      const data = new Uint8Array(visibleNodes.length * 4);
 
-    const nodes = visibleNodes.slice().sort(byLevelAndIndex);
+      this.visibleNodeTextureOffsets.clear();
 
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
+      const nodes = visibleNodes.slice().sort(byLevelAndIndex);
 
-      this.visibleNodeTextureOffsets.set(node.name, i);
+      const lodRanges = new Map<number, number>();
+      const leafNodeLodRanges = new Map<PointCloudOctreeNode, { distance: number; i: number }>();
 
-      const visibleChildren: PointCloudOctreeNode[] = [];
-      for (const child of node.children) {
-        if (isTreeNode(child) && child.sceneNode.visible && nodes.indexOf(child) > -1) {
-          visibleChildren.push(child);
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const level = node.level;
+
+        this.visibleNodeTextureOffsets.set(node.name, i);
+
+        const children = [];
+        for (let j = 0; j < 8; j++) {
+          const child = node.children[j];
+
+          if (child && isTreeNode(child) && child.sceneNode.visible) {
+            children.push(child);
+          }
+        }
+
+        data[i * 4 + 0] = 0;
+        data[i * 4 + 1] = 0;
+        data[i * 4 + 2] = 0;
+        data[i * 4 + 3] = level;
+
+        for (let j = 0; j < children.length; j++) {
+          const child = children[j];
+          const index = child.index;
+          data[i * 4 + 0] += Math.pow(2, index);
+
+          if (j === 0) {
+            const vArrayIndex = nodes.indexOf(child, i);
+
+            // tslint:disable-next-line:no-bitwise
+            data[i * 4 + 1] = (vArrayIndex - i) >> 8;
+            data[i * 4 + 2] = (vArrayIndex - i) % 256;
+          }
+        }
+
+        bBox.copy(node.boundingBox);
+        bBox.getBoundingSphere(bSphere);
+        bSphere.applyMatrix4(node.sceneNode.matrixWorld);
+        bSphere.applyMatrix4(camera.matrixWorldInverse);
+
+        const distance = bSphere.center.distanceTo(camera.position) + bSphere.radius;
+        const prevDist = lodRanges.get(level);
+        lodRanges.set(level, prevDist === undefined ? distance : Math.max(prevDist, distance));
+
+        if (!node.geometryNode.hasChildren) {
+          leafNodeLodRanges.set(node, { distance, i });
         }
       }
 
-      visibleChildren.sort(byLevelAndIndex);
+      leafNodeLodRanges.forEach((value, node) => {
+        const level = node.level;
+        const distance = value.distance;
+        const i = value.i;
 
-      data[i * 3 + 0] = 0;
-      data[i * 3 + 1] = 0;
-      data[i * 3 + 2] = 0;
-
-      for (let j = 0; j < visibleChildren.length; j++) {
-        const child = visibleChildren[j];
-
-        data[i * 3 + 0] += Math.pow(2, child.index);
-
-        if (j === 0) {
-          const vArrayIndex = nodes.indexOf(child);
-          // tslint:disable-next-line:no-bitwise
-          data[i * 3 + 1] = (vArrayIndex - i) >> 8;
-          data[i * 3 + 2] = (vArrayIndex - i) % 256;
+        if (level >= 4) {
+          return;
         }
-      }
-    }
 
-    texture.needsUpdate = true;
-  }
+        lodRanges.forEach((range, lod) => {
+          if (distance < range * 1.2) {
+            data[i * 4 + 3] = lod;
+          }
+        });
+      });
+
+      const texture = material.visibleNodesTexture;
+      texture.image.data.set(data);
+      texture.needsUpdate = true;
+    };
+  })();
 
   updateProfileRequests(): void {
     const start = performance.now();
@@ -289,12 +366,14 @@ export class PointCloudOctree extends PointCloudTree {
     const bsWorld = bbWorld.getBoundingSphere(new Sphere());
 
     let intersects = false;
+    const line = new Line3();
+    const closest = new Vector3();
 
     for (let i = 0; i < profile.points.length - 1; i++) {
-      const start = new Vector3(profile.points[i + 0].x, profile.points[i + 0].y, bsWorld.center.z);
-      const end = new Vector3(profile.points[i + 1].x, profile.points[i + 1].y, bsWorld.center.z);
+      line.start.set(profile.points[i + 0].x, profile.points[i + 0].y, bsWorld.center.z);
+      line.end.set(profile.points[i + 1].x, profile.points[i + 1].y, bsWorld.center.z);
 
-      const closest = new Line3(start, end).closestPointToPoint(bsWorld.center, true);
+      line.closestPointToPoint(bsWorld.center, true, closest);
       const distance = closest.distanceTo(bsWorld.center);
 
       intersects = intersects || distance < bsWorld.radius + profile.width;

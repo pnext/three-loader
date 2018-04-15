@@ -43,8 +43,12 @@ export class Potree implements IPotree {
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
+
+      // pointCloud.showBoundingBox = true;
+
       pointCloud.updateMaterial(pointCloud.material, pointCloud.visibleNodes, camera, renderer);
       pointCloud.updateVisibleBounds();
+      pointCloud.updateBoundingBoxes();
     }
 
     this.lru.freeMemory();
@@ -63,15 +67,6 @@ export class Potree implements IPotree {
       this.lru.freeMemory();
     }
   }
-
-  // getDEMWorkerInstance() {
-  //   if (!Potree.DEMWorkerInstance) {
-  //     const workerPath = Potree.scriptPath + '/workers/DEMWorker.js';
-  //     Potree.DEMWorkerInstance = Potree.workerPool.getWorker(workerPath);
-  //   }
-
-  //   return Potree.DEMWorkerInstance;
-  // }
 
   private updateVisibility(
     pointClouds: PointCloudOctree[],
@@ -156,9 +151,9 @@ export class Potree implements IPotree {
         const distance = sphere.center.distanceTo(camObjPos);
         const radius = sphere.radius;
 
-        const fov = camera.fov * Math.PI / 180;
+        const fov = (camera.fov * Math.PI) / 180;
         const slope = Math.tan(fov / 2);
-        const projFactor = 0.5 * height / (slope * distance);
+        const projFactor = (0.5 * height) / (slope * distance);
         const screenPixelRadius = radius * projFactor;
 
         if (screenPixelRadius < pointCloud.minimumNodePixelSize) {

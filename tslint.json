@@ -7,7 +7,6 @@
     "class-name": true,
     "comment-format": [true, "check-space"],
     "curly": true,
-    "defocus": true,
     "eofline": true,
     "forin": true,
     "import-spacing": true,
