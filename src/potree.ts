@@ -11,18 +11,20 @@ import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
 
-export interface IQueueItem {
-  weight: number;
-  node: IPointCloudTreeNode;
-  pointCloudIndex: number;
-  parent?: IPointCloudTreeNode | null;
+export class QueueItem {
+  constructor(
+    public pointCloudIndex: number,
+    public weight: number,
+    public node: IPointCloudTreeNode,
+    public parent?: IPointCloudTreeNode | null,
+  ) {}
 }
 
 const MAX_LOADS_TO_GPU = 2;
 
 export class Potree implements IPotree {
   private _pointBudget: number = 1_000_000;
-  maxNodesLoading: number = 5;
+  maxNodesLoading: number = 50;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
@@ -43,8 +45,10 @@ export class Potree implements IPotree {
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
+
       pointCloud.updateMaterial(pointCloud.material, pointCloud.visibleNodes, camera, renderer);
       pointCloud.updateVisibleBounds();
+      pointCloud.updateBoundingBoxes();
     }
 
     this.lru.freeMemory();
@@ -64,15 +68,6 @@ export class Potree implements IPotree {
     }
   }
 
-  // getDEMWorkerInstance() {
-  //   if (!Potree.DEMWorkerInstance) {
-  //     const workerPath = Potree.scriptPath + '/workers/DEMWorker.js';
-  //     Potree.DEMWorkerInstance = Potree.workerPool.getWorker(workerPath);
-  //   }
-
-  //   return Potree.DEMWorkerInstance;
-  // }
-
   private updateVisibility(
     pointClouds: PointCloudOctree[],
     camera: PerspectiveCamera,
@@ -84,42 +79,44 @@ export class Potree implements IPotree {
     const visibleGeometry: PointCloudOctreeGeometryNode[] = [];
     const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
 
-    let lowestSpacing = Infinity;
-
     // calculate object space frustum and cam pos and setup priority queue
-    const { frustums, camObjPositions, priorityQueue } = this.updateVisibilityStructures(
+    const { frustums, cameraPositions, priorityQueue } = this.updateVisibilityStructures(
       pointClouds,
       camera,
     );
 
     let loadedToGPUThisFrame = 0;
-    const height = renderer.getSize().height;
-    let element: IQueueItem | undefined;
+    let queueItem: QueueItem | undefined;
 
-    while ((element = priorityQueue.pop()) !== undefined) {
-      let node = element.node;
-      const parentNode = element.parent;
-      const pointCloud = pointClouds[element.pointCloudIndex];
+    const halfHeight = 0.5 * renderer.getSize().height;
+    const fov = (camera.fov * Math.PI) / 180.0;
+    const fovSlope = Math.tan(fov / 2.0);
 
+    while ((queueItem = priorityQueue.pop()) !== undefined) {
+      let node = queueItem.node;
+
+      // If we will end up with too many points, we stop right away.
       if (numVisiblePoints + node.numPoints > this.pointBudget) {
         break;
       }
 
-      const frustum = frustums[element.pointCloudIndex];
-      const camObjPos = camObjPositions[element.pointCloudIndex];
+      const pointCloudIndex = queueItem.pointCloudIndex;
+      const pointCloud = pointClouds[pointCloudIndex];
+
+      const maxLevel = pointCloud.maxLevel || Infinity;
 
       if (
-        node.level > pointCloud.maxLevel ||
-        !frustum.intersectsBox(node.boundingBox) ||
+        node.level > maxLevel ||
+        !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
         this.shouldClip(pointCloud, node.boundingBox)
       ) {
         continue;
       }
 
-      lowestSpacing = Math.min(lowestSpacing, node.spacing);
-
       numVisiblePoints += node.numPoints;
       pointCloud.numVisiblePoints += node.numPoints;
+
+      const parentNode = queueItem.parent;
 
       if (isGeometryNode(node) && (!parentNode || isTreeNode(parentNode))) {
         if (node.loaded && loadedToGPUThisFrame < MAX_LOADS_TO_GPU) {
@@ -132,52 +129,18 @@ export class Potree implements IPotree {
       }
 
       if (isTreeNode(node)) {
-        this.lru.touch(node.geometryNode);
-
-        node.sceneNode.visible = true;
-        node.sceneNode.material = pointCloud.material;
-
-        visibleNodes.push(node);
-        pointCloud.visibleNodes.push(node);
-
-        node.sceneNode.updateMatrix();
-        node.sceneNode.matrixWorld.multiplyMatrices(pointCloud.matrixWorld, node.sceneNode.matrix);
-
-        this.updateBoundingBoxVisibility(pointCloud, node);
+        this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
       }
 
-      // Add child nodes to priorityQueue
-      for (const child of node.children) {
-        if (child === null) {
-          continue;
-        }
-
-        const sphere = child.boundingSphere;
-        const distance = sphere.center.distanceTo(camObjPos);
-        const radius = sphere.radius;
-
-        const fov = camera.fov * Math.PI / 180;
-        const slope = Math.tan(fov / 2);
-        const projFactor = 0.5 * height / (slope * distance);
-        const screenPixelRadius = radius * projFactor;
-
-        if (screenPixelRadius < pointCloud.minimumNodePixelSize) {
-          continue;
-        }
-
-        let weight = screenPixelRadius;
-
-        if (distance - radius < 0) {
-          weight = Number.MAX_VALUE;
-        }
-
-        priorityQueue.push({
-          pointCloudIndex: element.pointCloudIndex,
-          node: child,
-          parent: node,
-          weight,
-        });
-      }
+      this.updateChildVisibility(
+        queueItem,
+        priorityQueue,
+        pointCloud,
+        node,
+        cameraPositions[pointCloudIndex],
+        halfHeight,
+        fovSlope,
+      );
     } // end priority queue loop
 
     const numNodesToLoad = Math.min(this.maxNodesLoading, unloadedGeometry.length);
@@ -188,8 +151,61 @@ export class Potree implements IPotree {
     return {
       visibleNodes: visibleNodes,
       numVisiblePoints: numVisiblePoints,
-      lowestSpacing: lowestSpacing,
     };
+  }
+
+  private updateTreeNodeVisibility(
+    pointCloud: PointCloudOctree,
+    node: PointCloudOctreeNode,
+    visibleNodes: IPointCloudTreeNode[],
+  ): void {
+    this.lru.touch(node.geometryNode);
+
+    const sceneNode = node.sceneNode;
+    sceneNode.visible = true;
+    sceneNode.material = pointCloud.material;
+    sceneNode.updateMatrix();
+    sceneNode.matrixWorld.multiplyMatrices(pointCloud.matrixWorld, sceneNode.matrix);
+
+    visibleNodes.push(node);
+    pointCloud.visibleNodes.push(node);
+
+    this.updateBoundingBoxVisibility(pointCloud, node);
+  }
+
+  private updateChildVisibility(
+    queueItem: QueueItem,
+    priorityQueue: BinaryHeap<QueueItem>,
+    pointCloud: PointCloudOctree,
+    node: IPointCloudTreeNode,
+    cameraPosition: Vector3,
+    halfHeight: number,
+    fovSlope: number,
+  ): void {
+    const children = node.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child === null) {
+        continue;
+      }
+
+      const sphere = child.boundingSphere;
+      const distance = sphere.center.distanceTo(cameraPosition);
+      const radius = sphere.radius;
+
+      const projFactor = halfHeight / (fovSlope * distance);
+      const screenPixelRadius = radius * projFactor;
+
+      // Don't add the node if it'll be too small on the screen.
+      if (screenPixelRadius < pointCloud.minimumNodePixelSize) {
+        continue;
+      }
+
+      // Nodes which are larger will have priority in loading/displaying.
+      const weight = distance < radius ? Number.MAX_VALUE : screenPixelRadius + 1 / distance;
+
+      priorityQueue.push(new QueueItem(queueItem.pointCloudIndex, weight, child, node));
+    }
   }
 
   private updateBoundingBoxVisibility(
@@ -211,7 +227,7 @@ export class Potree implements IPotree {
   }
 
   private shouldClip(pointCloud: PointCloudOctree, boundingBox: Box3): boolean {
-    const { material } = pointCloud;
+    const material = pointCloud.material;
 
     if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
       return false;
@@ -236,67 +252,70 @@ export class Potree implements IPotree {
     return false;
   }
 
-  private updateVisibilityStructures(
-    pointClouds: PointCloudOctree[],
-    camera: PerspectiveCamera,
-  ): {
-    frustums: Frustum[];
-    camObjPositions: Vector3[];
-    priorityQueue: BinaryHeap<IQueueItem>;
-  } {
-    const frustums: Frustum[] = [];
-    const camObjPositions = [];
-    const priorityQueue = new BinaryHeap<IQueueItem>(x => 1 / x.weight);
+  private updateVisibilityStructures = (() => {
+    const frustumMatrix = new Matrix4();
+    const inverseWorldMatrix = new Matrix4();
+    const cameraMatrix = new Matrix4();
 
-    for (let i = 0; i < pointClouds.length; i++) {
-      const pointCloud = pointClouds[i];
+    return (
+      pointClouds: PointCloudOctree[],
+      camera: PerspectiveCamera,
+    ): {
+      frustums: Frustum[];
+      cameraPositions: Vector3[];
+      priorityQueue: BinaryHeap<QueueItem>;
+    } => {
+      const frustums: Frustum[] = [];
+      const cameraPositions = [];
+      const priorityQueue = new BinaryHeap<QueueItem>(x => 1 / x.weight);
 
-      if (!pointCloud.initialized()) {
-        continue;
+      for (let i = 0; i < pointClouds.length; i++) {
+        const pointCloud = pointClouds[i];
+
+        if (!pointCloud.initialized()) {
+          continue;
+        }
+
+        pointCloud.numVisiblePoints = 0;
+        pointCloud.visibleNodes = [];
+        pointCloud.visibleGeometry = [];
+
+        camera.updateMatrixWorld(false);
+
+        // Furstum in object space.
+        const inverseViewMatrix = camera.matrixWorldInverse;
+        const worldMatrix = pointCloud.matrixWorld;
+        frustumMatrix
+          .identity()
+          .multiply(camera.projectionMatrix)
+          .multiply(inverseViewMatrix)
+          .multiply(worldMatrix);
+        frustums.push(new Frustum().setFromMatrix(frustumMatrix));
+
+        // Camera position in object space
+        inverseWorldMatrix.getInverse(worldMatrix);
+        cameraMatrix
+          .identity()
+          .multiply(inverseWorldMatrix)
+          .multiply(camera.matrixWorld);
+        cameraPositions.push(new Vector3().setFromMatrixPosition(cameraMatrix));
+
+        if (pointCloud.visible && pointCloud.root !== null) {
+          const weight = Number.MAX_VALUE;
+          priorityQueue.push(new QueueItem(i, weight, pointCloud.root));
+        }
+
+        // Hide any previously visible nodes. We will later show only the needed ones.
+        if (isTreeNode(pointCloud.root)) {
+          pointCloud.hideDescendants(pointCloud.root.sceneNode);
+        }
+
+        for (const boundingBoxNode of pointCloud.boundingBoxNodes) {
+          boundingBoxNode.visible = false;
+        }
       }
 
-      pointCloud.numVisiblePoints = 0;
-      pointCloud.visibleNodes = [];
-      pointCloud.visibleGeometry = [];
-
-      // frustum in object space
-      camera.updateMatrixWorld(true);
-      const frustum = new Frustum();
-      const viewI = camera.matrixWorldInverse;
-      const world = pointCloud.matrixWorld;
-      const proj = camera.projectionMatrix;
-      const fm = new Matrix4()
-        .multiply(proj)
-        .multiply(viewI)
-        .multiply(world);
-      frustum.setFromMatrix(fm);
-      frustums.push(frustum);
-
-      // camera position in object space
-      const view = camera.matrixWorld;
-      const worldI = new Matrix4().getInverse(world);
-      const camMatrixObject = new Matrix4().multiply(worldI).multiply(view);
-      const camObjPos = new Vector3().setFromMatrixPosition(camMatrixObject);
-      camObjPositions.push(camObjPos);
-
-      if (pointCloud.visible && pointCloud.root !== null) {
-        priorityQueue.push({
-          weight: Number.MAX_VALUE,
-          node: pointCloud.root,
-          pointCloudIndex: i,
-        });
-      }
-
-      // Hide any previously visible nodes. We will later show only the needed ones.
-      if (isTreeNode(pointCloud.root)) {
-        pointCloud.hideDescendants(pointCloud.root.sceneNode);
-      }
-
-      for (let j = 0; j < pointCloud.boundingBoxNodes.length; j++) {
-        pointCloud.boundingBoxNodes[j].visible = false;
-      }
-    }
-
-    return { frustums, camObjPositions, priorityQueue };
-  }
+      return { frustums, cameraPositions, priorityQueue };
+    };
+  })();
 }

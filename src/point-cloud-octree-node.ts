@@ -40,6 +40,10 @@ export class PointCloudOctreeNode extends EventDispatcher implements IPointCloud
     return this.geometryNode.level;
   }
 
+  get isLeafNode(): boolean {
+    return this.geometryNode.isLeafNode;
+  }
+
   get numPoints(): number {
     return this.geometryNode.numPoints;
   }

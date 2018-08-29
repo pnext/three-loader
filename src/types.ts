@@ -13,7 +13,8 @@ export interface IPointCloudTreeNode {
   boundingSphere: Sphere;
   loaded: boolean;
   numPoints: number;
-  children: (IPointCloudTreeNode | null)[];
+  readonly children: ReadonlyArray<IPointCloudTreeNode | null>;
+  readonly isLeafNode: boolean;
 
   dispose(): void;
 
@@ -23,7 +24,6 @@ export interface IPointCloudTreeNode {
 export interface IVisibilityUpdateResult {
   visibleNodes: IPointCloudTreeNode[];
   numVisiblePoints: number;
-  lowestSpacing: number;
 }
 
 export interface IPotree {
