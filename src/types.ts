@@ -24,7 +24,6 @@ export interface IPointCloudTreeNode {
 export interface IVisibilityUpdateResult {
   visibleNodes: IPointCloudTreeNode[];
   numVisiblePoints: number;
-  lowestSpacing: number;
 }
 
 export interface IPotree {

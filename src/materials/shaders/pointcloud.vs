@@ -71,7 +71,7 @@ varying vec3	vColor;
 varying float	vLinearDepth;
 varying float	vLogDepth;
 varying vec3	vViewPosition;
-varying float 	vRadius;
+varying float vRadius;
 varying vec3	vWorldPosition;
 varying vec3	vNormal;
 
@@ -84,8 +84,8 @@ varying vec3	vNormal;
 /**
  * Rounds the specified number to the closest integer.
  */
-int round(float number) {
-	return int(floor(number + 0.5));
+float round(float number){
+	return floor(number + 0.5);
 }
 
 /**
@@ -117,10 +117,13 @@ int numberOfOnes(int number, int index) {
  *
  * number is treated as if it were an integer in the range 0-255
  */
-bool isBitSet(int number, int index) {
+bool isBitSet(int number, int index){
 
+	// weird multi else if due to lack of proper array, int and bitwise support in WebGL 1.0
 	int powi = 1;
-	if (index == 1) {
+	if (index == 0) {
+		powi = 1;
+	} else if (index == 1) {
 		powi = 2;
 	} else if (index == 2) {
 		powi = 4;
@@ -134,8 +137,6 @@ bool isBitSet(int number, int index) {
 		powi = 64;
 	} else if (index == 7) {
 		powi = 128;
-	} else {
-		return false;
 	}
 
 	int ndp = number / powi;
@@ -156,15 +157,15 @@ float getLOD() {
 		
 		vec3 index3d = (position-offset) / nodeSizeAtLevel;
 		index3d = floor(index3d + 0.5);
-		int index = round(4.0 * index3d.x + 2.0 * index3d.y + index3d.z);
+		int index = int(round(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));
 		
 		vec4 value = texture2D(visibleNodes, vec2(float(iOffset) / 2048.0, 0.0));
-		int mask = round(value.r * 255.0);
+		int mask = int(round(value.r * 255.0));
 
 		if (isBitSet(mask, index)) {
 			// there are more visible child nodes at this position
-			int advanceG = round(value.g * 255.0) * 256;
-			int advanceB = round(value.b * 255.0);
+			int advanceG = int(round(value.g * 255.0)) * 256;
+			int advanceB = int(round(value.b * 255.0));
 			int advanceChild = numberOfOnes(mask, index - 1);
 			int advance = advanceG + advanceB + advanceChild;
 
@@ -175,15 +176,14 @@ float getLOD() {
 			return value.a * 255.0; // no more visible child nodes at this position
 		}
 		
-		offset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;
-        
+		offset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;  
 	}
 		
 	return depth;
 }
 
 float getPointSizeAttenuation() {
-	return pow(1.01, getLOD());
+	return 0.5 * pow(2.0, getLOD());
 }
 
 #endif
@@ -363,19 +363,21 @@ void main() {
 	// POINT SIZE
 	// ---------------------
 
+	float pointSize = 1.0;
 	float slope = tan(fov / 2.0);
 	float projFactor =  -0.5 * screenHeight / (slope * vViewPosition.z);
 
 	#if defined fixed_point_size
-		float pointSize = size;
+		pointSize = size;
 	#elif defined attenuated_point_size
-		float pointSize = size * spacing * projFactor;
+		pointSize = size * spacing * projFactor;
 	#elif defined adaptive_point_size
-		float worldSpaceSize = size * spacing * 2.0 / getPointSizeAttenuation();
-		float pointSize = worldSpaceSize * projFactor;
+		float worldSpaceSize = 2.0 * size * spacing / getPointSizeAttenuation();
+		pointSize = worldSpaceSize * projFactor;
 	#endif
 
-	pointSize = clamp(pointSize, minSize, maxSize);
+	pointSize = max(minSize, pointSize);
+	pointSize = min(maxSize, pointSize);
 
 	vRadius = pointSize / projFactor;
 	
@@ -405,8 +407,8 @@ void main() {
 	#elif defined color_type_color
 		vColor = uColor;
 	#elif defined color_type_lod
-		float w = getLOD() / 10.0;
-		vColor = texture2D(gradient, vec2(w, 1.0 - w)).rgb;
+	float w = getLOD() / 10.0;
+	vColor = texture2D(gradient, vec2(w, 1.0 - w)).rgb;
 	#elif defined color_type_point_index
 		vColor = indices.rgb;
 	#elif defined color_type_classification

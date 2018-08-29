@@ -112,8 +112,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     intensityRange: { type: 'fv', value: [0, 65000] },
     isLeafNode: { type: 'b', value: 0 },
     level: { type: 'f', value: 0.0 },
-    maxSize: { type: 'f', value: 10.0 },
-    minSize: { type: 'f', value: 1.0 },
+    maxSize: { type: 'f', value: 50.0 },
+    minSize: { type: 'f', value: 2.0 },
     near: { type: 'f', value: 0.1 },
     octreeSize: { type: 'f', value: 0 },
     opacity: { type: 'f', value: 1.0 },
@@ -172,7 +172,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     this.treeType = getValid(parameters.treeType, TreeType.OCTREE);
     this.size = getValid(parameters.size, 1.0);
-    this.minSize = getValid(parameters.minSize, 1.0);
+    this.minSize = getValid(parameters.minSize, 2.0);
     this.maxSize = getValid(parameters.maxSize, 50.0);
 
     this.classification = DEFAULT_CLASSIFICATION;

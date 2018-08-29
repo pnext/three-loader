@@ -5,14 +5,13 @@ import {
   LinearFilter,
   NearestFilter,
   RGBAFormat,
-  RGBFormat,
   Texture,
 } from 'three';
 import { IClassification, IGradient } from '../materials/types';
 
 export function generateDataTexture(width: number, height: number, color: Color): Texture {
   const size = width * height;
-  const data = new Uint8Array(3 * size);
+  const data = new Uint8Array(4 * size);
 
   const r = Math.floor(color.r * 255);
   const g = Math.floor(color.g * 255);
@@ -24,7 +23,7 @@ export function generateDataTexture(width: number, height: number, color: Color)
     data[i * 3 + 2] = b;
   }
 
-  const texture = new DataTexture(data, width, height, RGBFormat);
+  const texture = new DataTexture(data, width, height, RGBAFormat);
   texture.needsUpdate = true;
   texture.magFilter = NearestFilter;
 

@@ -29,7 +29,6 @@ import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PointCloudTree } from './point-cloud-tree';
 import { IProfile, IProfileRequestCallbacks, ProfileRequest } from './profile';
-import { isTreeNode } from './type-predicates';
 import { IPointCloudTreeNode, IPotree } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { clamp } from './utils/math';
@@ -250,101 +249,44 @@ export class PointCloudOctree extends PointCloudTree {
       material.pointSizeType === PointSizeType.ADAPTIVE ||
       material.pointColorType === PointColorType.LOD
     ) {
-      this.updateVisibilityTexture(material, camera, visibleNodes);
+      this.updateVisibilityTextureData(visibleNodes, material);
     }
   }
 
-  updateVisibilityTexture = (() => {
-    const bSphere = new Sphere();
-    const bBox = new Box3();
+  updateVisibilityTextureData(nodes: PointCloudOctreeNode[], material: PointCloudMaterial) {
+    nodes.sort(byLevelAndIndex);
 
-    return (
-      material: PointCloudMaterial,
-      camera: PerspectiveCamera,
-      visibleNodes: PointCloudOctreeNode[],
-    ) => {
-      if (!material) {
-        return;
+    const data = new Uint8Array(nodes.length * 4);
+    const offsetsToChild = new Array(nodes.length).fill(Infinity);
+
+    this.visibleNodeTextureOffsets.clear();
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+
+      this.visibleNodeTextureOffsets.set(node.name, i);
+
+      if (i > 0) {
+        const parentName = node.name.slice(0, -1);
+        const parentOffset = this.visibleNodeTextureOffsets.get(parentName)!;
+        const parentOffsetToChild = i - parentOffset;
+
+        offsetsToChild[parentOffset] = Math.min(offsetsToChild[parentOffset], parentOffsetToChild);
+
+        // tslint:disable:no-bitwise
+        data[parentOffset * 4 + 0] = data[parentOffset * 4 + 0] | (1 << node.index);
+        data[parentOffset * 4 + 1] = offsetsToChild[parentOffset] >> 8;
+        data[parentOffset * 4 + 2] = offsetsToChild[parentOffset] % 256;
+        // tslint:enable:no-bitwise
       }
 
-      const data = new Uint8Array(visibleNodes.length * 4);
+      data[i * 4 + 3] = node.name.length;
+    }
 
-      this.visibleNodeTextureOffsets.clear();
-
-      const nodes = visibleNodes.slice().sort(byLevelAndIndex);
-
-      const lodRanges = new Map<number, number>();
-      const leafNodeLodRanges = new Map<PointCloudOctreeNode, { distance: number; i: number }>();
-
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const level = node.level;
-
-        this.visibleNodeTextureOffsets.set(node.name, i);
-
-        const children = [];
-        for (let j = 0; j < 8; j++) {
-          const child = node.children[j];
-
-          if (child && isTreeNode(child) && child.sceneNode.visible) {
-            children.push(child);
-          }
-        }
-
-        data[i * 4 + 0] = 0;
-        data[i * 4 + 1] = 0;
-        data[i * 4 + 2] = 0;
-        data[i * 4 + 3] = level;
-
-        for (let j = 0; j < children.length; j++) {
-          const child = children[j];
-          const index = child.index;
-          data[i * 4 + 0] += Math.pow(2, index);
-
-          if (j === 0) {
-            const vArrayIndex = nodes.indexOf(child, i);
-
-            // tslint:disable-next-line:no-bitwise
-            data[i * 4 + 1] = (vArrayIndex - i) >> 8;
-            data[i * 4 + 2] = (vArrayIndex - i) % 256;
-          }
-        }
-
-        bBox.copy(node.boundingBox);
-        bBox.getBoundingSphere(bSphere);
-        bSphere.applyMatrix4(node.sceneNode.matrixWorld);
-        bSphere.applyMatrix4(camera.matrixWorldInverse);
-
-        const distance = bSphere.center.distanceTo(camera.position) + bSphere.radius;
-        const prevDist = lodRanges.get(level);
-        lodRanges.set(level, prevDist === undefined ? distance : Math.max(prevDist, distance));
-
-        if (!node.geometryNode.hasChildren) {
-          leafNodeLodRanges.set(node, { distance, i });
-        }
-      }
-
-      leafNodeLodRanges.forEach((value, node) => {
-        const level = node.level;
-        const distance = value.distance;
-        const i = value.i;
-
-        if (level >= 4) {
-          return;
-        }
-
-        lodRanges.forEach((range, lod) => {
-          if (distance < range * 1.2) {
-            data[i * 4 + 3] = lod;
-          }
-        });
-      });
-
-      const texture = material.visibleNodesTexture;
-      texture.image.data.set(data);
-      texture.needsUpdate = true;
-    };
-  })();
+    const texture = material.visibleNodesTexture;
+    texture.image.data.set(data);
+    texture.needsUpdate = true;
+  }
 
   updateProfileRequests(): void {
     const start = performance.now();
