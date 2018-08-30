@@ -1,4 +1,5 @@
 const path = require('path');
+const SizePlugin = require('size-plugin');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
@@ -11,6 +12,7 @@ module.exports = {
     umdNamedDefine: true,
   },
   devtool: 'cheap-eval-source-map',
+  stats: 'errors-only',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },
@@ -28,5 +30,5 @@ module.exports = {
       { test: /\.(vs|fs|glsl|vert|frag)$/, loader: 'raw-loader' },
     ],
   },
-  plugins: [],
+  plugins: [new SizePlugin()],
 };

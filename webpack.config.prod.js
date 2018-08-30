@@ -4,6 +4,7 @@ const baseConfig = require('./webpack.config');
 
 module.exports = Object.assign(baseConfig, {
   devtool: 'sourcemap',
+  stats: 'normal',
   plugins: [
     ...baseConfig.plugins,
     new BundleAnalyzerPlugin(),
