@@ -69,7 +69,11 @@ function handleEvent(msg) {
 
     case 'header':
       if (!instance) {
-        throw new Error('You need to open the file before trying to read header');
+        if (PRODUCTION) {
+          throw new Error();
+        } else {
+          throw new Error('You need to open the file before trying to read header');
+        }
       }
 
       let header = parseLASHeader(instance.arraybuffer);
@@ -80,7 +84,11 @@ function handleEvent(msg) {
 
     case 'read':
       if (!instance) {
-        throw new Error('You need to open the file before trying to read stuff');
+        if (PRODUCTION) {
+          throw new Error();
+        } else {
+          throw new Error('You need to open the file before trying to read stuff');
+        }
       }
 
       // msg.start
@@ -89,9 +97,13 @@ function handleEvent(msg) {
       let o = instance;
 
       if (!o.header) {
-        throw new Error(
-          'You need to query header before reading, I maintain state that way, sorry :(',
-        );
+        if (PRODUCTION) {
+          throw new Error();
+        } else {
+          throw new Error(
+            'You need to query header before reading, I maintain state that way, sorry :(',
+          );
+        }
       }
 
       let pointsToRead = Math.min(count * skip, o.header.pointsCount - o.readOffset);

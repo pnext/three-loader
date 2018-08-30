@@ -24,7 +24,7 @@ const MAX_LOADS_TO_GPU = 2;
 
 export class Potree implements IPotree {
   private _pointBudget: number = 1_000_000;
-  maxNodesLoading: number = 50;
+  maxNumNodesLoading: number = 5;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
@@ -37,10 +37,6 @@ export class Potree implements IPotree {
     camera: PerspectiveCamera,
     renderer: WebGLRenderer,
   ): IVisibilityUpdateResult {
-    for (let i = 0; i < pointClouds.length; i++) {
-      pointClouds[i].updateProfileRequests();
-    }
-
     const result = this.updateVisibility(pointClouds, camera, renderer);
 
     for (let i = 0; i < pointClouds.length; i++) {
@@ -143,7 +139,7 @@ export class Potree implements IPotree {
       );
     } // end priority queue loop
 
-    const numNodesToLoad = Math.min(this.maxNodesLoading, unloadedGeometry.length);
+    const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
     for (let i = 0; i < numNodesToLoad; i++) {
       unloadedGeometry[i].load();
     }

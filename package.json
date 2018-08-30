@@ -19,7 +19,6 @@
   "scripts": {
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
-    "dev": "npm run clean && webpack --mode development --progress",
     "build": "npm run clean && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
     "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
@@ -42,6 +41,7 @@
     "babel-preset-env": "^1.7.0",
     "circular-dependency-plugin": "^5.0.2",
     "install": "^0.12.1",
+    "prettier": "1.13.7",
     "raw-loader": "^0.5.1",
     "rimraf": "^2.6.2",
     "size-plugin": "^1.0.1",

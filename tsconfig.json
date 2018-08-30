@@ -15,6 +15,7 @@
     "noUnusedParameters": true,
     "alwaysStrict": true,
     "target": "es5",
+    "experimentalDecorators": true,
     "typeRoots": ["node_modules/@types"],
     "lib": ["es2017", "dom"],
     "plugins": []

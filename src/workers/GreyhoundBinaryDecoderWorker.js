@@ -47,7 +47,13 @@ let decompress = function(schema, input, numPoints) {
     if (f.type === 'floating') x.addFieldFloating(f.size);
     else if (f.type === 'unsigned') x.addFieldUnsigned(f.size);
     else if (f.type === 'signed') x.addFieldSigned(f.size);
-    else throw new Error('Unrecognized field desc:', f);
+    else {
+      if (PRODUCTION) {
+        throw new Error();
+      } else {
+        throw new Error('Unrecognized field desc:', f);
+      }
+    }
   });
 
   let out = Module._malloc(numPoints * pointSize);

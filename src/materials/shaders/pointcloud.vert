@@ -1,5 +1,5 @@
-precision mediump float;
-precision mediump int;
+precision highp float;
+precision highp int;
 
 #define max_clip_boxes 30
 
@@ -392,8 +392,8 @@ void main() {
 	#elif defined color_type_height
 		vColor = getElevation();
 	#elif defined color_type_rgb_height
-	vec3 cHeight = getElevation();
-	vColor = (1.0 - transition) * getRGB() + transition * cHeight;
+		vec3 cHeight = getElevation();
+		vColor = (1.0 - transition) * getRGB() + transition * cHeight;
 	#elif defined color_type_depth
 		float linearDepth = -mvPosition.z ;
 		float expDepth = (gl_Position.z / gl_Position.w) * 0.5 + 0.5;
