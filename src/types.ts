@@ -28,7 +28,7 @@ export interface IVisibilityUpdateResult {
 
 export interface IPotree {
   pointBudget: number;
-  maxNodesLoading: number;
+  maxNumNodesLoading: number;
   lru: LRU;
 
   loadPointCloud(url: string, getUrl: GetUrlFn): Promise<PointCloudOctree>;

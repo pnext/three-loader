@@ -1,6 +1,5 @@
-
-precision mediump float;
-precision mediump int;
+precision highp float;
+precision highp int;
 
 #if defined paraboloid_point_shape
 	#extension GL_EXT_frag_depth : enable
@@ -35,7 +34,6 @@ varying vec3	vNormal;
 float specularStrength = 1.0;
 
 void main() {
-
 	vec3 color = vColor;
 	float depth = gl_FragCoord.z;
 
@@ -212,8 +210,8 @@ void main() {
 		gl_FragDepthEXT = depth;
 		
 		#if defined(color_type_depth)
-			color.r = linearDepth;
-			color.g = expDepth;
+			gl_FragColor.r = linearDepth;
+			gl_FragColor.g = expDepth;
 		#endif
 		
 		#if defined(use_edl)

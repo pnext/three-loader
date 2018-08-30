@@ -5,6 +5,5 @@ export * from './point-cloud-octree-geometry';
 export * from './point-cloud-octree';
 export * from './point-cloud-tree';
 export * from './potree';
-export * from './profile';
 export * from './types';
 export * from './version';
