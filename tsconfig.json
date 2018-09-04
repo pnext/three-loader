@@ -4,7 +4,7 @@
     "baseUrl": "./src/",
     "sourceMap": true,
     "declaration": true,
-    "declarationDir": "declarations",
+    "declarationDir": "build/declarations",
     "module": "es2015",
     "moduleResolution": "node",
     "strict": true,
