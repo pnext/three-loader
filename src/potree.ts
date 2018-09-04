@@ -1,4 +1,5 @@
 import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, WebGLRenderer } from 'three';
+import { DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING } from './constants';
 import { FEATURES } from './features';
 import { GetUrlFn, loadPOC } from './loading';
 import { ClipMode } from './materials/clipping';
@@ -20,11 +21,9 @@ export class QueueItem {
   ) {}
 }
 
-const MAX_LOADS_TO_GPU = 2;
-
 export class Potree implements IPotree {
-  private _pointBudget: number = 1_000_000;
-  maxNumNodesLoading: number = 5;
+  private _pointBudget: number = DEFAULT_POINT_BUDGET;
+  maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
@@ -41,6 +40,9 @@ export class Potree implements IPotree {
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
+      if (pointCloud.disposed) {
+        continue;
+      }
 
       pointCloud.updateMaterial(pointCloud.material, pointCloud.visibleNodes, camera, renderer);
       pointCloud.updateVisibleBounds();
@@ -193,7 +195,7 @@ export class Potree implements IPotree {
       const screenPixelRadius = radius * projFactor;
 
       // Don't add the node if it'll be too small on the screen.
-      if (screenPixelRadius < pointCloud.minimumNodePixelSize) {
+      if (screenPixelRadius < pointCloud.minNodePixelSize) {
         continue;
       }
 

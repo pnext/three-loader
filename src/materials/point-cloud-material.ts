@@ -8,6 +8,13 @@ import {
   Texture,
   VertexColors,
 } from 'three';
+import {
+  DEFAULT_MAX_POINT_SIZE,
+  DEFAULT_MIN_POINT_SIZE,
+  DEFAULT_RGB_BRIGHTNESS,
+  DEFAULT_RGB_CONTRAST,
+  DEFAULT_RGB_GAMMA,
+} from '../constants';
 import { DEFAULT_CLASSIFICATION } from './classification';
 import { ClipMode, IClipBox } from './clipping';
 import { PointColorType, PointShape, PointSizeType, TreeType } from './enums';
@@ -25,10 +32,6 @@ export interface IPointCloudMaterialParameters {
   maxSize: number;
   treeType: TreeType;
 }
-
-const DEFAULT_RGB_GAMMA = 1;
-const DEFAULT_RGB_CONTRAST = 0;
-const DEFAULT_RGB_BRIGHTNESS = 0;
 
 export interface IPointCloudMaterialUniforms {
   bbSize: IUniform<[number, number, number]>;
@@ -122,8 +125,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
   readonly visibleNodesTexture: Texture;
+
   private _gradient = SPECTRAL;
   private gradientTexture = generateGradientTexture(this._gradient);
+
   private _classification: IClassification = DEFAULT_CLASSIFICATION;
   private classificationTexture: Texture = generateClassificationTexture(this._classification);
 
@@ -147,8 +152,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     intensityRange: makeUniform('fv', [0, 65000] as [number, number]),
     isLeafNode: makeUniform('b', 0),
     level: makeUniform('f', 0.0),
-    maxSize: makeUniform('f', 50.0),
-    minSize: makeUniform('f', 2.0),
+    maxSize: makeUniform('f', DEFAULT_MAX_POINT_SIZE),
+    minSize: makeUniform('f', DEFAULT_MIN_POINT_SIZE),
     near: makeUniform('f', 0.1),
     octreeSize: makeUniform('f', 0),
     opacity: makeUniform('f', 1.0),
@@ -175,71 +180,42 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   @uniform('bbSize', true) bbSize!: [number, number, number]; // prettier-ignore
   @uniform('depthMap', true) depthMap!: Texture | null; // prettier-ignore
-  @uniform('far')
-  far!: number;
-  @uniform('fov')
-  fov!: number;
-  @uniform('heightMax')
-  heightMax!: number;
-  @uniform('heightMin')
-  heightMin!: number;
-  @uniform('intensityBrightness')
-  intensityBrightness!: number;
-  @uniform('intensityContrast')
-  intensityContrast!: number;
-  @uniform('intensityGamma')
-  intensityGamma!: number;
-  @uniform('intensityRange')
-  intensityRange!: [number, number];
-  @uniform('maxSize')
-  maxSize!: number;
-  @uniform('minSize')
-  minSize!: number;
-  @uniform('near')
-  near!: number;
+  @uniform('far') far!: number; // prettier-ignore
+  @uniform('fov') fov!: number; // prettier-ignore
+  @uniform('heightMax') heightMax!: number; // prettier-ignore
+  @uniform('heightMin') heightMin!: number; // prettier-ignore
+  @uniform('intensityBrightness') intensityBrightness!: number; // prettier-ignore
+  @uniform('intensityContrast') intensityContrast!: number; // prettier-ignore
+  @uniform('intensityGamma') intensityGamma!: number; // prettier-ignore
+  @uniform('intensityRange') intensityRange!: [number, number]; // prettier-ignore
+  @uniform('maxSize') maxSize!: number; // prettier-ignore
+  @uniform('minSize') minSize!: number; // prettier-ignore
+  @uniform('near') near!: number; // prettier-ignore
   @uniform('opacity', true) opacity!: number; // prettier-ignore
   @uniform('rgbBrightness', true) rgbBrightness!: number; // prettier-ignore
   @uniform('rgbContrast', true) rgbContrast!: number; // prettier-ignore
   @uniform('rgbGamma', true) rgbGamma!: number; // prettier-ignore
-  @uniform('screenHeight')
-  screenHeight!: number;
-  @uniform('screenWidth')
-  screenWidth!: number;
+  @uniform('screenHeight') screenHeight!: number; // prettier-ignore
+  @uniform('screenWidth') screenWidth!: number; // prettier-ignore
   @uniform('size', true) size!: number; // prettier-ignore
-  @uniform('spacing')
-  spacing!: number;
-  @uniform('transition')
-  transition!: number;
+  @uniform('spacing') spacing!: number; // prettier-ignore
+  @uniform('transition') transition!: number; // prettier-ignore
   @uniform('uColor', true) color!: Color; // prettier-ignore
-  @uniform('wClassification')
-  weightClassification!: number;
-  @uniform('wElevation')
-  weightElevation!: number;
-  @uniform('wIntensity')
-  weightIntensity!: number;
-  @uniform('wReturnNumber')
-  weightReturnNumber!: number;
-  @uniform('wRGB')
-  weightRGB!: number;
-  @uniform('wSourceID')
-  weightSourceID!: number;
+  @uniform('wClassification') weightClassification!: number; // prettier-ignore
+  @uniform('wElevation') weightElevation!: number; // prettier-ignore
+  @uniform('wIntensity') weightIntensity!: number; // prettier-ignore
+  @uniform('wReturnNumber') weightReturnNumber!: number; // prettier-ignore
+  @uniform('wRGB') weightRGB!: number; // prettier-ignore
+  @uniform('wSourceID') weightSourceID!: number; // prettier-ignore
 
-  @requiresShaderUpdate()
-  useClipBox: boolean = false;
-  @requiresShaderUpdate()
-  weighted: boolean = false;
-  @requiresShaderUpdate()
-  pointColorType: PointColorType = PointColorType.RGB;
-  @requiresShaderUpdate()
-  pointSizeType: PointSizeType = PointSizeType.ADAPTIVE;
-  @requiresShaderUpdate()
-  clipMode: ClipMode = ClipMode.DISABLED;
-  @requiresShaderUpdate()
-  useEDL: boolean = false;
-  @requiresShaderUpdate()
-  shape: PointShape = PointShape.SQUARE;
-  @requiresShaderUpdate()
-  treeType: TreeType = TreeType.OCTREE;
+  @requiresShaderUpdate() useClipBox: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() weighted: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() pointColorType: PointColorType = PointColorType.RGB; // prettier-ignore
+  @requiresShaderUpdate() pointSizeType: PointSizeType = PointSizeType.ADAPTIVE; // prettier-ignore
+  @requiresShaderUpdate() clipMode: ClipMode = ClipMode.DISABLED; // prettier-ignore
+  @requiresShaderUpdate() useEDL: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() shape: PointShape = PointShape.SQUARE; // prettier-ignore
+  @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE; // prettier-ignore
 
   attributes = {
     position: { type: 'fv', value: [] },

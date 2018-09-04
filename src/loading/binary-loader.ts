@@ -27,11 +27,20 @@ interface WorkerResponse {
   };
 }
 
+interface BinaryLoaderOptions {
+  getUrl?: GetUrlFn;
+  version: string;
+  boundingBox: Box3;
+  scale: number;
+}
+
 export class BinaryLoader {
   version: Version;
   boundingBox: Box3;
   scale: number;
   getUrl: GetUrlFn;
+  disposed: boolean = false;
+
   private workers: Worker[] = [];
 
   constructor({
@@ -39,12 +48,7 @@ export class BinaryLoader {
     version,
     boundingBox,
     scale,
-  }: {
-    getUrl?: GetUrlFn;
-    version: string;
-    boundingBox: Box3;
-    scale: number;
-  }) {
+  }: BinaryLoaderOptions) {
     if (typeof version === 'string') {
       this.version = new Version(version);
     } else {
@@ -56,9 +60,16 @@ export class BinaryLoader {
     this.scale = scale;
   }
 
-  load(node: PointCloudOctreeGeometryNode) {
-    if (node.loaded) {
-      return;
+  dispose(): void {
+    this.workers.forEach(worker => worker.terminate());
+    this.workers = [];
+
+    this.disposed = true;
+  }
+
+  load(node: PointCloudOctreeGeometryNode): Promise<void> {
+    if (node.loaded || this.disposed) {
+      return Promise.resolve();
     }
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
@@ -76,15 +87,12 @@ export class BinaryLoader {
     return url;
   }
 
-  private parse = (
-    node: PointCloudOctreeGeometryNode,
-    buffer: ArrayBuffer,
-    worker?: Worker,
-  ): void => {
-    if (!worker) {
-      this.getWorker().then(w => this.parse(node, buffer, w));
+  private parse(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer): void {
+    if (this.disposed) {
       return;
     }
+
+    const worker = this.getWorker();
 
     const pointAttributes = node.pcoGeometry.pointAttributes;
     const numPoints = buffer.byteLength / pointAttributes.byteSize;
@@ -94,6 +102,10 @@ export class BinaryLoader {
     }
 
     worker.onmessage = (e: WorkerResponse) => {
+      if (this.disposed) {
+        return;
+      }
+
       const data = e.data;
 
       const geometry = (node.geometry = node.geometry || new BufferGeometry());
@@ -125,27 +137,20 @@ export class BinaryLoader {
     };
 
     worker.postMessage(message, [message.buffer]);
-  };
-
-  private getNewWorker(): Promise<Worker> {
-    return new Promise<Worker>(resolve => {
-      const ctor = require('worker-loader?inline!../workers/binary-decoder-worker.js');
-      return resolve(new ctor());
-    });
   }
 
-  private getWorker(): Promise<Worker> {
-    const worker = this.workers.pop();
-    return worker ? Promise.resolve(worker) : this.getNewWorker();
+  private getWorker(): Worker {
+    let worker = this.workers.pop();
+    if (worker) {
+      return worker;
+    }
+
+    const ctor = require('worker-loader?inline!../workers/binary-decoder-worker.js');
+    return new ctor();
   }
 
   private releaseWorker(worker: Worker): void {
     this.workers.push(worker);
-    // worker.terminate();
-  }
-
-  private isAttribute(property: string, name: PointAttributeName): boolean {
-    return parseInt(property, 10) === name;
   }
 
   private getTightBoundingBox({ min, max }: { min: number[]; max: number[] }): Box3 {
@@ -192,5 +197,9 @@ export class BinaryLoader {
       const buffer = new Float32Array(numPoints * 3);
       geometry.addAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
     }
+  }
+
+  private isAttribute(property: string, name: PointAttributeName): boolean {
+    return parseInt(property, 10) === name;
   }
 }
