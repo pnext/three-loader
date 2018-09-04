@@ -1,0 +1,23 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "sourceMap": true,
+    "module": "es2015",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "alwaysStrict": true,
+    "target": "es5",
+    "experimentalDecorators": true,
+    "typeRoots": ["../node_modules/@types"],
+    "lib": ["es2017", "dom"],
+    "plugins": []
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["build", "node_modules"]
+}

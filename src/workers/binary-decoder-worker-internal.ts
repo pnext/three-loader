@@ -237,8 +237,8 @@ function decodeNormalOct16(attribute: IPointAttribute, ctx: Ctx): DecodedAttribu
     const bx = ctx.data.getUint8(ctx.currentOffset + j * ctx.pointAttributes.byteSize + 0);
     const by = ctx.data.getUint8(ctx.currentOffset + j * ctx.pointAttributes.byteSize + 1);
 
-    const u = bx / 255 * 2 - 1;
-    const v = by / 255 * 2 - 1;
+    const u = (bx / 255) * 2 - 1;
+    const v = (by / 255) * 2 - 1;
 
     let z = 1 - Math.abs(u) - Math.abs(v);
 

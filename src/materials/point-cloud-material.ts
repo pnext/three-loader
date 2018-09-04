@@ -175,42 +175,71 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   @uniform('bbSize', true) bbSize!: [number, number, number]; // prettier-ignore
   @uniform('depthMap', true) depthMap!: Texture | null; // prettier-ignore
-  @uniform('far') far!: number;
-  @uniform('fov') fov!: number;
-  @uniform('heightMax') heightMax!: number;
-  @uniform('heightMin') heightMin!: number;
-  @uniform('intensityBrightness') intensityBrightness!: number;
-  @uniform('intensityContrast') intensityContrast!: number;
-  @uniform('intensityGamma') intensityGamma!: number;
-  @uniform('intensityRange') intensityRange!: [number, number];
-  @uniform('maxSize') maxSize!: number;
-  @uniform('minSize') minSize!: number;
-  @uniform('near') near!: number;
+  @uniform('far')
+  far!: number;
+  @uniform('fov')
+  fov!: number;
+  @uniform('heightMax')
+  heightMax!: number;
+  @uniform('heightMin')
+  heightMin!: number;
+  @uniform('intensityBrightness')
+  intensityBrightness!: number;
+  @uniform('intensityContrast')
+  intensityContrast!: number;
+  @uniform('intensityGamma')
+  intensityGamma!: number;
+  @uniform('intensityRange')
+  intensityRange!: [number, number];
+  @uniform('maxSize')
+  maxSize!: number;
+  @uniform('minSize')
+  minSize!: number;
+  @uniform('near')
+  near!: number;
   @uniform('opacity', true) opacity!: number; // prettier-ignore
   @uniform('rgbBrightness', true) rgbBrightness!: number; // prettier-ignore
   @uniform('rgbContrast', true) rgbContrast!: number; // prettier-ignore
   @uniform('rgbGamma', true) rgbGamma!: number; // prettier-ignore
-  @uniform('screenHeight') screenHeight!: number;
-  @uniform('screenWidth') screenWidth!: number;
+  @uniform('screenHeight')
+  screenHeight!: number;
+  @uniform('screenWidth')
+  screenWidth!: number;
   @uniform('size', true) size!: number; // prettier-ignore
-  @uniform('spacing') spacing!: number;
-  @uniform('transition') transition!: number;
+  @uniform('spacing')
+  spacing!: number;
+  @uniform('transition')
+  transition!: number;
   @uniform('uColor', true) color!: Color; // prettier-ignore
-  @uniform('wClassification') weightClassification!: number;
-  @uniform('wElevation') weightElevation!: number;
-  @uniform('wIntensity') weightIntensity!: number;
-  @uniform('wReturnNumber') weightReturnNumber!: number;
-  @uniform('wRGB') weightRGB!: number;
-  @uniform('wSourceID') weightSourceID!: number;
+  @uniform('wClassification')
+  weightClassification!: number;
+  @uniform('wElevation')
+  weightElevation!: number;
+  @uniform('wIntensity')
+  weightIntensity!: number;
+  @uniform('wReturnNumber')
+  weightReturnNumber!: number;
+  @uniform('wRGB')
+  weightRGB!: number;
+  @uniform('wSourceID')
+  weightSourceID!: number;
 
-  @requiresShaderUpdate() useClipBox: boolean = false;
-  @requiresShaderUpdate() weighted: boolean = false;
-  @requiresShaderUpdate() pointColorType: PointColorType = PointColorType.RGB;
-  @requiresShaderUpdate() pointSizeType: PointSizeType = PointSizeType.ADAPTIVE;
-  @requiresShaderUpdate() clipMode: ClipMode = ClipMode.DISABLED;
-  @requiresShaderUpdate() useEDL: boolean = false;
-  @requiresShaderUpdate() shape: PointShape = PointShape.SQUARE;
-  @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE;
+  @requiresShaderUpdate()
+  useClipBox: boolean = false;
+  @requiresShaderUpdate()
+  weighted: boolean = false;
+  @requiresShaderUpdate()
+  pointColorType: PointColorType = PointColorType.RGB;
+  @requiresShaderUpdate()
+  pointSizeType: PointSizeType = PointSizeType.ADAPTIVE;
+  @requiresShaderUpdate()
+  clipMode: ClipMode = ClipMode.DISABLED;
+  @requiresShaderUpdate()
+  useEDL: boolean = false;
+  @requiresShaderUpdate()
+  shape: PointShape = PointShape.SQUARE;
+  @requiresShaderUpdate()
+  treeType: TreeType = TreeType.OCTREE;
 
   attributes = {
     position: { type: 'fv', value: [] },

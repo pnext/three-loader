@@ -40,11 +40,11 @@ export class BinaryLoader {
     boundingBox,
     scale,
   }: {
-      getUrl?: GetUrlFn;
-      version: string;
-      boundingBox: Box3;
-      scale: number;
-    }) {
+    getUrl?: GetUrlFn;
+    version: string;
+    boundingBox: Box3;
+    scale: number;
+  }) {
     if (typeof version === 'string') {
       this.version = new Version(version);
     } else {
