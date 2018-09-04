@@ -7,3 +7,13 @@ body,
   height: 100%;
   overflow: hidden;
 }
+
+.btn-container {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.btn-container button {
+  margin-right: 10px;
+}

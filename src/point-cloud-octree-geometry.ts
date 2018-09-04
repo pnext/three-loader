@@ -4,6 +4,8 @@ import { PointAttributes } from './point-attributes';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 
 export class PointCloudOctreeGeometry {
+  disposed: boolean = false;
+  needsUpdate: boolean = true;
   root!: PointCloudOctreeGeometryNode;
   octreeDir: string = '';
   hierarchyStepSize: number = -1;
@@ -14,7 +16,6 @@ export class PointCloudOctreeGeometry {
   pointAttributes: PointAttributes = new PointAttributes([]);
   projection: any = null;
   url: string | null = null;
-  needsUpdate: boolean = true;
 
   constructor(
     public loader: BinaryLoader,
@@ -22,4 +23,11 @@ export class PointCloudOctreeGeometry {
     public tightBoundingBox: Box3,
     public offset: Vector3,
   ) {}
+
+  dispose(): void {
+    this.loader.dispose();
+    this.root.traverse(node => node.dispose());
+
+    this.disposed = true;
+  }
 }

@@ -92,22 +92,26 @@ export class Viewer {
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
   load(fileName: string, baseUrl: string): Promise<PointCloudOctree> {
-    return this.potree
-      .loadPointCloud(
-        // The file name of the point cloud which is to be loaded.
-        fileName,
-        // Given the relative URL of a file, should return a full URL.
-        url => `${baseUrl}${url}`,
-      )
-      .then((pco: PointCloudOctree) => {
-        // Add the point cloud to the scene and to our list of
-        // point clouds. We will pass this list of point clouds to
-        // potree to tell it to update them.
-        this.scene.add(pco);
-        this.pointClouds.push(pco);
+    return this.potree.loadPointCloud(
+      // The file name of the point cloud which is to be loaded.
+      fileName,
+      // Given the relative URL of a file, should return a full URL.
+      url => `${baseUrl}${url}`,
+    );
+  }
 
-        return pco;
-      });
+  add(pco: PointCloudOctree): void {
+    this.scene.add(pco);
+    this.pointClouds.push(pco);
+  }
+
+  unload(): void {
+    this.pointClouds.forEach(pco => {
+      this.scene.remove(pco);
+      pco.dispose();
+    });
+
+    this.pointClouds = [];
   }
 
   /**

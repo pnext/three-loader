@@ -1,4 +1,5 @@
 import { Vector3 } from 'three';
+import { PointCloudOctree } from '../src';
 import { Viewer } from './viewer';
 
 require('./main.css');
@@ -10,20 +11,52 @@ document.body.appendChild(targetEl);
 const viewer = new Viewer();
 viewer.initialize(targetEl);
 
-viewer
-  .load(
-    'cloud.js',
-    'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-  )
-  .then(pco => {
-    const camera = viewer.camera;
-    camera.far = 1000;
-    camera.updateProjectionMatrix();
+let pointCloud: PointCloudOctree | undefined;
+let loaded: boolean = false;
 
-    camera.position.set(0, 0, 10);
-    camera.lookAt(new Vector3());
+const unloadBtn = document.createElement('button');
+unloadBtn.textContent = 'Unload';
+unloadBtn.addEventListener('click', () => {
+  if (!loaded) {
+    return;
+  }
 
-    pco.rotateX(-Math.PI / 2);
-    pco.material.size = 1.0;
-  })
-  .catch(err => console.error(err));
+  viewer.unload();
+  loaded = false;
+});
+
+const loadBtn = document.createElement('button');
+loadBtn.textContent = 'Load';
+loadBtn.addEventListener('click', () => {
+  if (loaded) {
+    return;
+  }
+
+  loaded = true;
+
+  viewer
+    .load(
+      'cloud.js',
+      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+    )
+    .then(pco => {
+      pointCloud = pco;
+      pointCloud.rotateX(-Math.PI / 2);
+      pointCloud.material.size = 1.0;
+
+      const camera = viewer.camera;
+      camera.far = 1000;
+      camera.updateProjectionMatrix();
+      camera.position.set(0, 0, 10);
+      camera.lookAt(new Vector3());
+
+      viewer.add(pco);
+    })
+    .catch(err => console.error(err));
+});
+
+const btnContainer = document.createElement('div');
+btnContainer.className = 'btn-container';
+document.body.appendChild(btnContainer);
+btnContainer.appendChild(unloadBtn);
+btnContainer.appendChild(loadBtn);

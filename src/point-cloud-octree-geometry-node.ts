@@ -62,6 +62,19 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     this.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
   }
 
+  dispose(): void {
+    if (!this.geometry || !this.parent) {
+      return;
+    }
+
+    this.geometry.dispose();
+    this.geometry = new BufferGeometry();
+    this.loaded = false;
+
+    this.oneTimeDisposeHandlers.forEach(handler => handler());
+    this.oneTimeDisposeHandlers = [];
+  }
+
   /**
    * Gets the url of the binary file for this node.
    */
@@ -124,36 +137,42 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     }
   }
 
-  load(): void {
-    if (
-      this.loading === true ||
-      this.loaded === true ||
-      this.pcoGeometry.numNodesLoading > this.pcoGeometry.maxNumNodesLoading
-    ) {
-      return;
+  load(): Promise<void> {
+    if (!this.canLoad()) {
+      return Promise.resolve();
     }
 
     this.loading = true;
     this.pcoGeometry.numNodesLoading++;
     this.pcoGeometry.needsUpdate = true;
 
-    if (this.pcoGeometry.loader.version.equalOrHigher('1.5')) {
-      if (this.level % this.pcoGeometry.hierarchyStepSize === 0 && this.hasChildren) {
-        this.loadHierachyThenPoints();
-      } else {
-        this.loadPoints();
-      }
+    if (
+      this.pcoGeometry.loader.version.equalOrHigher('1.5') &&
+      this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
+      this.hasChildren
+    ) {
+      return this.loadHierachyThenPoints();
     } else {
-      this.loadPoints();
+      return this.loadPoints();
     }
   }
 
-  loadPoints(): void {
-    this.pcoGeometry.loader.load(this);
-    this.pcoGeometry.needsUpdate = true;
+  private canLoad(): boolean {
+    return (
+      !this.loading &&
+      !this.loaded &&
+      !this.pcoGeometry.disposed &&
+      !this.pcoGeometry.loader.disposed &&
+      this.pcoGeometry.numNodesLoading < this.pcoGeometry.maxNumNodesLoading
+    );
   }
 
-  loadHierachyThenPoints(): Promise<any> {
+  private loadPoints(): Promise<void> {
+    this.pcoGeometry.needsUpdate = true;
+    return this.pcoGeometry.loader.load(this);
+  }
+
+  private loadHierachyThenPoints(): Promise<any> {
     if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
       return Promise.resolve();
     }
@@ -253,18 +272,5 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
     parentNode.addChild(node);
     nodes.set(name, node);
-  }
-
-  dispose(): void {
-    if (!this.geometry || !this.parent) {
-      return;
-    }
-
-    this.geometry.dispose();
-    this.geometry = new BufferGeometry();
-    this.loaded = false;
-
-    this.oneTimeDisposeHandlers.forEach(handler => handler());
-    this.oneTimeDisposeHandlers = [];
   }
 }

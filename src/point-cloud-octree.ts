@@ -20,6 +20,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
+import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
 import { ClipMode } from './materials/clipping';
 import { PointColorType, PointSizeType } from './materials/enums';
 import { PointCloudMaterial } from './materials/point-cloud-material';
@@ -47,13 +48,14 @@ const helperVec3 = new Vector3();
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
+  disposed: boolean = false;
   pcoGeometry: PointCloudOctreeGeometry;
   boundingBox: Box3;
   boundingSphere: Sphere;
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
-  minimumNodePixelSize: number = 50;
+  minNodePixelSize: number = DEFAULT_MIN_NODE_PIXEL_SIZE;
   root: IPointCloudTreeNode | null = null;
   boundingBoxNodes: Object3D[] = [];
   visibleNodes: PointCloudOctreeNode[] = [];
@@ -98,6 +100,27 @@ export class PointCloudOctree extends PointCloudTree {
     material.heightMax = max.z + 0.2 * bWidth;
   }
 
+  dispose(): void {
+    if (this.root) {
+      this.root.dispose();
+    }
+
+    this.pcoGeometry.dispose();
+    this.material.dispose();
+
+    this.visibleNodes = [];
+    this.visibleGeometry = [];
+    this.visibleNodeTextureOffsets.clear();
+
+    if (this.pickState) {
+      this.pickState.material.dispose();
+      this.pickState.renderTarget.dispose();
+      this.pickState = undefined;
+    }
+
+    this.disposed = false;
+  }
+
   get pointSizeType(): PointSizeType {
     return this.material.pointSizeType;
   }
@@ -106,7 +129,10 @@ export class PointCloudOctree extends PointCloudTree {
     this.material.pointSizeType = value;
   }
 
-  toTreeNode(geometryNode: PointCloudOctreeGeometryNode, parent?: PointCloudOctreeNode | null) {
+  toTreeNode(
+    geometryNode: PointCloudOctreeGeometryNode,
+    parent?: PointCloudOctreeNode | null,
+  ): PointCloudOctreeNode {
     const sceneNode = new Points(geometryNode.geometry, this.material);
     const node = new PointCloudOctreeNode(geometryNode, sceneNode);
     sceneNode.name = geometryNode.name;
