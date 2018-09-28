@@ -1,5 +1,5 @@
 {
-  "name": "@pix4d/three-potree-loader",
+  "name": "@pnext/three-loader",
   "private": false,
   "version": "0.0.8",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
@@ -8,10 +8,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Pix4D/three-potree-loader.git"
+    "url": "git+https://github.com/pnext/three-loader.git"
   },
   "bugs": {
-    "url": "https://github.com/Pix4D/three-potree-loader/issues"
+    "url": "https://github.com/pnext/three-loader/issues"
   },
   "license": "MIT",
   "main": "build/potree.js",
@@ -20,7 +20,7 @@
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
     "start:example": "webpack-dev-server --config webpack.config.example.js --mode development --progress",
-    "build": "npm run clean && webpack --mode production --progress --config webpack.config.prod.js",
+    "build": "npm run clean && npm run lint && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
     "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\""
   },
@@ -73,9 +73,9 @@
     "3d",
     "webgl",
     "geo",
-    "photogrammetry",
-    "pix4d"
+    "gis",
+    "photogrammetry"
   ],
-  "homepage": "https://github.com/Pix4D/three-potree-loader#readme",
+  "homepage": "https://github.com/pnext/three-loader#readme",
   "author": ""
 }

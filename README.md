@@ -1,15 +1,20 @@
 # README
 
-This project is based on the core/loading parts of Potree [Potree](http://potree.org/), converted to
-Typescript for usage directly in ThreeJS-based third party applications.
+This project is based on the core/loading parts of [Potree](http://potree.org/), converted to Typescript for usage directly in ThreeJS-based third-party applications.
 
-Suggestions for better/easier APIs or new features, as well as PRs, are very welcome!
+This project focuses solely on the loading of point clouds into ThreeJS applications and doesn't try to provide other things which are available in Potree: earth controls, measurement tools, elevation profiles, etc.
+
+If you have a need for such auxiliary components/tools, we would most definitely welcome contributions, potentially as part of another project under the PNext organization.
+
+And of course, suggestions for better/easier APIs or new features, as well as PRs, are very welcome too!
 
 # Usage
 
 ```typescript
-import { PointCloudOctree, Potree } from '@pix4d/three-potree-loader';
+import { Scene } from 'three';
+import { PointCloudOctree, Potree } from '@pnext/three-loader';
 
+const scene = new Scene();
 // Manages the necessary state for loading/updating one or more point clouds.
 const potree = new Potree();
 // Show at most 2 million points.
@@ -26,7 +31,7 @@ potree
   )
   .then(pco => {
     pointClouds.push(pco);
-    scene.add(pco);
+    scene.add(pco); // Add the loaded point cloud to your ThreeJS scene.
 
     // The point cloud comes with a material which can be customized directly.
     // Here we just set the size of the points.
@@ -47,12 +52,40 @@ function update() {
 
 You can play with a live example here: https://codesandbox.io/s/yw2p3446j9?autoresize=1&view=preview
 
+# Local Development
+
+To develop and contribute to the project, you need to start by cloning the repositry and then install all the dependencies with yarn:
+
+```bash
+> yarn
+```
+
+Once that is done you can start a development server by running:
+
+```bash
+> yarn start
+```
+
+You can also start the example application (`/example`) by running:
+
+```bash
+> yarn start:example
+```
+
+To create a production-ready build of the library which can be published to NPM, you can run the following command:
+
+```bash
+> yarn build
+```
+
 # Thank You!
 
 Thank you to Markus Schütz for his work on Potree, on which this project is based.
 
-# Work with us
+# Contributors
 
-We use this as part of our 3D model viewer at Pix4D (http://www.pix4d.com). If you would like to
-work with us on some awesome GIS and Photogrametry visualization and measurement/analysis tools,
-check our WebGL Web Developer job opening: https://pix4d.workable.com/j/654F8D2A74
+## Pix4D
+
+We use this as part of our online 3D model viewer (http://cloud.pix4d.com).
+
+## Georepublic
