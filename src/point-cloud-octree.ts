@@ -429,7 +429,7 @@ export class PointCloudOctree extends PointCloudTree {
 
     // RENDER
     renderer.setRenderTarget(pickState.renderTarget);
-    renderer.clearTarget(pickState.renderTarget, true, true, true);
+    renderer.clear(true, true, true);
 
     const halfPickWindow = (pickWindowSize - 1) / 2;
 
