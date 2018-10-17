@@ -27,8 +27,8 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  loadPointCloud(url: string, getUrl: GetUrlFn): Promise<PointCloudOctree> {
-    return loadPOC(url, getUrl).then(geometry => new PointCloudOctree(this, geometry));
+  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = fetch): Promise<PointCloudOctree> {
+    return loadPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
   updatePointClouds(

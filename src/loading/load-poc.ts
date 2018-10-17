@@ -10,7 +10,7 @@ import { createChildAABB } from '../utils/bounds';
 import { getIndexFromName } from '../utils/utils';
 import { Version } from '../version';
 import { BinaryLoader } from './binary-loader';
-import { GetUrlFn } from './types';
+import { GetUrlFn, XhrRequest } from './types';
 
 interface BoundingBoxData {
   lx: number;
@@ -46,15 +46,15 @@ interface POCJson {
  * @returns
  *    An observable which emits once when the first LOD of the point cloud is loaded.
  */
-export function loadPOC(url: string, getUrl: GetUrlFn): Promise<PointCloudOctreeGeometry> {
+export function loadPOC(url: string, getUrl: GetUrlFn, xhrRequest = fetch): Promise<PointCloudOctreeGeometry> {
   return Promise.resolve(getUrl(url)).then(transformedUrl => {
-    return fetch(transformedUrl, { mode: 'cors' })
+    return xhrRequest(transformedUrl, { mode: 'cors' })
       .then(res => res.json())
-      .then(parse(transformedUrl, getUrl));
+      .then(parse(transformedUrl, getUrl, xhrRequest));
   });
 }
 
-function parse(url: string, getUrl: GetUrlFn) {
+function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
   return (data: POCJson): PointCloudOctreeGeometry => {
     const { offset, boundingBox, tightBoundingBox } = getBoundingBoxes(data);
 
@@ -63,9 +63,10 @@ function parse(url: string, getUrl: GetUrlFn) {
       version: data.version,
       boundingBox,
       scale: data.scale,
+      xhrRequest
     });
 
-    const pco = new PointCloudOctreeGeometry(loader, boundingBox, tightBoundingBox, offset);
+    const pco = new PointCloudOctreeGeometry(loader, boundingBox, tightBoundingBox, offset, xhrRequest);
 
     pco.url = url;
     pco.needsUpdate = true;
