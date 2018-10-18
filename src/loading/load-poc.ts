@@ -87,7 +87,7 @@ function parse(url: string, getUrl: GetUrlFn) {
 
         pco.nodes = nodes;
         return pco;
-    };
+    });
   };
 }
 
