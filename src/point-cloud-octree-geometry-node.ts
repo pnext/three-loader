@@ -217,7 +217,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
       // From the last bit, all the way to the 8th one from the right.
       let mask = 1;
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 8 && offset + 1 < buffer.byteLength; i++) {
         if ((stackNodeData.children & mask) !== 0) {
           const nodeData = this.getNodeData(stackNodeData.name + i, offset, view);
 
@@ -228,10 +228,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
         }
 
         mask = mask * 2;
-      }
-
-      if (offset === buffer.byteLength) {
-        break;
       }
     }
 
