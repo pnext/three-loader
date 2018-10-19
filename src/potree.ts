@@ -1,8 +1,8 @@
 import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, WebGLRenderer } from 'three';
 import { DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING } from './constants';
 import { FEATURES } from './features';
-import {GetUrlFn, loadPOC} from './loading';
-import { ClipMode } from './materials/clipping';
+import { GetUrlFn, loadPOC } from './loading';
+import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
