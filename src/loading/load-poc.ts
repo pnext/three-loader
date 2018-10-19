@@ -55,7 +55,7 @@ export function loadPOC(url: string, getUrl: GetUrlFn, xhrRequest = fetch): Prom
 }
 
 function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
-  return (data: POCJson): PointCloudOctreeGeometry => {
+  return (data: POCJson): Promise<PointCloudOctreeGeometry> => {
     const { offset, boundingBox, tightBoundingBox } = getBoundingBoxes(data);
 
     const loader = new BinaryLoader({
@@ -68,9 +68,9 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
 
     const pco = new PointCloudOctreeGeometry(loader, boundingBox, tightBoundingBox, offset, xhrRequest);
 
+    pco.octreeDir = data.octreeDir.indexOf('http') === 0 ? data.octreeDir : `${url}/../${data.octreeDir}`;
     pco.url = url;
     pco.needsUpdate = true;
-    pco.octreeDir = data.octreeDir;
     pco.spacing = data.spacing;
     pco.hierarchyStepSize = data.hierarchyStepSize;
     pco.projection = data.projection;
@@ -81,15 +81,14 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
 
     const version = new Version(data.version);
 
-    loadRoot(pco, data, nodes, version);
+    return loadRoot(pco, data, nodes, version).then(() => {
 
-    if (version.upTo('1.4')) {
-      loadRemainingHierarchy(pco, data, nodes);
-    }
+        if (version.upTo('1.4'))
+            loadRemainingHierarchy(pco, data, nodes);
 
-    pco.nodes = nodes;
-
-    return pco;
+        pco.nodes = nodes;
+        return pco;
+    };
   };
 }
 
@@ -122,7 +121,7 @@ function loadRoot(
   data: POCJson,
   nodes: Record<string, PointCloudOctreeGeometryNode>,
   version: Version,
-): void {
+): Promise<void> {
   const name = 'r';
 
   const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox);
@@ -136,8 +135,8 @@ function loadRoot(
   }
 
   pco.root = root;
-  pco.root.load();
   nodes[name] = root;
+  return pco.root.load();
 }
 
 function loadRemainingHierarchy(
