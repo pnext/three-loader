@@ -77,10 +77,7 @@ export class BinaryLoader {
     }
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
-      .then(url => {
-          // @ts-ignore
-          return this.xhrRequest.bind()(url, { mode: 'cors' });
-      })
+      .then(url => this.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
       .then(buffer => this.parse(node, buffer));
   }

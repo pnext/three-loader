@@ -1,7 +1,7 @@
 import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, WebGLRenderer } from 'three';
 import { DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING } from './constants';
 import { FEATURES } from './features';
-import { GetUrlFn, loadPOC } from './loading';
+import {GetUrlFn, loadPOC} from './loading';
 import { ClipMode } from './materials/clipping';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
@@ -27,7 +27,8 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = fetch): Promise<PointCloudOctree> {
+  loadPointCloud(url: string, getUrl: GetUrlFn,
+      xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init)): Promise<PointCloudOctree> {
     return loadPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
