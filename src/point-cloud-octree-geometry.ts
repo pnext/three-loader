@@ -1,5 +1,5 @@
 import { Box3, Vector3 } from 'three';
-import { BinaryLoader } from './loading';
+import { BinaryLoader, XhrRequest } from './loading';
 import { PointAttributes } from './point-attributes';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 
@@ -22,6 +22,7 @@ export class PointCloudOctreeGeometry {
     public boundingBox: Box3,
     public tightBoundingBox: Box3,
     public offset: Vector3,
+    public xhrRequest: XhrRequest
   ) {}
 
   dispose(): void {

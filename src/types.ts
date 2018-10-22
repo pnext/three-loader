@@ -1,5 +1,5 @@
 import { Box3, PerspectiveCamera, Sphere, WebGLRenderer } from 'three';
-import { GetUrlFn } from './loading/types';
+import { GetUrlFn, XhrRequest } from './loading/types';
 import { PointCloudOctree } from './point-cloud-octree';
 import { LRU } from './utils/lru';
 
@@ -31,7 +31,7 @@ export interface IPotree {
   maxNumNodesLoading: number;
   lru: LRU;
 
-  loadPointCloud(url: string, getUrl: GetUrlFn): Promise<PointCloudOctree>;
+  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
