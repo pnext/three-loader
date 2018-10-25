@@ -530,6 +530,7 @@ export class PointCloudOctree extends PointCloudTree {
               point.dataset_normal = datasetNormal;
 
           } else if (property === 'indices') {
+              // TODO
           } else {
             if (values.itemSize === 1) {
               point[property] = values.array[hit.pIndex];
