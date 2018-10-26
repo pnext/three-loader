@@ -1,4 +1,4 @@
-import { Box3, PerspectiveCamera, Sphere, WebGLRenderer } from 'three';
+import { Box3, PerspectiveCamera, Sphere, Vector3, WebGLRenderer } from 'three';
 import { GetUrlFn, XhrRequest } from './loading/types';
 import { PointCloudOctree } from './point-cloud-octree';
 import { LRU } from './utils/lru';
@@ -38,4 +38,16 @@ export interface IPotree {
     camera: PerspectiveCamera,
     renderer: WebGLRenderer,
   ): IVisibilityUpdateResult;
+}
+
+export interface PickPoint {
+  position?: Vector3;
+  normal?: Vector3;
+  datasetNormal?: Vector3;
+  [property: string]: any;
+}
+
+export interface PointCloudHit {
+  pIndex: number;
+  pcIndex: number;
 }
