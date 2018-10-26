@@ -49,7 +49,7 @@ interface POCJson {
 export function loadPOC(
   url: string,
   getUrl: GetUrlFn,
-  xhrRequest,
+  xhrRequest: XhrRequest,
 ): Promise<PointCloudOctreeGeometry> {
   return Promise.resolve(getUrl(url)).then(transformedUrl => {
     return xhrRequest(transformedUrl, { mode: 'cors' })

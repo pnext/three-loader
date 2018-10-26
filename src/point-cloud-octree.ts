@@ -28,7 +28,7 @@ import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudTreeNode, IPotree } from './types';
+import { IPointCloudTreeNode, IPotree, PickPoint, PointCloudHit } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { clamp } from './utils/math';
 import { byLevelAndIndex } from './utils/utils';
@@ -374,7 +374,7 @@ export class PointCloudOctree extends PointCloudTree {
     camera: PerspectiveCamera,
     ray: Ray,
     params: Partial<PickParams> = {},
-  ) {
+  ): PickPoint | null {
     const pickWindowSize = params.pickWindowSize || 17;
 
     const width = Math.ceil(renderer.domElement.clientWidth);
@@ -462,7 +462,7 @@ export class PointCloudOctree extends PointCloudTree {
 
     // find closest hit inside pixelWindow boundaries
     let min = Number.MAX_VALUE;
-    let hit = null;
+    let hit: PointCloudHit | null = null;
     for (let u = 0; u < pickWindowSize; u++) {
       for (let v = 0; v < pickWindowSize; v++) {
         const offset = u + v * pickWindowSize;
@@ -483,69 +483,85 @@ export class PointCloudOctree extends PointCloudTree {
       }
     }
 
-    let point: any = null;
+    return this.getPickPoint(hit, nodes);
+  }
 
-    if (hit) {
-      point = {};
+  private getPickPoint(hit: PointCloudHit | null, nodes: PointCloudOctreeNode[]): PickPoint | null {
+    if (!hit) {
+      return null;
+    }
 
-      const node = nodes[hit.pcIndex];
-      const pc = node && node.sceneNode;
-      if (!pc) {
-        return null;
+    const point: PickPoint = {};
+
+    const points = nodes[hit.pcIndex] && nodes[hit.pcIndex].sceneNode;
+    if (!points) {
+      return null;
+    }
+
+    const attributes: BufferAttribute[] = (points.geometry as any).attributes;
+
+    for (const property in attributes) {
+      if (!attributes.hasOwnProperty(property)) {
+        continue;
       }
 
-      const attributes: BufferAttribute[] = (pc.geometry as any).attributes;
+      const values = attributes[property];
 
-      for (const property in attributes) {
-        if (attributes.hasOwnProperty(property)) {
-          const values = attributes[property];
-
-          // tslint:disable-next-line:prefer-switch
-          if (property === 'position') {
-            const positionArray = values.array;
-
-            // tslint:disable-next-line:no-shadowed-variable
-            const x = positionArray[3 * hit.pIndex];
-            // tslint:disable-next-line:no-shadowed-variable
-            const y = positionArray[3 * hit.pIndex + 1];
-            const z = positionArray[3 * hit.pIndex + 2];
-
-            point[property] = new Vector3(x, y, z).applyMatrix4(pc.matrixWorld);
-          } else if (property === 'normal') {
-            const normalsArray = values.array;
-
-            const x = normalsArray[3 * hit.pIndex];
-            const y = normalsArray[3 * hit.pIndex + 1];
-            const z = normalsArray[3 * hit.pIndex + 2];
-
-            const datasetNormal = new Vector3(x, y, z);
-            const normal = new Vector4(x, y, z, 0);
-
-            const m = new Matrix4();
-            m.getInverse(this.matrixWorld);
-            m.transpose();
-            normal.applyMatrix4(m);
-
-            point.normal = new Vector3(normal.x, normal.y, normal.z);
-            point.dataset_normal = datasetNormal;
-          } else if (property === 'indices') {
-            // TODO
-          } else {
-            if (values.itemSize === 1) {
-              point[property] = values.array[hit.pIndex];
-            } else {
-              const value = [];
-              for (let j = 0; j < values.itemSize; j++) {
-                value.push(values.array[values.itemSize * hit.pIndex + j]);
-              }
-              point[property] = value;
-            }
+      // tslint:disable-next-line:prefer-switch
+      if (property === 'position') {
+        this.addPositionToPickPoint(point, hit, values, points);
+      } else if (property === 'normal') {
+        this.addNormalToPickPoint(point, hit, values);
+      } else if (property === 'indices') {
+        // TODO
+      } else {
+        if (values.itemSize === 1) {
+          point[property] = values.array[hit.pIndex];
+        } else {
+          const value = [];
+          for (let j = 0; j < values.itemSize; j++) {
+            value.push(values.array[values.itemSize * hit.pIndex + j]);
           }
+          point[property] = value;
         }
       }
     }
 
     return point;
+  }
+
+  private addPositionToPickPoint(
+    point: PickPoint,
+    hit: PointCloudHit,
+    values: BufferAttribute,
+    points: Points,
+  ): void {
+    const x = values.array[3 * hit.pIndex];
+    const y = values.array[3 * hit.pIndex + 1];
+    const z = values.array[3 * hit.pIndex + 2];
+
+    point.position = new Vector3(x, y, z).applyMatrix4(points.matrixWorld);
+  }
+
+  private addNormalToPickPoint(
+    point: PickPoint,
+    hit: PointCloudHit,
+    values: BufferAttribute,
+  ): void {
+    const normalsArray = values.array;
+
+    const x = normalsArray[3 * hit.pIndex];
+    const y = normalsArray[3 * hit.pIndex + 1];
+    const z = normalsArray[3 * hit.pIndex + 2];
+
+    const normal = new Vector4(x, y, z, 0);
+    const m = new Matrix4();
+    m.getInverse(this.matrixWorld);
+    m.transpose();
+    normal.applyMatrix4(m);
+
+    point.normal = new Vector3(normal.x, normal.y, normal.z);
+    point.datasetNormal = new Vector3(x, y, z);
   }
 
   private getPickState() {
