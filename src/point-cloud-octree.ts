@@ -6,6 +6,7 @@ import {
   Geometry,
   LinearFilter,
   Material,
+  Matrix4,
   NearestFilter,
   NoBlending,
   Object3D,
@@ -16,14 +17,13 @@ import {
   Scene,
   Sphere,
   Vector3,
+  Vector4,
   WebGLProgram,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
 import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
-import { ClipMode } from './materials/clipping';
-import { PointColorType, PointSizeType } from './materials/enums';
-import { PointCloudMaterial } from './materials/point-cloud-material';
+import { ClipMode, PointCloudMaterial, PointColorType, PointSizeType } from './materials';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -500,17 +500,36 @@ export class PointCloudOctree extends PointCloudTree {
         if (attributes.hasOwnProperty(property)) {
           const values = attributes[property];
 
+          // tslint:disable-next-line:prefer-switch
           if (property === 'position') {
             const positionArray = values.array;
 
             // tslint:disable-next-line:no-shadowed-variable
-            const x = positionArray[3 * hit.pIndex + 0];
+            const x = positionArray[3 * hit.pIndex];
             // tslint:disable-next-line:no-shadowed-variable
             const y = positionArray[3 * hit.pIndex + 1];
             const z = positionArray[3 * hit.pIndex + 2];
 
             point[property] = new Vector3(x, y, z).applyMatrix4(pc.matrixWorld);
+          } else if (property === 'normal') {
+            const normalsArray = values.array;
+
+            const x = normalsArray[3 * hit.pIndex];
+            const y = normalsArray[3 * hit.pIndex + 1];
+            const z = normalsArray[3 * hit.pIndex + 2];
+
+            const datasetNormal = new Vector3(x, y, z);
+            const normal = new Vector4(x, y, z, 0);
+
+            const m = new Matrix4();
+            m.getInverse(this.matrixWorld);
+            m.transpose();
+            normal.applyMatrix4(m);
+
+            point.normal = new Vector3(normal.x, normal.y, normal.z);
+            point.dataset_normal = datasetNormal;
           } else if (property === 'indices') {
+            // TODO
           } else {
             if (values.itemSize === 1) {
               point[property] = values.array[hit.pIndex];

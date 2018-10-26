@@ -42,14 +42,14 @@ interface POCJson {
  * @param getUrl
  *    Function which receives the relative URL of a point cloud chunk file which is to be loaded
  *    and shoud return a new url (e.g. signed) in the form of a string or a promise.
- *
+ * @param xhrRequest An arrow function for a fetch request
  * @returns
  *    An observable which emits once when the first LOD of the point cloud is loaded.
  */
 export function loadPOC(
   url: string,
   getUrl: GetUrlFn,
-  xhrRequest = fetch,
+  xhrRequest,
 ): Promise<PointCloudOctreeGeometry> {
   return Promise.resolve(getUrl(url)).then(transformedUrl => {
     return xhrRequest(transformedUrl, { mode: 'cors' })
