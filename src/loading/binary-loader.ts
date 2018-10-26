@@ -50,7 +50,7 @@ export class BinaryLoader {
     version,
     boundingBox,
     scale,
-    xhrRequest
+    xhrRequest,
   }: BinaryLoaderOptions) {
     if (typeof version === 'string') {
       this.version = new Version(version);
@@ -144,7 +144,7 @@ export class BinaryLoader {
   }
 
   private getWorker(): Worker {
-    let worker = this.workers.pop();
+    const worker = this.workers.pop();
     if (worker) {
       return worker;
     }
