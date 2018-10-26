@@ -22,7 +22,7 @@ export class PointCloudOctreeGeometry {
     public boundingBox: Box3,
     public tightBoundingBox: Box3,
     public offset: Vector3,
-    public xhrRequest: XhrRequest
+    public xhrRequest: XhrRequest,
   ) {}
 
   dispose(): void {
