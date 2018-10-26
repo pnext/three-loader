@@ -46,11 +46,15 @@ interface POCJson {
  * @returns
  *    An observable which emits once when the first LOD of the point cloud is loaded.
  */
-export function loadPOC(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest): Promise<PointCloudOctreeGeometry> {
+export function loadPOC(
+  url: string,
+  getUrl: GetUrlFn,
+  xhrRequest,
+): Promise<PointCloudOctreeGeometry> {
   return Promise.resolve(getUrl(url)).then(transformedUrl => {
     return xhrRequest(transformedUrl, { mode: 'cors' })
-        .then(res => res.json())
-        .then(parse(transformedUrl, getUrl, xhrRequest));
+      .then(res => res.json())
+      .then(parse(transformedUrl, getUrl, xhrRequest));
   });
 }
 
@@ -63,12 +67,19 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
       version: data.version,
       boundingBox,
       scale: data.scale,
-      xhrRequest
+      xhrRequest,
     });
 
-    const pco = new PointCloudOctreeGeometry(loader, boundingBox, tightBoundingBox, offset, xhrRequest);
+    const pco = new PointCloudOctreeGeometry(
+      loader,
+      boundingBox,
+      tightBoundingBox,
+      offset,
+      xhrRequest,
+    );
 
-    pco.octreeDir = data.octreeDir.indexOf('http') === 0 ? data.octreeDir : `${url}/../${data.octreeDir}`;
+    pco.octreeDir =
+      data.octreeDir.indexOf('http') === 0 ? data.octreeDir : `${url}/../${data.octreeDir}`;
     pco.url = url;
     pco.needsUpdate = true;
     pco.spacing = data.spacing;
@@ -82,12 +93,12 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
     const version = new Version(data.version);
 
     return loadRoot(pco, data, nodes, version).then(() => {
+      if (version.upTo('1.4')) {
+        loadRemainingHierarchy(pco, data, nodes);
+      }
 
-        if (version.upTo('1.4'))
-            loadRemainingHierarchy(pco, data, nodes);
-
-        pco.nodes = nodes;
-        return pco;
+      pco.nodes = nodes;
+      return pco;
     });
   };
 }
