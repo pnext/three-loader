@@ -79,7 +79,7 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
     );
 
     pco.url = url;
-    pco.octreeDir = data.octreeDir;
+    pco.octreeDir = data.octreeDir.indexOf('http') === 0 ? data.octreeDir : `${url}/../${data.octreeDir}`;
     pco.needsUpdate = true;
     pco.spacing = data.spacing;
     pco.hierarchyStepSize = data.hierarchyStepSize;
