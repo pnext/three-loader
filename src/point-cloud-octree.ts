@@ -399,7 +399,7 @@ export class PointCloudOctree extends PointCloudTree {
 
     const pixelPos = helperVec3; // Use helper vector to prevent extra allocations.
     pixelPos
-      .addVectors(camera.position, ray.direction)
+      .addVectors(ray.origin, ray.direction)
       .project(camera)
       .addScalar(1)
       .multiplyScalar(0.5);
