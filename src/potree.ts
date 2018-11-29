@@ -1,5 +1,5 @@
 import {Box3, Camera, Frustum, Matrix4, OrthographicCamera, PerspectiveCamera, Vector3, WebGLRenderer} from 'three';
-import { DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING } from './constants';
+import {DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING, PERSPECTIVE_CAMERA} from './constants';
 import { FEATURES } from './features';
 import { GetUrlFn, loadPOC } from './loading';
 import { ClipMode } from './materials';
@@ -195,7 +195,7 @@ export class Potree implements IPotree {
 
       let projectionFactor = 0.0;
 
-      if (camera.type === 'PerspectiveCamera') {
+      if (camera.type === PERSPECTIVE_CAMERA) {
           const perspective = camera as PerspectiveCamera;
           const fov = (perspective.fov * Math.PI) / 180.0;
           const slope = Math.tan(fov / 2.0);
