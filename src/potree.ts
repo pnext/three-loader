@@ -1,5 +1,19 @@
-import {Box3, Camera, Frustum, Matrix4, OrthographicCamera, PerspectiveCamera, Vector3, WebGLRenderer} from 'three';
-import {DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING, PERSPECTIVE_CAMERA} from './constants';
+import {
+  Box3,
+  Camera,
+  Frustum,
+  Matrix4,
+  OrthographicCamera,
+  PerspectiveCamera,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
+import {
+  DEFAULT_POINT_BUDGET,
+  MAX_LOADS_TO_GPU,
+  MAX_NUM_NODES_LOADING,
+  PERSPECTIVE_CAMERA,
+} from './constants';
 import { FEATURES } from './features';
 import { GetUrlFn, loadPOC } from './loading';
 import { ClipMode } from './materials';
@@ -48,7 +62,12 @@ export class Potree implements IPotree {
         continue;
       }
 
-      pointCloud.updateMaterial(pointCloud.material, pointCloud.visibleNodes, camera as PerspectiveCamera, renderer);
+      pointCloud.updateMaterial(
+        pointCloud.material,
+        pointCloud.visibleNodes,
+        camera as PerspectiveCamera,
+        renderer,
+      );
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
     }
@@ -139,7 +158,7 @@ export class Potree implements IPotree {
         node,
         cameraPositions[pointCloudIndex],
         camera,
-        halfHeight
+        halfHeight,
       );
     } // end priority queue loop
 
@@ -180,7 +199,7 @@ export class Potree implements IPotree {
     node: IPointCloudTreeNode,
     cameraPosition: Vector3,
     camera: Camera,
-    halfHeight: number
+    halfHeight: number,
   ): void {
     const children = node.children;
     for (let i = 0; i < children.length; i++) {
@@ -196,13 +215,13 @@ export class Potree implements IPotree {
       let projectionFactor = 0.0;
 
       if (camera.type === PERSPECTIVE_CAMERA) {
-          const perspective = camera as PerspectiveCamera;
-          const fov = (perspective.fov * Math.PI) / 180.0;
-          const slope = Math.tan(fov / 2.0);
-          projectionFactor = halfHeight / (slope * distance);
+        const perspective = camera as PerspectiveCamera;
+        const fov = (perspective.fov * Math.PI) / 180.0;
+        const slope = Math.tan(fov / 2.0);
+        projectionFactor = halfHeight / (slope * distance);
       } else {
-          const orthographic = camera as OrthographicCamera;
-          projectionFactor = radius / orthographic.top;
+        const orthographic = camera as OrthographicCamera;
+        projectionFactor = radius / orthographic.top;
       }
 
       const screenPixelRadius = radius * projectionFactor;

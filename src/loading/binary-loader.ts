@@ -130,7 +130,7 @@ export class BinaryLoader {
 
       this.releaseWorker(worker);
 
-      this.callbacks.forEach((callback) => callback(node));
+      this.callbacks.forEach(callback => callback(node));
     };
 
     const message = {
