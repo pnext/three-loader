@@ -1,5 +1,5 @@
 {
-  "name": "@alejandrodecea/three-loader",
+  "name": "three-loader-fork",
   "private": false,
   "version": "0.0.12",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
