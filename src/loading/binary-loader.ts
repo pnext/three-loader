@@ -43,6 +43,7 @@ export class BinaryLoader {
   disposed: boolean = false;
   xhrRequest: XhrRequest;
 
+  private callbacks: ((node: PointCloudOctreeGeometryNode) => void)[];
   private workers: Worker[] = [];
 
   constructor({
@@ -62,6 +63,7 @@ export class BinaryLoader {
     this.getUrl = getUrl;
     this.boundingBox = boundingBox;
     this.scale = scale;
+    this.callbacks = [];
   }
 
   dispose(): void {
@@ -80,6 +82,14 @@ export class BinaryLoader {
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
       .then(buffer => this.parse(node, buffer));
+  }
+
+  public addNodeLoadedCallback(callback: (node: PointCloudOctreeGeometryNode) => void): void {
+    this.callbacks.push(callback);
+  }
+
+  public clearNodeLoadedCallbacks(): void {
+    this.callbacks = [];
   }
 
   private getNodeUrl(node: PointCloudOctreeGeometryNode): string {
@@ -127,6 +137,8 @@ export class BinaryLoader {
       node.pcoGeometry.needsUpdate = true;
 
       this.releaseWorker(worker);
+
+      this.callbacks.forEach((callback) => callback(node));
     };
 
     const message = {
