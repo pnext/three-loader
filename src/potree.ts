@@ -1,5 +1,5 @@
-import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, WebGLRenderer } from 'three';
-import { DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING } from './constants';
+import {Box3, Camera, Frustum, Matrix4, OrthographicCamera, PerspectiveCamera, Vector3, WebGLRenderer} from 'three';
+import {DEFAULT_POINT_BUDGET, MAX_LOADS_TO_GPU, MAX_NUM_NODES_LOADING, PERSPECTIVE_CAMERA} from './constants';
 import { FEATURES } from './features';
 import { GetUrlFn, loadPOC } from './loading';
 import { ClipMode } from './materials';
@@ -37,7 +37,7 @@ export class Potree implements IPotree {
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
-    camera: PerspectiveCamera,
+    camera: Camera,
     renderer: WebGLRenderer,
   ): IVisibilityUpdateResult {
     const result = this.updateVisibility(pointClouds, camera, renderer);
@@ -48,7 +48,7 @@ export class Potree implements IPotree {
         continue;
       }
 
-      pointCloud.updateMaterial(pointCloud.material, pointCloud.visibleNodes, camera, renderer);
+      pointCloud.updateMaterial(pointCloud.material, pointCloud.visibleNodes, camera as PerspectiveCamera, renderer);
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
     }
@@ -72,7 +72,7 @@ export class Potree implements IPotree {
 
   private updateVisibility(
     pointClouds: PointCloudOctree[],
-    camera: PerspectiveCamera,
+    camera: Camera,
     renderer: WebGLRenderer,
   ): IVisibilityUpdateResult {
     let numVisiblePoints = 0;
@@ -89,10 +89,6 @@ export class Potree implements IPotree {
 
     let loadedToGPUThisFrame = 0;
     let queueItem: QueueItem | undefined;
-
-    const halfHeight = 0.5 * renderer.getSize().height;
-    const fov = (camera.fov * Math.PI) / 180.0;
-    const fovSlope = Math.tan(fov / 2.0);
 
     while ((queueItem = priorityQueue.pop()) !== undefined) {
       let node = queueItem.node;
@@ -134,14 +130,16 @@ export class Potree implements IPotree {
         this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
       }
 
+      const halfHeight = 0.5 * renderer.getSize().height;
+
       this.updateChildVisibility(
         queueItem,
         priorityQueue,
         pointCloud,
         node,
         cameraPositions[pointCloudIndex],
-        halfHeight,
-        fovSlope,
+        camera,
+        halfHeight
       );
     } // end priority queue loop
 
@@ -181,8 +179,8 @@ export class Potree implements IPotree {
     pointCloud: PointCloudOctree,
     node: IPointCloudTreeNode,
     cameraPosition: Vector3,
-    halfHeight: number,
-    fovSlope: number,
+    camera: Camera,
+    halfHeight: number
   ): void {
     const children = node.children;
     for (let i = 0; i < children.length; i++) {
@@ -195,8 +193,19 @@ export class Potree implements IPotree {
       const distance = sphere.center.distanceTo(cameraPosition);
       const radius = sphere.radius;
 
-      const projFactor = halfHeight / (fovSlope * distance);
-      const screenPixelRadius = radius * projFactor;
+      let projectionFactor = 0.0;
+
+      if (camera.type === PERSPECTIVE_CAMERA) {
+          const perspective = camera as PerspectiveCamera;
+          const fov = (perspective.fov * Math.PI) / 180.0;
+          const slope = Math.tan(fov / 2.0);
+          projectionFactor = halfHeight / (slope * distance);
+      } else {
+          const orthographic = camera as OrthographicCamera;
+          projectionFactor = radius / orthographic.top;
+      }
+
+      const screenPixelRadius = radius * projectionFactor;
 
       // Don't add the node if it'll be too small on the screen.
       if (screenPixelRadius < pointCloud.minNodePixelSize) {
@@ -261,7 +270,7 @@ export class Potree implements IPotree {
 
     return (
       pointClouds: PointCloudOctree[],
-      camera: PerspectiveCamera,
+      camera: Camera,
     ): {
       frustums: Frustum[];
       cameraPositions: Vector3[];
