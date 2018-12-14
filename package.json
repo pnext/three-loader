@@ -1,10 +1,11 @@
 {
-  "name": "@pnext/three-loader",
+  "name": "@alejandrodecea/three-loader",
   "private": false,
   "version": "0.0.12",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": [
-    "Hugo Campos <hugo.campos@pix4d.com>"
+    "Hugo Campos <hugo.campos@pix4d.com>",
+    "Alejandro de Cea <alejandrodecea@gmail.com>"
   ],
   "repository": {
     "type": "git",
