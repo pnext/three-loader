@@ -42,6 +42,7 @@ export class BinaryLoader {
   getUrl: GetUrlFn;
   disposed: boolean = false;
   xhrRequest: XhrRequest;
+  callbacks: ((node: PointCloudOctreeGeometryNode) => void)[];
 
   private workers: Worker[] = [];
 
@@ -62,6 +63,7 @@ export class BinaryLoader {
     this.getUrl = getUrl;
     this.boundingBox = boundingBox;
     this.scale = scale;
+    this.callbacks = [];
   }
 
   dispose(): void {
@@ -127,6 +129,8 @@ export class BinaryLoader {
       node.pcoGeometry.needsUpdate = true;
 
       this.releaseWorker(worker);
+
+      this.callbacks.forEach(callback => callback(node));
     };
 
     const message = {
