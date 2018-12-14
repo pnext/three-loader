@@ -31,4 +31,12 @@ export class PointCloudOctreeGeometry {
 
     this.disposed = true;
   }
+
+  addNodeLoadedCallback(callback: (node: PointCloudOctreeGeometryNode) => void): void {
+    this.loader.callbacks.push(callback);
+  }
+
+  clearNodeLoadedCallbacks(): void {
+    this.loader.callbacks = [];
+  }
 }

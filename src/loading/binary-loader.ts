@@ -42,8 +42,8 @@ export class BinaryLoader {
   getUrl: GetUrlFn;
   disposed: boolean = false;
   xhrRequest: XhrRequest;
+  callbacks: ((node: PointCloudOctreeGeometryNode) => void)[];
 
-  private callbacks: ((node: PointCloudOctreeGeometryNode) => void)[];
   private workers: Worker[] = [];
 
   constructor({
@@ -82,14 +82,6 @@ export class BinaryLoader {
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
       .then(buffer => this.parse(node, buffer));
-  }
-
-  public addNodeLoadedCallback(callback: (node: PointCloudOctreeGeometryNode) => void): void {
-    this.callbacks.push(callback);
-  }
-
-  public clearNodeLoadedCallbacks(): void {
-    this.callbacks = [];
   }
 
   private getNodeUrl(node: PointCloudOctreeGeometryNode): string {
