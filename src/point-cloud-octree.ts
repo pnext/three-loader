@@ -59,7 +59,7 @@ export class PointCloudOctree extends PointCloudTree {
   root: IPointCloudTreeNode | null = null;
   boundingBoxNodes: Object3D[] = [];
   visibleNodes: PointCloudOctreeNode[] = [];
-  visibleGeometry: PointCloudOctreeGeometry[] = [];
+  visibleGeometry: PointCloudOctreeGeometryNode[] = [];
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
   private visibleBounds: Box3 = new Box3();
@@ -611,6 +611,7 @@ export class PointCloudOctree extends PointCloudTree {
   }
 
   get progress() {
-    return this.visibleNodes.length / this.visibleGeometry.length;
+    return this.visibleGeometry.length === 0 ? 0 :
+        this.visibleNodes.length / this.visibleGeometry.length;
   }
 }
