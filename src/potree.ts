@@ -97,7 +97,6 @@ export class Potree implements IPotree {
     let numVisiblePoints = 0;
 
     const visibleNodes: PointCloudOctreeNode[] = [];
-    const visibleGeometry: PointCloudOctreeGeometryNode[] = [];
     const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
 
     // calculate object space frustum and cam pos and setup priority queue
@@ -141,12 +140,13 @@ export class Potree implements IPotree {
           loadedToGPUThisFrame++;
         } else {
           unloadedGeometry.push(node);
-          visibleGeometry.push(node);
+          pointCloud.visibleGeometry.push(node);
         }
       }
 
       if (isTreeNode(node)) {
         this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
+        pointCloud.visibleGeometry.push(node.geometryNode);
       }
 
       const halfHeight = 0.5 * renderer.getSize().height;
