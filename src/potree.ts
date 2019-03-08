@@ -5,6 +5,7 @@ import {
   Matrix4,
   OrthographicCamera,
   PerspectiveCamera,
+  Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -37,6 +38,8 @@ export class QueueItem {
 
 export class Potree implements IPotree {
   private _pointBudget: number = DEFAULT_POINT_BUDGET;
+  private _rendererSize: Vector2 = new Vector2();
+
   maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
@@ -97,7 +100,6 @@ export class Potree implements IPotree {
     let numVisiblePoints = 0;
 
     const visibleNodes: PointCloudOctreeNode[] = [];
-    const visibleGeometry: PointCloudOctreeGeometryNode[] = [];
     const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
 
     // calculate object space frustum and cam pos and setup priority queue
@@ -141,15 +143,16 @@ export class Potree implements IPotree {
           loadedToGPUThisFrame++;
         } else {
           unloadedGeometry.push(node);
-          visibleGeometry.push(node);
+          pointCloud.visibleGeometry.push(node);
         }
       }
 
       if (isTreeNode(node)) {
         this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
+        pointCloud.visibleGeometry.push(node.geometryNode);
       }
 
-      const halfHeight = 0.5 * renderer.getSize().height;
+      const halfHeight = 0.5 * renderer.getSize(this._rendererSize).height;
 
       this.updateChildVisibility(
         queueItem,

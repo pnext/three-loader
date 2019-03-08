@@ -25,7 +25,7 @@ export class Viewer {
   /**
    * Controls which update the position of the camera.
    */
-  cameraControls!: THREE.OrbitControls;
+  cameraControls!: any;
   /**
    * Out potree instance which handles updating point clouds, keeps track of loaded nodes, etc.
    */
