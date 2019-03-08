@@ -147,7 +147,7 @@ export class DEMNode {
     return h;
   }
 
-  traverse(handler: ((node: DEMNode, level: number) => void), level = 0) {
+  traverse(handler: (node: DEMNode, level: number) => void, level = 0) {
     handler(this, level);
 
     this.children.filter(c => c !== undefined).forEach(child => child.traverse(handler, level + 1));

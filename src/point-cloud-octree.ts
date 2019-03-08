@@ -444,7 +444,7 @@ export class PointCloudOctree extends PointCloudTree {
     renderer.state.buffers.depth.setMask(pickMaterial.depthWrite ? 1 : 0);
     renderer.state.setBlending(NoBlending);
 
-    renderer.render(pickState.scene, camera, pickState.renderTarget);
+    renderer.render(pickState.scene, camera);
 
     const x = Math.floor(clamp(pixelPos.x - halfPickWindow, 0, width));
     const y = Math.floor(clamp(pixelPos.y - halfPickWindow, 0, height));
@@ -611,7 +611,8 @@ export class PointCloudOctree extends PointCloudTree {
   }
 
   get progress() {
-    return this.visibleGeometry.length === 0 ? 0 :
-        this.visibleNodes.length / this.visibleGeometry.length;
+    return this.visibleGeometry.length === 0
+      ? 0
+      : this.visibleNodes.length / this.visibleGeometry.length;
   }
 }

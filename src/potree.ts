@@ -5,6 +5,7 @@ import {
   Matrix4,
   OrthographicCamera,
   PerspectiveCamera,
+  Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -37,6 +38,8 @@ export class QueueItem {
 
 export class Potree implements IPotree {
   private _pointBudget: number = DEFAULT_POINT_BUDGET;
+  private _rendererSize: Vector2 = new Vector2();
+
   maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
@@ -149,7 +152,7 @@ export class Potree implements IPotree {
         pointCloud.visibleGeometry.push(node.geometryNode);
       }
 
-      const halfHeight = 0.5 * renderer.getSize().height;
+      const halfHeight = 0.5 * renderer.getSize(this._rendererSize).height;
 
       this.updateChildVisibility(
         queueItem,

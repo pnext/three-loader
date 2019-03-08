@@ -13,10 +13,12 @@ import { Version } from '../version';
 import { CustomArrayView } from './custom-array-view';
 
 // IE11 does not have Math.sign(), this has been adapted from CoreJS es6.math.sign.js for TypeScript
-const mathSign = Math.sign || function(x: number): number {
-  // tslint:disable-next-line:triple-equals
-  return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
-};
+const mathSign =
+  Math.sign ||
+  function(x: number): number {
+    // tslint:disable-next-line:triple-equals
+    return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
+  };
 
 interface DecodedAttribute {
   buffer: ArrayBuffer;

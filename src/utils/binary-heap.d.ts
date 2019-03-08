@@ -1,5 +1,5 @@
 export class BinaryHeap<T> {
-  constructor(scoreFunction: ((node: T) => number));
+  constructor(scoreFunction: (node: T) => number);
   push(node: T): void;
   pop(): T | undefined;
   remove(node: T): void;
