@@ -46,7 +46,9 @@ uniform float level;
 uniform float vnStart;
 uniform bool isLeafNode;
 
+uniform float normalsFilteringThreshold;
 uniform vec2 intensityRange;
+uniform float alphaAttenuation;
 uniform float intensityGamma;
 uniform float intensityContrast;
 uniform float intensityBrightness;
@@ -71,7 +73,7 @@ varying vec3	vColor;
 varying float	vLinearDepth;
 varying float	vLogDepth;
 varying vec3	vViewPosition;
-varying float vRadius;
+varying float   vRadius;
 varying vec3	vWorldPosition;
 varying vec3	vNormal;
 
@@ -354,10 +356,9 @@ void main() {
 	vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 	vViewPosition = mvPosition.xyz;
 	gl_Position = projectionMatrix * mvPosition;
-	vOpacity = opacity;
 	vLinearDepth = gl_Position.w;
-	vLogDepth = log2(-mvPosition.z);
 	vNormal = normalize(normalMatrix * normal);
+	vLogDepth = log2(-mvPosition.z);
 
 	// ---------------------
 	// POINT SIZE
@@ -382,6 +383,26 @@ void main() {
 	vRadius = pointSize / projFactor;
 	
 	gl_PointSize = pointSize;
+
+	// ---------------------
+    // OPACITY
+    // ---------------------
+
+    #if defined attenuated_opacity
+        vOpacity = opacity * exp(-length(-vViewPosition.xyz) / alphaAttenuation);
+    #else //defined fixed_opacity
+        vOpacity = opacity;
+    #endif
+
+    // ---------------------
+    // FILTERING
+    // ---------------------
+
+    #if defined use_normals_filtering
+        if(abs((modelViewMatrix * vec4(normal, 0.0)).z) > normalsFilteringThreshold){
+            gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+        }
+    #endif
 
 	// ---------------------
 	// POINT COLOR
@@ -432,9 +453,11 @@ void main() {
 			return;
 		}
 	#endif
-	
-	// CLIPPING
-	
+
+	// ---------------------
+    // CLIPPING
+    // ---------------------
+
 	#if defined use_clip_box
 		bool insideAny = false;
 		for (int i = 0; i < MAX_CLIP_BOXES; i++) {

@@ -1,30 +1,17 @@
+import {AdditiveBlending, AlwaysDepth, Color, NearestFilter, NoBlending, RawShaderMaterial, Texture, VertexColors, } from 'three';
 import {
-  AdditiveBlending,
-  AlwaysDepth,
-  Color,
-  NearestFilter,
-  NoBlending,
-  RawShaderMaterial,
-  Texture,
-  VertexColors,
-} from 'three';
-import {
-  DEFAULT_MAX_POINT_SIZE,
-  DEFAULT_MIN_POINT_SIZE,
-  DEFAULT_RGB_BRIGHTNESS,
-  DEFAULT_RGB_CONTRAST,
-  DEFAULT_RGB_GAMMA,
+    DEFAULT_MAX_POINT_SIZE,
+    DEFAULT_MIN_POINT_SIZE,
+    DEFAULT_RGB_BRIGHTNESS,
+    DEFAULT_RGB_CONTRAST,
+    DEFAULT_RGB_GAMMA,
 } from '../constants';
-import { DEFAULT_CLASSIFICATION } from './classification';
-import { ClipMode, IClipBox } from './clipping';
-import { PointColorType, PointShape, PointSizeType, TreeType } from './enums';
-import { SPECTRAL } from './gradients/spectral';
-import {
-  generateClassificationTexture,
-  generateDataTexture,
-  generateGradientTexture,
-} from './texture-generation';
-import { IClassification, IGradient, IUniform } from './types';
+import {DEFAULT_CLASSIFICATION} from './classification';
+import {ClipMode, IClipBox} from './clipping';
+import {PointOpacityType, PointColorType, PointShape, PointSizeType, TreeType} from './enums';
+import {SPECTRAL} from './gradients/spectral';
+import {generateClassificationTexture, generateDataTexture, generateGradientTexture, } from './texture-generation';
+import {IClassification, IGradient, IUniform} from './types';
 
 export interface IPointCloudMaterialParameters {
   size: number;
@@ -76,6 +63,8 @@ export interface IPointCloudMaterialUniforms {
   wReturnNumber: IUniform<number>;
   wRGB: IUniform<number>;
   wSourceID: IUniform<number>;
+  alphaAttenuation: IUniform<number>;
+  normalsFilteringThreshold: IUniform<number>;
 }
 
 const TREE_TYPE_DEFS = {
@@ -87,6 +76,11 @@ const SIZE_TYPE_DEFS = {
   [PointSizeType.FIXED]: 'fixed_point_size',
   [PointSizeType.ATTENUATED]: 'attenuated_point_size',
   [PointSizeType.ADAPTIVE]: 'adaptive_point_size',
+};
+
+const OPACITY_DEFS = {
+  [PointOpacityType.ATTENUATED] : 'attenuated_opacity',
+  [PointOpacityType.FIXED] : 'fixed_opacity'
 };
 
 const SHAPE_DEFS = {
@@ -176,6 +170,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     wReturnNumber: makeUniform('f', 0),
     wRGB: makeUniform('f', 1),
     wSourceID: makeUniform('f', 0),
+    alphaAttenuation: makeUniform('f', 1),
+    normalsFilteringThreshold: makeUniform('f', 0)
   };
 
   @uniform('bbSize', true) bbSize!: [number, number, number]; // prettier-ignore
@@ -207,6 +203,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('wReturnNumber') weightReturnNumber!: number; // prettier-ignore
   @uniform('wRGB') weightRGB!: number; // prettier-ignore
   @uniform('wSourceID') weightSourceID!: number; // prettier-ignore
+  @uniform('alphaAttenuation') alphaAttenuation!: number; // prettier-ignore
+  @uniform('normalsFilteringThreshold') normalsFilteringThreshold!: number; // prettier-ignore
 
   @requiresShaderUpdate() useClipBox: boolean = false; // prettier-ignore
   @requiresShaderUpdate() weighted: boolean = false; // prettier-ignore
@@ -216,6 +214,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @requiresShaderUpdate() useEDL: boolean = false; // prettier-ignore
   @requiresShaderUpdate() shape: PointShape = PointShape.SQUARE; // prettier-ignore
   @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE; // prettier-ignore
+  @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED; // prettier-ignore
+  @requiresShaderUpdate() useNormalsFiltering: boolean = false; // prettier-ignore
 
   attributes = {
     position: { type: 'fv', value: [] },
@@ -292,6 +292,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     define(SHAPE_DEFS[this.shape]);
     define(COLOR_DEFS[this.pointColorType]);
     define(CLIP_MODE_DEFS[this.clipMode]);
+    define(OPACITY_DEFS[this.pointOpacityType]);
 
     // We only perform gamma and brightness/contrast calculations per point if values are specified.
     if (
@@ -300,6 +301,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.rgbContrast !== DEFAULT_RGB_CONTRAST
     ) {
       define('use_rgb_gamma_contrast_brightness');
+    }
+
+    if (this.useNormalsFiltering) {
+      define('use_normals_filtering');
     }
 
     if (this.useEDL) {
