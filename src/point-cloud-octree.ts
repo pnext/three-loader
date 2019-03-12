@@ -22,7 +22,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
+import { DEFAULT_MIN_NODE_PIXEL_SIZE, DEFAULT_PICK_WINDOW_SIZE } from './constants';
 import { ClipMode, PointCloudMaterial, PointColorType, PointSizeType } from './materials';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
@@ -244,10 +244,11 @@ export class PointCloudOctree extends PointCloudTree {
     renderer: WebGLRenderer,
   ): void {
     const maxScale = Math.max(this.scale.x, this.scale.y, this.scale.z);
+    const pixelRatio = renderer.getPixelRatio();
 
     material.fov = camera.fov * (Math.PI / 180);
-    material.screenWidth = renderer.domElement.clientWidth;
-    material.screenHeight = renderer.domElement.clientHeight;
+    material.screenWidth = renderer.domElement.clientWidth * pixelRatio;
+    material.screenHeight = renderer.domElement.clientHeight * pixelRatio;
     material.near = camera.near;
     material.far = camera.far;
     material.spacing = this.pcoGeometry.spacing * maxScale;
@@ -375,43 +376,30 @@ export class PointCloudOctree extends PointCloudTree {
     ray: Ray,
     params: Partial<PickParams> = {},
   ): PickPoint | null {
-    const pickWindowSize = params.pickWindowSize || 17;
+    const pixelRatio = renderer.getPixelRatio();
+    const pickWndSize = Math.floor(
+      (params.pickWindowSize || DEFAULT_PICK_WINDOW_SIZE) * pixelRatio,
+    );
 
-    const width = Math.ceil(renderer.domElement.clientWidth);
-    const height = Math.ceil(renderer.domElement.clientHeight);
-
-    const nodes: PointCloudOctreeNode[] = this.nodesOnRay(this.visibleNodes, ray);
-
-    if (nodes.length === 0) {
-      return null;
-    }
+    const width = Math.ceil(renderer.domElement.clientWidth * pixelRatio);
+    const height = Math.ceil(renderer.domElement.clientHeight * pixelRatio);
 
     const pickState = this.pickState ? this.pickState : (this.pickState = this.getPickState());
     const pickMaterial = pickState.material;
 
-    this.updatePickMaterial(pickMaterial, params);
-    this.updateMaterial(pickMaterial, nodes, camera, renderer);
-
-    if (pickState.renderTarget.width !== width || pickState.renderTarget.height !== height) {
-      this.updatePickRenderTarget(this.pickState);
-      pickState.renderTarget.setSize(width, height);
+    // Get all the octree nodes which intersect the picking ray. We only need to render those.
+    const nodes: PointCloudOctreeNode[] = this.nodesOnRay(this.visibleNodes, ray);
+    if (nodes.length === 0) {
+      return null;
     }
 
-    const pixelPos = helperVec3; // Use helper vector to prevent extra allocations.
-    pixelPos
-      .addVectors(camera.position, ray.direction)
-      .project(camera)
-      .addScalar(1)
-      .multiplyScalar(0.5);
-    pixelPos.x *= width;
-    pixelPos.y *= height;
-
+    // Create copies of the nodes so we can render them differently than in the normal point cloud.
     const tempNodes = [];
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
       node.pcIndex = i + 1;
-      const sceneNode = node.sceneNode;
 
+      const sceneNode = node.sceneNode;
       const tempNode = new Points(sceneNode.geometry, pickMaterial);
       tempNode.matrix = sceneNode.matrix;
       tempNode.matrixWorld = sceneNode.matrixWorld;
@@ -425,49 +413,46 @@ export class PointCloudOctree extends PointCloudTree {
 
     pickState.scene.autoUpdate = false;
     pickState.scene.children = tempNodes;
-    // pickState.scene.overrideMaterial = pickMaterial;
 
-    // RENDER
-    renderer.setRenderTarget(pickState.renderTarget);
-    renderer.clear(true, true, true);
+    this.updatePickMaterial(pickMaterial, params);
+    this.updateMaterial(pickMaterial, nodes, camera, renderer);
+    this.updatePickRenderTarget(this.pickState, width, height);
 
-    const halfPickWindow = (pickWindowSize - 1) / 2;
+    const pixelPos = helperVec3; // Use helper vector to prevent extra allocations.
+    pixelPos.addVectors(camera.position, ray.direction).project(camera);
+    pixelPos.x = (pixelPos.x + 1) * width * 0.5;
+    pixelPos.y = (pixelPos.y + 1) * height * 0.5;
+    const halfPickWndSize = (pickWndSize - 1) / 2;
+    const x = Math.floor(clamp(pixelPos.x - halfPickWndSize, 0, width));
+    const y = Math.floor(clamp(pixelPos.y - halfPickWndSize, 0, height));
 
-    renderer.setScissor(
-      Math.floor(pixelPos.x - halfPickWindow),
-      Math.floor(pixelPos.y - halfPickWindow),
-      Math.floor(pickWindowSize),
-      Math.floor(pickWindowSize),
-    );
+    // Render the intersected nodes onto the pick render target, clipping to a small pick window.
+    renderer.setScissor(x, y, pickWndSize, pickWndSize);
     renderer.setScissorTest(true);
     renderer.state.buffers.depth.setTest(pickMaterial.depthTest);
     renderer.state.buffers.depth.setMask(pickMaterial.depthWrite ? 1 : 0);
     renderer.state.setBlending(NoBlending);
 
+    renderer.setRenderTarget(pickState.renderTarget);
+    renderer.clear(true, true, true);
     renderer.render(pickState.scene, camera);
 
-    const x = Math.floor(clamp(pixelPos.x - halfPickWindow, 0, width));
-    const y = Math.floor(clamp(pixelPos.y - halfPickWindow, 0, height));
-    const w = Math.floor(Math.min(x + pickWindowSize, width) - x);
-    const h = Math.floor(Math.min(y + pickWindowSize, height) - y);
-
-    const pixelCount = w * h;
-    const buffer = new Uint8Array(4 * pixelCount);
-    renderer.readRenderTargetPixels(pickState.renderTarget, x, y, w, h, buffer);
+    // Read the pixel from the pick render target.
+    const pixels = new Uint8Array(4 * pickWndSize * pickWndSize);
+    renderer.readRenderTargetPixels(pickState.renderTarget, x, y, pickWndSize, pickWndSize, pixels);
     renderer.setScissorTest(false);
     renderer.setRenderTarget(null!);
 
-    const pixels = buffer;
-    const ibuffer = new Uint32Array(buffer.buffer);
+    const ibuffer = new Uint32Array(pixels.buffer);
 
-    // find closest hit inside pixelWindow boundaries
+    // Find closest hit inside pixelWindow boundaries
     let min = Number.MAX_VALUE;
     let hit: PointCloudHit | null = null;
-    for (let u = 0; u < pickWindowSize; u++) {
-      for (let v = 0; v < pickWindowSize; v++) {
-        const offset = u + v * pickWindowSize;
+    for (let u = 0; u < pickWndSize; u++) {
+      for (let v = 0; v < pickWndSize; v++) {
+        const offset = u + v * pickWndSize;
         const distance =
-          Math.pow(u - (pickWindowSize - 1) / 2, 2) + Math.pow(v - (pickWindowSize - 1) / 2, 2);
+          Math.pow(u - (pickWndSize - 1) / 2, 2) + Math.pow(v - (pickWndSize - 1) / 2, 2);
 
         const pcIndex = pixels[4 * offset + 3];
         pixels[4 * offset + 3] = 0;
@@ -597,9 +582,14 @@ export class PointCloudOctree extends PointCloudTree {
     }
   }
 
-  private updatePickRenderTarget(pickState: IPickState) {
+  private updatePickRenderTarget(pickState: IPickState, width: number, height: number): void {
+    if (pickState.renderTarget.width === width || pickState.renderTarget.height === height) {
+      return;
+    }
+
     pickState.renderTarget.dispose();
     pickState.renderTarget = this.makePickRenderTarget();
+    pickState.renderTarget.setSize(width, height);
   }
 
   private makePickRenderTarget() {
