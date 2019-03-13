@@ -71,11 +71,15 @@ uniform sampler2D depthMap;
 varying float	vOpacity;
 varying vec3	vColor;
 varying float	vLinearDepth;
-varying float	vLogDepth;
+
 varying vec3	vViewPosition;
 varying float   vRadius;
 varying vec3	vWorldPosition;
 varying vec3	vNormal;
+
+#if defined use_edl
+	varying float	vLogDepth;
+#endif
 
 // ---------------------
 // OCTREE
@@ -358,7 +362,10 @@ void main() {
 	gl_Position = projectionMatrix * mvPosition;
 	vLinearDepth = gl_Position.w;
 	vNormal = normalize(normalMatrix * normal);
-	vLogDepth = log2(-mvPosition.z);
+
+	#if defined use_edl
+        vLogDepth = log2(-mvPosition.z);
+    #endif
 
 	// ---------------------
 	// POINT SIZE
@@ -389,7 +396,7 @@ void main() {
     // ---------------------
 
     #if defined attenuated_opacity
-        vOpacity = opacity * exp(-length(-vViewPosition.xyz) / alphaAttenuation);
+        vOpacity = opacity * exp(-length(-mvPosition.xyz) / alphaAttenuation);
     #else //defined fixed_opacity
         vOpacity = opacity;
     #endif
