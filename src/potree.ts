@@ -152,7 +152,8 @@ export class Potree implements IPotree {
         pointCloud.visibleGeometry.push(node.geometryNode);
       }
 
-      const halfHeight = 0.5 * renderer.getSize(this._rendererSize).height;
+      const halfHeight =
+        0.5 * renderer.getSize(this._rendererSize).height * renderer.getPixelRatio();
 
       this.updateChildVisibility(
         queueItem,
