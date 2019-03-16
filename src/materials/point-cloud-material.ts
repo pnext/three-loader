@@ -178,8 +178,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     wSourceID: makeUniform('f', 0),
   };
 
-  @uniform('bbSize', true) bbSize!: [number, number, number]; // prettier-ignore
-  @uniform('depthMap', true) depthMap!: Texture | null; // prettier-ignore
+  @uniform('bbSize') bbSize!: [number, number, number]; // prettier-ignore
+  @uniform('depthMap') depthMap!: Texture | null; // prettier-ignore
   @uniform('far') far!: number; // prettier-ignore
   @uniform('fov') fov!: number; // prettier-ignore
   @uniform('heightMax') heightMax!: number; // prettier-ignore
@@ -197,10 +197,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('rgbGamma', true) rgbGamma!: number; // prettier-ignore
   @uniform('screenHeight') screenHeight!: number; // prettier-ignore
   @uniform('screenWidth') screenWidth!: number; // prettier-ignore
-  @uniform('size', true) size!: number; // prettier-ignore
+  @uniform('size') size!: number; // prettier-ignore
   @uniform('spacing') spacing!: number; // prettier-ignore
   @uniform('transition') transition!: number; // prettier-ignore
-  @uniform('uColor', true) color!: Color; // prettier-ignore
+  @uniform('uColor') color!: Color; // prettier-ignore
   @uniform('wClassification') weightClassification!: number; // prettier-ignore
   @uniform('wElevation') weightElevation!: number; // prettier-ignore
   @uniform('wIntensity') weightIntensity!: number; // prettier-ignore
