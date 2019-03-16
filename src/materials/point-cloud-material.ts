@@ -424,10 +424,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     if (uObj.type === 'c') {
       (uObj.value as Color).copy(value as Color);
-      this.needsUpdate = true;
     } else if (value !== uObj.value) {
       uObj.value = value;
-      this.needsUpdate = true;
     }
   }
 }
