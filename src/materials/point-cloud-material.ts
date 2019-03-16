@@ -464,15 +464,15 @@ function uniform<K extends keyof IPointCloudMaterialUniforms>(
 
 function requiresShaderUpdate() {
   return (target: Object, propertyKey: string | symbol): void => {
-    let pValue: any;
+    const fieldName = "_" + propertyKey.toString();
 
     Object.defineProperty(target, propertyKey, {
       get() {
-        return pValue;
+        return this[fieldName];
       },
       set(value: any) {
-        if (value !== pValue) {
-          pValue = value;
+        if (value !== this[fieldName]) {
+          this[fieldName] = value;
           this.updateShaderSource();
         }
       },
