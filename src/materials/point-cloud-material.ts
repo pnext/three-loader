@@ -1,7 +1,7 @@
 import {
   AdditiveBlending,
-  AlwaysDepth,
   Color,
+  LessEqualDepth,
   NearestFilter,
   NoBlending,
   RawShaderMaterial,
@@ -262,12 +262,12 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.transparent = false;
       this.depthTest = true;
       this.depthWrite = true;
+      this.depthFunc = LessEqualDepth;
     } else if (this.opacity < 1.0 && !this.useEDL) {
       this.blending = AdditiveBlending;
       this.transparent = true;
       this.depthTest = false;
       this.depthWrite = true;
-      this.depthFunc = AlwaysDepth;
     }
 
     if (this.weighted) {
@@ -275,6 +275,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.transparent = true;
       this.depthTest = true;
       this.depthWrite = false;
+      this.depthFunc = LessEqualDepth;
     }
 
     this.needsUpdate = true;
