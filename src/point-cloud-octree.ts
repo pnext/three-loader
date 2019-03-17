@@ -18,7 +18,6 @@ import {
   Sphere,
   Vector3,
   Vector4,
-  WebGLProgram,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
@@ -159,46 +158,31 @@ export class PointCloudOctree extends PointCloudTree {
 
   private makeOnBeforeRender(node: PointCloudOctreeNode) {
     return (
-      renderer: WebGLRenderer,
+      _renderer: WebGLRenderer,
       _scene: Scene,
       _camera: Camera,
       _geometry: Geometry | BufferGeometry,
       material: Material,
     ) => {
-      const program = (material as any).program as WebGLProgram;
-      if (program === undefined) {
-        return;
-      }
-
-      const ctx = renderer.getContext();
-      ctx.useProgram(program.program);
-
-      const uniformsMap = (program.getUniforms() as any).map;
       const materialUniforms = (material as PointCloudMaterial).uniforms;
 
-      if (uniformsMap.level !== undefined) {
-        const level = node.level;
-        materialUniforms.level.value = level;
-        uniformsMap.level.setValue(ctx, level);
-      }
-
-      if (uniformsMap.isLeafNode !== undefined) {
-        const isLeafNode = node.isLeafNode;
-        uniformsMap.isLeafNode.setValue(ctx, isLeafNode);
-        materialUniforms.isLeafNode.value = isLeafNode;
-      }
+      materialUniforms.level.value = node.level;
+      materialUniforms.isLeafNode.value = node.isLeafNode;
 
       const vnStart = this.visibleNodeTextureOffsets.get(node.name);
-      if (vnStart !== undefined && uniformsMap.vnStart !== undefined) {
+      if (vnStart !== undefined) {
         materialUniforms.vnStart.value = vnStart;
-        uniformsMap.vnStart.setValue(ctx, vnStart);
       }
 
-      if (uniformsMap.pcIndex !== undefined) {
-        const i = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
-        materialUniforms.pcIndex.value = i;
-        uniformsMap.pcIndex.setValue(ctx, i);
-      }
+      const pcIndex = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
+      materialUniforms.pcIndex.value = pcIndex;
+
+      // Note: when changing uniforms in onBeforeRender, the flag uniformsNeedUpdate has to be
+      // set to true to instruct ThreeJS to upload them. See also
+      // https://github.com/mrdoob/three.js/issues/9870#issuecomment-368750182.
+
+      // Remove the cast to any when uniformsNeedUpdate has been added to the typings.
+      (material as any /*ShaderMaterial*/).uniformsNeedUpdate = true;
     };
   }
 
