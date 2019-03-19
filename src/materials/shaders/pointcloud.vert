@@ -46,7 +46,9 @@ uniform float level;
 uniform float vnStart;
 uniform bool isLeafNode;
 
+uniform float filterByNormalThreshold;
 uniform vec2 intensityRange;
+uniform float opacityAttenuation;
 uniform float intensityGamma;
 uniform float intensityContrast;
 uniform float intensityBrightness;
@@ -66,14 +68,19 @@ uniform sampler2D gradient;
 uniform sampler2D classificationLUT;
 uniform sampler2D depthMap;
 
-varying float	vOpacity;
+#ifndef color_type_point_index
+	varying float vOpacity;
+#endif
 varying vec3	vColor;
 varying float	vLinearDepth;
-varying float	vLogDepth;
+
 varying vec3	vViewPosition;
-varying float vRadius;
-varying vec3	vWorldPosition;
+varying float   vRadius;
 varying vec3	vNormal;
+
+#if defined use_edl
+	varying float vLogDepth;
+#endif
 
 // ---------------------
 // OCTREE
@@ -354,10 +361,12 @@ void main() {
 	vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 	vViewPosition = mvPosition.xyz;
 	gl_Position = projectionMatrix * mvPosition;
-	vOpacity = opacity;
 	vLinearDepth = gl_Position.w;
-	vLogDepth = log2(-mvPosition.z);
 	vNormal = normalize(normalMatrix * normal);
+
+	#if defined use_edl
+		vLogDepth = log2(-mvPosition.z);
+	#endif
 
 	// ---------------------
 	// POINT SIZE
@@ -382,6 +391,29 @@ void main() {
 	vRadius = pointSize / projFactor;
 	
 	gl_PointSize = pointSize;
+
+	// ---------------------
+	// OPACITY
+	// ---------------------
+
+	#ifndef color_type_point_index
+		#ifdef attenuated_opacity
+			vOpacity = opacity * exp(-length(-mvPosition.xyz) / opacityAttenuation);
+		#else
+			vOpacity = opacity;
+		#endif
+	#endif
+
+	// ---------------------
+	// FILTERING
+	// ---------------------
+
+	#ifdef use_filter_by_normal
+		if(abs((modelViewMatrix * vec4(normal, 0.0)).z) > filterByNormalThreshold) {
+			// Move point outside clip space space to discard it.
+			gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+		}
+	#endif
 
 	// ---------------------
 	// POINT COLOR
@@ -432,9 +464,11 @@ void main() {
 			return;
 		}
 	#endif
-	
+
+	// ---------------------
 	// CLIPPING
-	
+	// ---------------------
+
 	#if defined use_clip_box
 		bool insideAny = false;
 		for (int i = 0; i < MAX_CLIP_BOXES; i++) {

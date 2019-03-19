@@ -24,7 +24,9 @@ uniform float screenHeight;
 uniform sampler2D depthMap;
 
 varying vec3	vColor;
-varying float	vOpacity;
+#ifndef color_type_point_index
+	varying float vOpacity;
+#endif
 varying float	vLinearDepth;
 varying float	vLogDepth;
 varying vec3	vViewPosition;

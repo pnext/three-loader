@@ -15,6 +15,11 @@ export enum TreeType {
   KDTREE = 1,
 }
 
+export enum PointOpacityType {
+  FIXED = 0,
+  ATTENUATED = 1
+}
+
 export enum PointColorType {
   RGB = 0,
   COLOR = 1,
