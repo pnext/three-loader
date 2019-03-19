@@ -122,7 +122,7 @@ export class Potree implements IPotree {
       const pointCloudIndex = queueItem.pointCloudIndex;
       const pointCloud = pointClouds[pointCloudIndex];
 
-      const maxLevel = pointCloud.maxLevel || Infinity;
+      const maxLevel = pointCloud.maxLevel !== undefined ? pointCloud.maxLevel : Infinity;
 
       if (
         node.level > maxLevel ||
