@@ -18,7 +18,7 @@ import {
 import { DEFAULT_CLASSIFICATION } from './classification';
 import { ClipMode, IClipBox } from './clipping';
 import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
-import { SPECTRAL } from './gradients/spectral';
+import { SPECTRAL } from './gradients';
 import {
   generateClassificationTexture,
   generateDataTexture,
