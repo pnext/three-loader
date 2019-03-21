@@ -110,6 +110,7 @@ export class Potree implements IPotree {
 
     let loadedToGPUThisFrame = 0;
     let exceededMaxLoadsToGPU = false;
+    let nodeLoadFailed = false;
     let queueItem: QueueItem | undefined;
 
     while ((queueItem = priorityQueue.pop()) !== undefined) {
@@ -142,12 +143,15 @@ export class Potree implements IPotree {
         if (node.loaded && loadedToGPUThisFrame < MAX_LOADS_TO_GPU) {
           node = pointCloud.toTreeNode(node, parentNode);
           loadedToGPUThisFrame++;
-        } else {
+        } else if (!node.failed) {
           if (node.loaded && loadedToGPUThisFrame >= MAX_LOADS_TO_GPU) {
             exceededMaxLoadsToGPU = true;
           }
           unloadedGeometry.push(node);
           pointCloud.visibleGeometry.push(node);
+        } else {
+          nodeLoadFailed = true;
+          continue;
         }
       }
 
@@ -171,14 +175,17 @@ export class Potree implements IPotree {
     } // end priority queue loop
 
     const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
+    const nodeLoadPromises: Promise<void>[] = [];
     for (let i = 0; i < numNodesToLoad; i++) {
-      unloadedGeometry[i].load();
+      nodeLoadPromises.push(unloadedGeometry[i].load());
     }
 
     return {
       visibleNodes: visibleNodes,
       numVisiblePoints: numVisiblePoints,
-      exceededMaxLoadsToGPU: exceededMaxLoadsToGPU
+      exceededMaxLoadsToGPU: exceededMaxLoadsToGPU,
+      nodeLoadFailed: nodeLoadFailed,
+      nodeLoadPromises: nodeLoadPromises
     };
   }
 

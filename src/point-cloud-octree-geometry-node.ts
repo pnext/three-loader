@@ -43,6 +43,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   geometry: BufferGeometry = new BufferGeometry();
   loaded: boolean = false;
   loading: boolean = false;
+  failed: boolean = false;
   parent: PointCloudOctreeGeometryNode | null = null;
   oneTimeDisposeHandlers: (() => void)[] = [];
   isLeafNode: boolean = true;
@@ -146,15 +147,24 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     this.pcoGeometry.numNodesLoading++;
     this.pcoGeometry.needsUpdate = true;
 
+    let promise: Promise<void>;
+
     if (
       this.pcoGeometry.loader.version.equalOrHigher('1.5') &&
       this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
       this.hasChildren
     ) {
-      return this.loadHierachyThenPoints();
+      promise = this.loadHierachyThenPoints();
     } else {
-      return this.loadPoints();
+      promise = this.loadPoints();
     }
+
+    return promise.catch((reason) => {
+      this.loading = false;
+      this.failed = true;
+      this.pcoGeometry.numNodesLoading--;
+      throw reason;
+    });
   }
 
   private canLoad(): boolean {
