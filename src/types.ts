@@ -24,6 +24,11 @@ export interface IPointCloudTreeNode {
 export interface IVisibilityUpdateResult {
   visibleNodes: IPointCloudTreeNode[];
   numVisiblePoints: number;
+  /**
+   * True when a node has been loaded but was not added to the scene yet.
+   * Make sure to call updatePointClouds() again on the next frame.
+   */
+  exceededMaxLoadsToGPU: boolean;
 }
 
 export interface IPotree {

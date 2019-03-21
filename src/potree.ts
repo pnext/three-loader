@@ -109,6 +109,7 @@ export class Potree implements IPotree {
     );
 
     let loadedToGPUThisFrame = 0;
+    let exceededMaxLoadsToGPU = false;
     let queueItem: QueueItem | undefined;
 
     while ((queueItem = priorityQueue.pop()) !== undefined) {
@@ -142,6 +143,9 @@ export class Potree implements IPotree {
           node = pointCloud.toTreeNode(node, parentNode);
           loadedToGPUThisFrame++;
         } else {
+          if (node.loaded && loadedToGPUThisFrame >= MAX_LOADS_TO_GPU) {
+            exceededMaxLoadsToGPU = true;
+          }
           unloadedGeometry.push(node);
           pointCloud.visibleGeometry.push(node);
         }
@@ -174,6 +178,7 @@ export class Potree implements IPotree {
     return {
       visibleNodes: visibleNodes,
       numVisiblePoints: numVisiblePoints,
+      exceededMaxLoadsToGPU: exceededMaxLoadsToGPU
     };
   }
 
