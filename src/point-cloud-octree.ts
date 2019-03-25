@@ -182,7 +182,7 @@ export class PointCloudOctree extends PointCloudTree {
       // https://github.com/mrdoob/three.js/issues/9870#issuecomment-368750182.
 
       // Remove the cast to any when uniformsNeedUpdate has been added to the typings.
-      (material as any /*ShaderMaterial*/).uniformsNeedUpdate = true;
+      (material as any) /*ShaderMaterial*/.uniformsNeedUpdate = true;
     };
   }
 

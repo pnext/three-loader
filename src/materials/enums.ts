@@ -17,7 +17,7 @@ export enum TreeType {
 
 export enum PointOpacityType {
   FIXED = 0,
-  ATTENUATED = 1
+  ATTENUATED = 1,
 }
 
 export enum PointColorType {

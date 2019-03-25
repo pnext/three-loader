@@ -92,8 +92,8 @@ const SIZE_TYPE_DEFS = {
 };
 
 const OPACITY_DEFS = {
-  [PointOpacityType.ATTENUATED] : 'attenuated_opacity',
-  [PointOpacityType.FIXED] : 'fixed_opacity'
+  [PointOpacityType.ATTENUATED]: 'attenuated_opacity',
+  [PointOpacityType.FIXED]: 'fixed_opacity',
 };
 
 const SHAPE_DEFS = {
@@ -184,7 +184,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     wRGB: makeUniform('f', 1),
     wSourceID: makeUniform('f', 0),
     opacityAttenuation: makeUniform('f', 1),
-    filterByNormalThreshold: makeUniform('f', 0)
+    filterByNormalThreshold: makeUniform('f', 0),
   };
 
   @uniform('bbSize') bbSize!: [number, number, number]; // prettier-ignore
@@ -481,7 +481,7 @@ function uniform<K extends keyof IPointCloudMaterialUniforms>(
 
 function requiresShaderUpdate() {
   return (target: Object, propertyKey: string | symbol): void => {
-    const fieldName = "_" + propertyKey.toString();
+    const fieldName = `_${propertyKey.toString()}`;
 
     Object.defineProperty(target, propertyKey, {
       get() {
