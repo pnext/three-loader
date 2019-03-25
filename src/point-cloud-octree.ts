@@ -567,7 +567,7 @@ export class PointCloudOctree extends PointCloudTree {
   }
 
   private updatePickRenderTarget(pickState: IPickState, width: number, height: number): void {
-    if (pickState.renderTarget.width === width || pickState.renderTarget.height === height) {
+    if (pickState.renderTarget.width === width && pickState.renderTarget.height === height) {
       return;
     }
 
