@@ -267,8 +267,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   }
 
   updateShaderSource() {
-    this.vertexShader = this.applyDefines(require('./shaders/pointcloud.vert'));
-    this.fragmentShader = this.applyDefines(require('./shaders/pointcloud.frag'));
+    this.vertexShader = this.applyDefines(require('./shaders/pointcloud.vert').default);
+    this.fragmentShader = this.applyDefines(require('./shaders/pointcloud.frag').default);
 
     if (this.opacity === 1.0) {
       this.blending = NoBlending;
@@ -297,8 +297,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   applyDefines(shaderSrc: string): string {
     const parts: string[] = [];
 
-    function define(value: string) {
-      parts.push(`#define ${value}`);
+    function define(value: string | undefined) {
+      if (value) {
+        parts.push(`#define ${value}`);
+      }
     }
 
     define(TREE_TYPE_DEFS[this.treeType]);
