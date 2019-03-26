@@ -225,7 +225,7 @@ export class Potree implements IPotree {
         projectionFactor = halfHeight / (slope * distance);
       } else {
         const orthographic = camera as OrthographicCamera;
-        projectionFactor = radius / orthographic.top;
+        projectionFactor = 2 * halfHeight / (orthographic.top - orthographic.bottom)
       }
 
       const screenPixelRadius = radius * projectionFactor;

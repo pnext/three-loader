@@ -54,6 +54,9 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
+  /**
+   * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
+   */
   minNodePixelSize: number = DEFAULT_MIN_NODE_PIXEL_SIZE;
   root: IPointCloudTreeNode | null = null;
   boundingBoxNodes: Object3D[] = [];
