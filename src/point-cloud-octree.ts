@@ -41,9 +41,16 @@ export interface PickParams {
    * will be used for the pick window position.
    */
   pixelPos: Vector3;
+
+  /**
+   * For a custom configuration of render target and pick material
+   * @param material The pick material
+   * @param target The render target for picking
+   */
+  pickConfiguration: (material: PointCloudMaterial, target: WebGLRenderTarget) => void;
 }
 
-export interface IPickState {
+interface IPickState {
   renderTarget: WebGLRenderTarget;
   material: PointCloudMaterial;
   scene: Scene;
@@ -70,9 +77,9 @@ export class PointCloudOctree extends PointCloudTree {
   visibleGeometry: PointCloudOctreeGeometryNode[] = [];
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
-  pickState: IPickState | undefined;
   private visibleBounds: Box3 = new Box3();
   private visibleNodeTextureOffsets = new Map<string, number>();
+  private pickState: IPickState | undefined;
 
   constructor(
     potree: IPotree,
@@ -411,14 +418,18 @@ export class PointCloudOctree extends PointCloudTree {
     this.updateMaterial(pickMaterial, nodes, camera, renderer);
     this.updatePickRenderTarget(this.pickState, width, height);
 
+    if (params.pickConfiguration) {
+      params.pickConfiguration(pickMaterial, pickState.renderTarget);
+    }
+
     let pixelPos = helperVec3; // Use helper vector to prevent extra allocations.
 
     if (params.pixelPos) {
-        pixelPos = params.pixelPos;
+      pixelPos = params.pixelPos;
     } else {
-        pixelPos.addVectors(camera.position, ray.direction).project(camera);
-        pixelPos.x = (pixelPos.x + 1) * width * 0.5;
-        pixelPos.y = (pixelPos.y + 1) * height * 0.5;
+      pixelPos.addVectors(camera.position, ray.direction).project(camera);
+      pixelPos.x = (pixelPos.x + 1) * width * 0.5;
+      pixelPos.y = (pixelPos.y + 1) * height * 0.5;
     }
 
     const halfPickWndSize = (pickWndSize - 1) / 2;
