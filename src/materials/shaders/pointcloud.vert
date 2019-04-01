@@ -68,19 +68,32 @@ uniform sampler2D gradient;
 uniform sampler2D classificationLUT;
 uniform sampler2D depthMap;
 
-#ifndef color_type_point_index
+varying vec3 vColor;
+
+#if !defined(color_type_point_index)
 	varying float vOpacity;
 #endif
-varying vec3	vColor;
-varying float	vLinearDepth;
 
-varying vec3	vViewPosition;
-varying float   vRadius;
-varying vec3	vNormal;
+#if defined(weighted_splats)
+	varying float vLinearDepth;
+#endif
 
-#if defined use_edl
+#if !defined(paraboloid_point_shape) && defined(use_edl)
 	varying float vLogDepth;
 #endif
+
+#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)
+	varying vec3 vViewPosition;
+#endif
+
+#if defined(weighted_splats) || defined(paraboloid_point_shape)
+	varying float vRadius;
+#endif
+
+#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)
+	varying vec3 vNormal;
+#endif
+
 
 // ---------------------
 // OCTREE
@@ -359,12 +372,22 @@ vec3 getCompositeColor() {
 
 void main() {
 	vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-	vViewPosition = mvPosition.xyz;
-	gl_Position = projectionMatrix * mvPosition;
-	vLinearDepth = gl_Position.w;
-	vNormal = normalize(normalMatrix * normal);
 
-	#if defined use_edl
+	gl_Position = projectionMatrix * mvPosition;
+
+	#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)
+		vViewPosition = mvPosition.xyz;
+	#endif
+
+	#if defined weighted_splats
+		vLinearDepth = gl_Position.w;
+	#endif
+
+	#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)
+		vNormal = normalize(normalMatrix * normal);
+	#endif
+
+	#if !defined(paraboloid_point_shape) && defined(use_edl)
 		vLogDepth = log2(-mvPosition.z);
 	#endif
 
@@ -374,7 +397,7 @@ void main() {
 
 	float pointSize = 1.0;
 	float slope = tan(fov / 2.0);
-	float projFactor =  -0.5 * screenHeight / (slope * vViewPosition.z);
+	float projFactor =  -0.5 * screenHeight / (slope * mvPosition.z);
 
 	#if defined fixed_point_size
 		pointSize = size;
@@ -388,7 +411,9 @@ void main() {
 	pointSize = max(minSize, pointSize);
 	pointSize = min(maxSize, pointSize);
 
-	vRadius = pointSize / projFactor;
+	#if defined(weighted_splats) || defined(paraboloid_point_shape)
+		vRadius = pointSize / projFactor;
+	#endif
 	
 	gl_PointSize = pointSize;
 
