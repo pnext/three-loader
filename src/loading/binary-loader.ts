@@ -95,7 +95,11 @@ export class BinaryLoader {
     return url;
   }
 
-  private parse(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer, resolve: () => void): void {
+  private parse(
+    node: PointCloudOctreeGeometryNode,
+    buffer: ArrayBuffer,
+    resolve: () => void,
+  ): void {
     if (this.disposed) {
       resolve();
       return;

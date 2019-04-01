@@ -185,7 +185,7 @@ export class Potree implements IPotree {
       numVisiblePoints: numVisiblePoints,
       exceededMaxLoadsToGPU: exceededMaxLoadsToGPU,
       nodeLoadFailed: nodeLoadFailed,
-      nodeLoadPromises: nodeLoadPromises
+      nodeLoadPromises: nodeLoadPromises,
     };
   }
 
@@ -237,7 +237,7 @@ export class Potree implements IPotree {
         projectionFactor = halfHeight / (slope * distance);
       } else {
         const orthographic = camera as OrthographicCamera;
-        projectionFactor = 2 * halfHeight / (orthographic.top - orthographic.bottom)
+        projectionFactor = (2 * halfHeight) / (orthographic.top - orthographic.bottom);
       }
 
       const screenPixelRadius = radius * projectionFactor;

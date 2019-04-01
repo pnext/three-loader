@@ -159,7 +159,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       promise = this.loadPoints();
     }
 
-    return promise.catch((reason) => {
+    return promise.catch(reason => {
       this.loading = false;
       this.failed = true;
       this.pcoGeometry.numNodesLoading--;
