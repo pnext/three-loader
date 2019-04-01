@@ -81,7 +81,9 @@ export class BinaryLoader {
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
-      .then(buffer => this.parse(node, buffer));
+      .then(buffer => {
+        return new Promise(resolve => this.parse(node, buffer, resolve));
+      });
   }
 
   private getNodeUrl(node: PointCloudOctreeGeometryNode): string {
@@ -93,8 +95,9 @@ export class BinaryLoader {
     return url;
   }
 
-  private parse(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer): void {
+  private parse(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer, resolve: () => void): void {
     if (this.disposed) {
+      resolve();
       return;
     }
 
@@ -109,6 +112,7 @@ export class BinaryLoader {
 
     worker.onmessage = (e: WorkerResponse) => {
       if (this.disposed) {
+        resolve();
         return;
       }
 
@@ -125,12 +129,14 @@ export class BinaryLoader {
       node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
       node.loaded = true;
       node.loading = false;
+      node.failed = false;
       node.pcoGeometry.numNodesLoading--;
       node.pcoGeometry.needsUpdate = true;
 
       this.releaseWorker(worker);
 
       this.callbacks.forEach(callback => callback(node));
+      resolve();
     };
 
     const message = {
