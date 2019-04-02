@@ -35,6 +35,22 @@ import { byLevelAndIndex } from './utils/utils';
 export interface PickParams {
   pickWindowSize: number;
   pickOutsideClipRegion: boolean;
+  /**
+   * If provided, the picking will use this pixel position instead of the `Ray` passed to the `pick`
+   * method.
+   */
+  pixelPosition: Vector3;
+  /**
+   * Function which gets called after a picking material has been created and setup and before the
+   * point cloud is rendered into the picking render target. This gives applications a chance to
+   * customize the renderTarget and the material.
+   *
+   * @param material
+   *    The pick material.
+   * @param renterTarget
+   *    The render target used for picking.
+   */
+  onBeforePickRender: (material: PointCloudMaterial, renterTarget: WebGLRenderTarget) => void;
 }
 
 interface IPickState {
@@ -405,13 +421,23 @@ export class PointCloudOctree extends PointCloudTree {
     this.updateMaterial(pickMaterial, nodes, camera, renderer);
     this.updatePickRenderTarget(this.pickState, width, height);
 
-    const pixelPos = helperVec3; // Use helper vector to prevent extra allocations.
-    pixelPos.addVectors(camera.position, ray.direction).project(camera);
-    pixelPos.x = (pixelPos.x + 1) * width * 0.5;
-    pixelPos.y = (pixelPos.y + 1) * height * 0.5;
+    if (params.onBeforePickRender) {
+      params.onBeforePickRender(pickMaterial, pickState.renderTarget);
+    }
+
+    const pixelPosition = helperVec3; // Use helper vector to prevent extra allocations.
+
+    if (params.pixelPosition) {
+      pixelPosition.copy(params.pixelPosition);
+    } else {
+      pixelPosition.addVectors(camera.position, ray.direction).project(camera);
+      pixelPosition.x = (pixelPosition.x + 1) * width * 0.5;
+      pixelPosition.y = (pixelPosition.y + 1) * height * 0.5;
+    }
+
     const halfPickWndSize = (pickWndSize - 1) / 2;
-    const x = Math.floor(clamp(pixelPos.x - halfPickWndSize, 0, width));
-    const y = Math.floor(clamp(pixelPos.y - halfPickWndSize, 0, height));
+    const x = Math.floor(clamp(pixelPosition.x - halfPickWndSize, 0, width));
+    const y = Math.floor(clamp(pixelPosition.y - halfPickWndSize, 0, height));
 
     // Render the intersected nodes onto the pick render target, clipping to a small pick window.
     renderer.setScissor(x, y, pickWndSize, pickWndSize);
