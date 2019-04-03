@@ -335,6 +335,9 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('use_clip_box');
     }
 
+    define('MAX_POINT_LIGHTS 0');
+    define('MAX_DIR_LIGHTS 0');
+
     parts.push(shaderSrc);
 
     return parts.join('\n');
