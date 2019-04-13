@@ -496,7 +496,7 @@ void main() {
 
 	#if defined use_clip_box
 		bool insideAny = false;
-		for (int i = 0; i < MAX_CLIP_BOXES; i++) {
+		for (int i = 0; i < max_clip_boxes; i++) {
 			if (i == int(clipBoxCount)) {
 				break;
 			}
