@@ -403,8 +403,6 @@ void doClipping() {
 		} else {
 			#if defined clip_highlight_inside
 				vColor.r += 0.5;
-			#elif defined clip_outside
-				vColor.g += 0.5;
 			#endif
 		}
 	#endif
