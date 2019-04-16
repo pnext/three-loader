@@ -8,6 +8,10 @@ body,
   overflow: hidden;
 }
 
+.gui-container {
+
+}
+
 .btn-container {
   position: absolute;
   bottom: 20px;
@@ -16,4 +20,19 @@ body,
 
 .btn-container button {
   margin-right: 10px;
+}
+
+.slider-container {
+  position: absolute;
+  bottom: 100px;
+  left: 20px;
+}
+
+.slider {
+  margin-right: 10px;
+  width: 200px;
+}
+
+.slider-label {
+  color: white;
 }

@@ -16,7 +16,7 @@ import {
   DEFAULT_RGB_GAMMA,
 } from '../constants';
 import { DEFAULT_CLASSIFICATION } from './classification';
-import { ClipMode, IClipBox } from './clipping';
+import { ClipMode, IClipBox, IClipSphere } from './clipping';
 import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
 import { SPECTRAL } from './gradients';
 import {
@@ -40,6 +40,8 @@ export interface IPointCloudMaterialUniforms {
   classificationLUT: IUniform<Texture>;
   clipBoxCount: IUniform<number>;
   clipBoxes: IUniform<Float32Array>;
+  clipSphereCount: IUniform<number>;
+  clipSpheres: IUniform<Float32Array>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
   far: IUniform<number>;
@@ -124,6 +126,7 @@ const CLIP_MODE_DEFS = {
   [ClipMode.DISABLED]: 'clip_disabled',
   [ClipMode.CLIP_OUTSIDE]: 'clip_outside',
   [ClipMode.HIGHLIGHT_INSIDE]: 'clip_highlight_inside',
+  [ClipMode.CLIP_OUTSIDE_TEST]: 'clip_outside_test',
 };
 
 export class PointCloudMaterial extends RawShaderMaterial {
@@ -131,6 +134,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   fog = false;
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
+  numClipSpheres: number = 0;
+  clipSpheres: IClipSphere[] = [];
   readonly visibleNodesTexture: Texture;
 
   private _gradient = SPECTRAL;
@@ -146,6 +151,12 @@ export class PointCloudMaterial extends RawShaderMaterial {
     classificationLUT: makeUniform('t', this.classificationTexture),
     clipBoxCount: makeUniform('f', 0),
     clipBoxes: makeUniform('Matrix4fv', [] as any),
+    clipSphereCount: makeUniform('f', 0),
+    clipSpheres: makeUniform('Matrix4fv', [] as any),
+    // clipPolygonCount: makeUniform('f', 0),
+    // clipPolygons: makeUniform( '3fv', [] as any ),
+		// clipPolygonVCount: makeUniform('iv', [] as any),
+		// clipPolygonVP: makeUniform('Matrix4fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     far: makeUniform('f', 1.0),
@@ -220,6 +231,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('filterByNormalThreshold') filterByNormalThreshold!: number; // prettier-ignore
 
   @requiresShaderUpdate() useClipBox: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() useClipSphere: boolean = false; // prettier-ignore
   @requiresShaderUpdate() weighted: boolean = false; // prettier-ignore
   @requiresShaderUpdate() pointColorType: PointColorType = PointColorType.RGB; // prettier-ignore
   @requiresShaderUpdate() pointSizeType: PointSizeType = PointSizeType.ADAPTIVE; // prettier-ignore
@@ -335,6 +347,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('use_clip_box');
     }
 
+    if (this.numClipSpheres > 0) {
+      define('use_clip_sphere');
+    }
+
     define('MAX_POINT_LIGHTS 0');
     define('MAX_DIR_LIGHTS 0');
 
@@ -375,6 +391,53 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     this.setUniform('clipBoxes', clipBoxesArray);
   }
+
+  setClipSpheres(clipSpheres: IClipSphere[]): void {
+		if (!clipSpheres) {
+			return;
+    }
+    
+    this.clipSpheres = clipSpheres;
+
+		const doUpdate =
+      this.numClipSpheres !== clipSpheres.length && (clipSpheres.length === 0 || this.numClipSpheres === 0);
+
+    this.numClipSpheres = clipSpheres.length;
+    this.setUniform('clipSphereCount', this.numClipSpheres);
+
+		if (doUpdate) {
+			this.updateShaderSource();
+    }
+
+    const clipSpheresLength = this.numClipSpheres * 16;
+    const clipSpheresArray = new Float32Array(clipSpheresLength);
+
+		for (let i = 0; i < this.numClipSpheres; i++) {
+      clipSpheresArray.set(clipSpheres[i].inverse.elements, 16 * i);
+		}
+
+    for (let i = 0; i < clipSpheresLength; i++) {
+      if (isNaN(clipSpheresArray[i])) {
+        clipSpheresArray[i] = Infinity;
+      }
+    }
+
+    this.setUniform('clipSpheres', clipSpheresArray);
+  }
+  
+  // setClipPolygons(clipPolygons, maxPolygonVertices) {
+	// 	if(!clipPolygons){
+	// 		return;
+	// 	}
+
+	// 	this.clipPolygons = clipPolygons;
+
+	// 	let doUpdate = (this.clipPolygons.length !== clipPolygons.length);
+
+	// 	if(doUpdate){
+	// 		this.updateShaderSource();
+	// 	}
+	// }
 
   get gradient(): IGradient {
     return this._gradient;
