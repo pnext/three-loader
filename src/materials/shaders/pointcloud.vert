@@ -1,8 +1,9 @@
 precision highp float;
 precision highp int;
 
-#define max_clip_boxes 10
-#define max_clip_spheres 10
+#define max_clip_boxes 30
+#define max_clip_spheres 30
+#define max_clip_planes 100
 
 attribute vec3 position;
 attribute vec3 color;
@@ -37,6 +38,10 @@ uniform float far;
 	uniform mat4 clipSpheres[max_clip_spheres];
 #endif
 
+#if defined use_clip_plane
+	uniform mat4 clipPlanes[max_clip_planes];
+#endif
+
 uniform float heightMin;
 uniform float heightMax;
 uniform float size; // pixel size factor
@@ -48,6 +53,7 @@ uniform vec3 uColor;
 uniform float opacity;
 uniform float clipBoxCount;
 uniform float clipSphereCount;
+uniform float clipPlaneCount;
 uniform float level;
 uniform float vnStart;
 uniform bool isLeafNode;
@@ -377,34 +383,23 @@ vec3 getCompositeColor() {
 }
 
 void doClipping() {
+	bool insideAny = false;
+
 	#if defined use_clip_box
-		bool insideAny = false;
 		for (int i = 0; i < max_clip_boxes; i++) {
 			if (i == int(clipBoxCount)) {
 				break;
 			}
 		
 			vec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);
+
 			bool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;
 			inside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;
 			inside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;
 			insideAny = insideAny || inside;
 		}
 
-		if (!insideAny) {
-			#if defined clip_outside
-				// gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
-				// vColor.b += 0.5;
-			#elif defined clip_highlight_inside && !defined(color_type_depth)
-				// float c = (vColor.r + vColor.g + vColor.b) / 6.0;
-			#elif defined clip_outside_test
-				gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
-			#endif
-		} else {
-			#if defined clip_highlight_inside
-				vColor.r += 0.5;
-			#endif
-		}
+		
 	#endif
 
 	#if defined use_clip_sphere
@@ -413,19 +408,42 @@ void doClipping() {
 				break;
 			}
 			vec4 sphereLocal = clipSpheres[i] * modelMatrix * vec4(position, 1.0);
-			float distance = length(sphereLocal.xyz);
 
-			if(distance < 1.0){
-				#if defined clip_highlight_inside
-					vColor.r += 0.5; 
-				#endif
-			} else {
-				#if defined clip_outside_test
-					gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
-				#endif
-			}
+			float distance = length(sphereLocal.xyz);
+			bool insideSphere = distance < 1.0;
+			insideAny = insideAny || insideSphere;
 		}
 	#endif
+
+	#if defined use_clip_plane
+		bool insideAll = true;
+		for (int i = 0; i < max_clip_planes; i++) {
+			if (i == int(clipPlaneCount)) {
+				break;
+			}
+
+			vec4 planeLocal = clipPlanes[i] * modelMatrix * vec4(position, 1.0);
+
+			bool insidePlane = planeLocal.z >= 0.0;
+			
+			insideAll = insideAll && insidePlane;
+		}
+		insideAny = insideAll || insideAny;
+	#endif
+
+	if (!insideAny) {
+		#if defined clip_outside
+			gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
+		#elif defined clip_highlight_inside && !defined(color_type_depth)
+			// float c = (vColor.r + vColor.g + vColor.b) / 6.0;
+		#endif
+	} else {
+		#if defined clip_highlight_inside
+			vColor.r += 0.5;
+		#elif defined clip_inside
+			gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
+		#endif
+	}
 }
 
 void main() {

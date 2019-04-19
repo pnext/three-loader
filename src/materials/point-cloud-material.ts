@@ -16,7 +16,7 @@ import {
   DEFAULT_RGB_GAMMA,
 } from '../constants';
 import { DEFAULT_CLASSIFICATION } from './classification';
-import { ClipMode, IClipBox, IClipSphere } from './clipping';
+import { ClipMode, IClipBox, IClipSphere, IClipPlane } from './clipping';
 import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
 import { SPECTRAL } from './gradients';
 import {
@@ -42,6 +42,8 @@ export interface IPointCloudMaterialUniforms {
   clipBoxes: IUniform<Float32Array>;
   clipSphereCount: IUniform<number>;
   clipSpheres: IUniform<Float32Array>;
+  clipPlaneCount: IUniform<number>;
+  clipPlanes: IUniform<Float32Array>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
   far: IUniform<number>;
@@ -125,8 +127,9 @@ const COLOR_DEFS = {
 const CLIP_MODE_DEFS = {
   [ClipMode.DISABLED]: 'clip_disabled',
   [ClipMode.CLIP_OUTSIDE]: 'clip_outside',
+  [ClipMode.CLIP_INSIDE]: 'clip_inside',
   [ClipMode.HIGHLIGHT_INSIDE]: 'clip_highlight_inside',
-  [ClipMode.CLIP_OUTSIDE_TEST]: 'clip_outside_test',
+  [ClipMode.CLIP_OUTSIDE_PICK]: 'clip_outside_pick',
 };
 
 export class PointCloudMaterial extends RawShaderMaterial {
@@ -136,6 +139,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   clipBoxes: IClipBox[] = [];
   numClipSpheres: number = 0;
   clipSpheres: IClipSphere[] = [];
+  numClipPlanes: number = 0;
+  clipPlanes: IClipPlane[] = [];
   readonly visibleNodesTexture: Texture;
 
   private _gradient = SPECTRAL;
@@ -153,10 +158,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     clipBoxes: makeUniform('Matrix4fv', [] as any),
     clipSphereCount: makeUniform('f', 0),
     clipSpheres: makeUniform('Matrix4fv', [] as any),
-    // clipPolygonCount: makeUniform('f', 0),
-    // clipPolygons: makeUniform( '3fv', [] as any ),
-		// clipPolygonVCount: makeUniform('iv', [] as any),
-		// clipPolygonVP: makeUniform('Matrix4fv', [] as any),
+    clipPlaneCount: makeUniform('f', 0),
+    clipPlanes: makeUniform('Matrix4fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     far: makeUniform('f', 1.0),
@@ -351,6 +354,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('use_clip_sphere');
     }
 
+    if (this.numClipPlanes > 0) {
+      define('use_clip_plane');
+    }
+
     define('MAX_POINT_LIGHTS 0');
     define('MAX_DIR_LIGHTS 0');
 
@@ -380,7 +387,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     const clipBoxesArray = new Float32Array(clipBoxesLength);
 
     for (let i = 0; i < this.numClipBoxes; i++) {
-      clipBoxesArray.set(clipBoxes[i].inverse.elements, 16 * i);
+      clipBoxesArray.set(clipBoxes[i].matrix.elements, 16 * i);
     }
 
     for (let i = 0; i < clipBoxesLength; i++) {
@@ -413,7 +420,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     const clipSpheresArray = new Float32Array(clipSpheresLength);
 
 		for (let i = 0; i < this.numClipSpheres; i++) {
-      clipSpheresArray.set(clipSpheres[i].inverse.elements, 16 * i);
+      clipSpheresArray.set(clipSpheres[i].matrix.elements, 16 * i);
 		}
 
     for (let i = 0; i < clipSpheresLength; i++) {
@@ -425,19 +432,38 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.setUniform('clipSpheres', clipSpheresArray);
   }
   
-  // setClipPolygons(clipPolygons, maxPolygonVertices) {
-	// 	if(!clipPolygons){
-	// 		return;
-	// 	}
+  setClipPlanes(clipPlanes: IClipPlane[]): void {
+		if (!clipPlanes) {
+			return;
+    }
+    
+    this.clipPlanes = clipPlanes;
 
-	// 	this.clipPolygons = clipPolygons;
+		const doUpdate =
+      this.numClipPlanes !== clipPlanes.length && (clipPlanes.length === 0 || this.numClipPlanes === 0);
 
-	// 	let doUpdate = (this.clipPolygons.length !== clipPolygons.length);
+    this.numClipPlanes = clipPlanes.length;
+    this.setUniform('clipPlaneCount', this.numClipPlanes);
 
-	// 	if(doUpdate){
-	// 		this.updateShaderSource();
-	// 	}
-	// }
+		if (doUpdate) {
+			this.updateShaderSource();
+    }
+
+    const clipPlanesLength = this.numClipPlanes * 16;
+    let clipPlanesArray = new Float32Array(clipPlanesLength);
+
+		for (let i = 0; i < this.numClipPlanes; i++) {
+      clipPlanesArray.set(clipPlanes[i].matrix.elements, 16 * i);
+    }
+
+    for (let i = 0; i < clipPlanesLength; i++) {
+      if (isNaN(clipPlanesArray[i])) {
+        clipPlanesArray[i] = Infinity;
+      }
+    }
+
+    this.setUniform('clipPlanes', clipPlanesArray);
+	}
 
   get gradient(): IGradient {
     return this._gradient;

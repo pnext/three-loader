@@ -1,5 +1,5 @@
 import { PerspectiveCamera, Scene, WebGLRenderer, Vector3, Matrix4 } from 'three';
-import { PointCloudOctree, Potree, ClipMode, IClipBox, ClipBox, IClipSphere, ClipSphere } from '../src';
+import { PointCloudOctree, Potree, ClipMode, IClipBox, ClipBox, IClipSphere, ClipSphere, IClipPlane, ClipPlane } from '../src';
 
 // tslint:disable-next-line:no-duplicate-imports
 import * as THREE from 'three';
@@ -51,6 +51,10 @@ export class Viewer {
    */
   private clipSpheres: ClipSphere[] = [];
   /**
+   * Array of clipSpheres which are in the scene and need to be updated.
+   */
+  private clipPlanes: ClipPlane[] = [];
+  /**
    * Initializes the viewer into the specified element.
    *
    * @param targetEl
@@ -63,6 +67,9 @@ export class Viewer {
 
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
+
+    // ELLIOTT EXPERIMENT WITH RENDERER CLIPPING PLANES
+    this.renderer.localClippingEnabled = true;
 
     this.cameraControls = new OrbitControls(this.camera, this.targetEl);
 
@@ -113,16 +120,14 @@ export class Viewer {
   }
 
   addClipBox(clipBox: IClipBox): void {
-    const clipBoxBox3 = clipBox.box;
-    const min = clipBoxBox3.min;
-    const max = clipBoxBox3.min;
-    const geometry = new THREE.BoxGeometry(max.x-min.x, max.y-min.y, max.z-min.z);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshLambertMaterial({
+      color: '#00ff00',
+      opacity: 0.25,
+      transparent: true, 
       wireframe: true,
     });
     const cube = new THREE.Mesh( geometry, material );
-    cube.position.set(clipBox.position.x, clipBox.position.y, clipBox.position.z);
     this.clipBoxes.push({
       iClipBox: clipBox,
       geometry: geometry,
@@ -136,7 +141,7 @@ export class Viewer {
   }
 
   addClipSphere(clipSphere: IClipSphere): void {
-    const geometry = new THREE.SphereGeometry(clipSphere.radius, 32, 32);
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
     const material = new THREE.MeshLambertMaterial({ 
       color: '#0000ff',
       opacity: 0.25,
@@ -156,14 +161,37 @@ export class Viewer {
     this.scene.add(this.clipSpheres[0].mesh);
   }
 
+  addClipPlane(clipPlane: IClipPlane): void {
+    const geometry = new THREE.PlaneGeometry( 5, 20, 32 );
+    const material = new THREE.MeshBasicMaterial({
+      color: '#ff00ff',
+      side: THREE.DoubleSide,
+      opacity: 0.25,
+      transparent: true, 
+    });
+    const plane = new THREE.Mesh( geometry, material );
+    this.clipPlanes.push({
+      iClipPlane: clipPlane,
+      geometry: geometry,
+      color: '#0000FF',
+      mesh: plane,
+      position: new THREE.Vector3(0, 0, 0),
+      rotation: new THREE.Quaternion(),
+      scale: new THREE.Vector3(1, 1, 1),
+    });
+    this.scene.add(plane);
+  }
+
   updateClipMode() {
     const pcos = this.pointClouds;
     const numPcos = pcos.length;
     if (numPcos > 0) {
       const pointCloud = pcos[0];
       if (pointCloud.material.clipMode === ClipMode.HIGHLIGHT_INSIDE) {
-        pointCloud.material.clipMode = ClipMode.CLIP_OUTSIDE_TEST;
-      } else if (pointCloud.material.clipMode === ClipMode.CLIP_OUTSIDE_TEST) {
+        pointCloud.material.clipMode = ClipMode.CLIP_OUTSIDE;
+      } else if (pointCloud.material.clipMode === ClipMode.CLIP_OUTSIDE) {
+        pointCloud.material.clipMode = ClipMode.CLIP_INSIDE;
+      } else if (pointCloud.material.clipMode === ClipMode.CLIP_INSIDE) {
         pointCloud.material.clipMode = ClipMode.HIGHLIGHT_INSIDE;
       }
     }
@@ -181,28 +209,28 @@ export class Viewer {
     
     this.clipBoxes[0].mesh.position.set(this.clipBoxes[0].position.x, this.clipBoxes[0].position.y, this.clipBoxes[0].position.z);
 
+    let iClipBox = this.clipBoxes[0].iClipBox;
     const m = new Matrix4;
     m.compose(
       this.clipBoxes[0].position,
       this.clipBoxes[0].rotation,
       this.clipBoxes[0].scale,
     );
-    let iClipBox = this.clipBoxes[0].iClipBox;
-    iClipBox.inverse.getInverse(m);
+    iClipBox.matrix.getInverse(m);
     this.pointClouds[0].material.setClipBoxes([iClipBox]);
   }
 
   scaleClipBox = (scale: number) => {
     this.clipBoxes[0].scale = new Vector3(scale, scale, scale);
     this.clipBoxes[0].mesh.scale.set(this.clipBoxes[0].scale.x, this.clipBoxes[0].scale.y, this.clipBoxes[0].scale.z);
+    let iClipBox = this.clipBoxes[0].iClipBox;
     const m = new Matrix4;
     m.compose(
       this.clipBoxes[0].position,
       this.clipBoxes[0].rotation,
       this.clipBoxes[0].scale,
     )
-    let iClipBox = this.clipBoxes[0].iClipBox;
-    iClipBox.inverse.getInverse(m);
+    iClipBox.matrix.getInverse(m);
     this.pointClouds[0].material.setClipBoxes([iClipBox]);
   }
 
@@ -217,30 +245,89 @@ export class Viewer {
     }
     
     this.clipSpheres[0].mesh.position.set(this.clipSpheres[0].position.x, this.clipSpheres[0].position.y, this.clipSpheres[0].position.z);
-
+    let iClipSphere = this.clipSpheres[0].iClipSphere;
     const m = new Matrix4;
     m.compose(
       this.clipSpheres[0].position,
       this.clipSpheres[0].rotation,
       this.clipSpheres[0].scale,
     );
-    let iClipSphere = this.clipSpheres[0].iClipSphere;
-    iClipSphere.inverse.getInverse(m);
+    iClipSphere.matrix.getInverse(m); 
     this.pointClouds[0].material.setClipSpheres([iClipSphere]);
   }
 
   scaleClipSphere = (scale: number) => {
     this.clipSpheres[0].scale = new Vector3(scale, scale, scale);
     this.clipSpheres[0].mesh.scale.set(this.clipSpheres[0].scale.x, this.clipSpheres[0].scale.y, this.clipSpheres[0].scale.z);
+    let iClipSphere = this.clipSpheres[0].iClipSphere;
     const m = new Matrix4;
     m.compose(
       this.clipSpheres[0].position,
       this.clipSpheres[0].rotation,
       this.clipSpheres[0].scale,
     )
-    let iClipSphere = this.clipSpheres[0].iClipSphere;
-    iClipSphere.inverse.getInverse(m);
+    iClipSphere.matrix.getInverse(m);
     this.pointClouds[0].material.setClipSpheres([iClipSphere]);
+  }
+
+  translateClipPlane = (translation: Vector3, axis: string) => {
+    const currentPos = this.clipPlanes[0].position;
+    if (axis === 'x') {
+      this.clipPlanes[0].position = new Vector3(translation.x, currentPos.y, currentPos.z);
+    } else if (axis === 'y') {
+      this.clipPlanes[0].position = new Vector3(currentPos.x, translation.y, currentPos.z);
+    } else if (axis === 'PZ') {
+      this.clipPlanes[0].position = new Vector3(currentPos.x, currentPos.y, translation.z);
+    }
+    
+    this.clipPlanes[0].mesh.position.set(this.clipPlanes[0].position.x, this.clipPlanes[0].position.y, this.clipPlanes[0].position.z);
+
+    let iClipPlane = this.clipPlanes[0].iClipPlane;
+    const m = new Matrix4();
+    m.compose(
+      this.clipPlanes[0].position,
+      this.clipPlanes[0].rotation,
+      this.clipPlanes[0].scale,
+    );
+    iClipPlane.matrix.getInverse(m);
+    console.log(iClipPlane.matrix);
+
+    let iClipPlane2 = this.clipPlanes[1].iClipPlane;
+    const m2 = new Matrix4();
+    m2.compose(
+      this.clipPlanes[0].position,
+      this.clipPlanes[0].rotation,
+      this.clipPlanes[0].scale,
+    );
+    iClipPlane2.matrix.getInverse(m2);
+
+    this.pointClouds[0].material.setClipPlanes([iClipPlane, iClipPlane]);
+  }
+
+  rotateClipPlane = (rotationAngle: number) => {
+    this.clipPlanes[0].rotation.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
+    let newEuler = new THREE.Euler();
+    newEuler.setFromQuaternion(this.clipPlanes[0].rotation);
+    this.clipPlanes[0].mesh.rotation.set(newEuler.x, newEuler.y, newEuler.z);
+    let iClipPlane = this.clipPlanes[0].iClipPlane;
+    const m = new Matrix4;
+    m.compose(
+      this.clipPlanes[0].position,
+      this.clipPlanes[0].rotation,
+      this.clipPlanes[0].scale,
+    );
+    iClipPlane.matrix.getInverse(m);
+
+    let iClipPlane2 = this.clipPlanes[1].iClipPlane;
+    const m2 = new Matrix4;
+    m2.compose(
+      this.clipPlanes[1].position,
+      this.clipPlanes[1].rotation,
+      this.clipPlanes[1].scale,
+    );
+    iClipPlane2.matrix.getInverse(m2);
+
+    this.pointClouds[0].material.setClipPlanes([iClipPlane, iClipPlane2]);
   }
 
   addAxes() {

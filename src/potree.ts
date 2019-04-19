@@ -275,7 +275,7 @@ export class Potree implements IPotree {
   private shouldClip(pointCloud: PointCloudOctree, boundingBox: Box3): boolean {
     const material = pointCloud.material;
 
-    if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
+    if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE_PICK) {
       return false;
     }
 

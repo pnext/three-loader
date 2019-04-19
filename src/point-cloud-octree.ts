@@ -590,7 +590,7 @@ export class PointCloudOctree extends PointCloudTree {
     } else {
       pickMaterial.clipMode = material.clipMode;
       pickMaterial.setClipBoxes(
-        material.clipMode === ClipMode.CLIP_OUTSIDE ? material.clipBoxes : [],
+        material.clipMode === ClipMode.CLIP_OUTSIDE_PICK ? material.clipBoxes : [],
       );
     }
   }
