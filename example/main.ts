@@ -1,7 +1,7 @@
 // import { Vector3, Matrix4, Box3 } from 'three';
 import { Vector3, Matrix4 } from 'three';
 // import { PointCloudOctree, ClipMode, IClipBox, IClipSphere, IClipPlane } from '../src';
-import { PointCloudOctree, ClipMode, IClipPlane } from '../src';
+import { PointCloudOctree, ClipMode, IClipBox } from '../src';
 // import { PointCloudOctree, ClipMode } from '../src';
 import { Viewer } from './viewer';
 
@@ -17,10 +17,11 @@ viewer.initialize(targetEl);
 let pointCloud: PointCloudOctree | undefined;
 let loaded: boolean = false;
 
-// let clipBox: IClipBox | undefined;
+let clipBox1: IClipBox | undefined;
+let clipBox2: IClipBox | undefined;
 // let clipSphere: IClipSphere | undefined;
-let clipPlane: IClipPlane | undefined;
-let clipPlane2: IClipPlane | undefined;
+// let clipPlane: IClipPlane | undefined;
+// let clipPlane2: IClipPlane | undefined;
 
 let currentTranslation = new Vector3();
 
@@ -66,14 +67,23 @@ loadBtn.addEventListener('click', () => {
 
       pointCloud.material.clipMode = ClipMode.HIGHLIGHT_INSIDE;
       
-      let m = new Matrix4();
+      let m1 = new Matrix4();
+      let m2 = new Matrix4();
       // CLIP BOXES
-      // const newClipBox = {
-      //   matrix: m,
-      // }
-      // clipBox = newClipBox;
-      //pointCloud.material.setClipBoxes([clipBox]);
-      // viewer.addClipBox(clipBox);
+      const newClipBox1 = {
+        matrix: m1,
+      }
+      clipBox1 = newClipBox1;
+      viewer.addClipBox(clipBox1, 0);
+
+      const newClipBox2 = {
+        matrix: m2,
+      }
+      clipBox2 = newClipBox2;
+      viewer.addClipBox(clipBox2, 1);
+
+
+      pointCloud.material.setClipBoxes([clipBox1, clipBox2]);
 
       // CLIP SPHERE
       // const newClipSphere = {
@@ -84,17 +94,17 @@ loadBtn.addEventListener('click', () => {
       // viewer.addClipSphere(clipSphere);
 
       // CLIP PLANE
-      const newClipPlane = {
-        matrix: m,
-      }
-      const newClipPlane2 = {
-        matrix: m,
-      }
-      clipPlane = newClipPlane;
-      clipPlane2 = newClipPlane2;
-      pointCloud.material.setClipPlanes([clipPlane, clipPlane2]);
-      viewer.addClipPlane(clipPlane);
-      viewer.addClipPlane(clipPlane2);
+      // const newClipPlane = {
+      //   matrix: m,
+      // }
+      // const newClipPlane2 = {
+      //   matrix: m,
+      // }
+      // clipPlane = newClipPlane;
+      // clipPlane2 = newClipPlane2;
+      // pointCloud.material.setClipPlanes([clipPlane, clipPlane2]);
+      // viewer.addClipPlane(clipPlane);
+      // viewer.addClipPlane(clipPlane2);
 
     })
     .catch(err => console.error(err));
@@ -145,10 +155,10 @@ function createSlider(min: string, max: string, startVal: string, id: string, ty
           viewer.scaleClipSphere(parseFloat(newSlider.value));
         } else if (type === 'PZ') {
           currentTranslation.z = parseFloat(newSlider.value);
-          viewer.translateClipPlane(currentTranslation, 'PZ');
+          // viewer.translateClipPlane(currentTranslation, 'PZ');
         } else if (type === 'PR') {
           currentTranslation.z = parseFloat(newSlider.value);
-          viewer.rotateClipPlane(parseFloat(newSlider.value));
+          // viewer.rotateClipPlane(parseFloat(newSlider.value));
         } 
       }
     }
@@ -179,5 +189,5 @@ createSlider('-5', '5', '0', 'xSlider', 'xS');
 createSlider('-5', '5', '0', 'ySlider', 'yS');
 createSlider('-5', '5', '0', 'zSlider', 'zS');
 createSlider('0.01', '5', '2', 'scaleSlider', 'scaleS');
-createSlider('-5', '5', '0', 'planeSlider', 'PZ');
-createSlider('-3.14', '3.14', '0', 'planeSliderR', 'PR');
+// createSlider('-5', '5', '0', 'planeSlider', 'PZ');
+// createSlider('-3.14', '3.14', '0', 'planeSliderR', 'PR');

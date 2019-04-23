@@ -1,9 +1,9 @@
 precision highp float;
 precision highp int;
 
-#define max_clip_boxes 30
-#define max_clip_spheres 30
-#define max_clip_planes 100
+#define max_clip_boxes 20
+#define max_clip_spheres 20
+// #define max_clip_planes 100
 
 attribute vec3 position;
 attribute vec3 color;
@@ -38,9 +38,9 @@ uniform float far;
 	uniform mat4 clipSpheres[max_clip_spheres];
 #endif
 
-#if defined use_clip_plane
-	uniform mat4 clipPlanes[max_clip_planes];
-#endif
+// #if defined use_clip_plane
+// 	uniform mat4 clipPlanes[max_clip_planes];
+// #endif
 
 uniform float heightMin;
 uniform float heightMax;
@@ -53,7 +53,7 @@ uniform vec3 uColor;
 uniform float opacity;
 uniform float clipBoxCount;
 uniform float clipSphereCount;
-uniform float clipPlaneCount;
+// uniform float clipPlaneCount;
 uniform float level;
 uniform float vnStart;
 uniform bool isLeafNode;
@@ -398,8 +398,6 @@ void doClipping() {
 			inside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;
 			insideAny = insideAny || inside;
 		}
-
-		
 	#endif
 
 	#if defined use_clip_sphere
@@ -415,21 +413,18 @@ void doClipping() {
 		}
 	#endif
 
-	#if defined use_clip_plane
-		bool insideAll = true;
-		for (int i = 0; i < max_clip_planes; i++) {
-			if (i == int(clipPlaneCount)) {
-				break;
-			}
-
-			vec4 planeLocal = clipPlanes[i] * modelMatrix * vec4(position, 1.0);
-
-			bool insidePlane = planeLocal.z >= 0.0;
-			
-			insideAll = insideAll && insidePlane;
-		}
-		insideAny = insideAll || insideAny;
-	#endif
+	// #if defined use_clip_plane
+		// bool insideAll = true;
+		// for (int i = 0; i < max_clip_planes; i++) {
+			// if (i == int(clipPlaneCount)) {
+				// break;
+			// }
+			// vec4 planeLocal = clipPlanes[i] * modelMatrix * vec4(position, 1.0);
+			// bool insidePlane = planeLocal.z >= 0.0;
+			// insideAll = insideAll && insidePlane;
+		// }
+		// insideAny = insideAll || insideAny;
+	// #endif
 
 	if (!insideAny) {
 		#if defined clip_outside

@@ -1,4 +1,4 @@
-import { Matrix4, Vector3, BoxGeometry, Mesh, Quaternion, SphereGeometry, PlaneGeometry } from 'three';
+import { Matrix4, Vector3, BoxGeometry, Mesh, Quaternion, SphereGeometry } from 'three';
 
 export enum ClipMode {
   DISABLED = 0,
@@ -36,16 +36,16 @@ export type ClipSphere = {
   scale: Vector3,
 }
 
-export interface IClipPlane {
-  matrix: Matrix4;
-}
+// export interface IClipPlane {
+//   matrix: Matrix4;
+// }
 
-export type ClipPlane = {
-  iClipPlane: IClipPlane,
-  geometry: PlaneGeometry,
-  color: string,
-  mesh: Mesh,
-  position: Vector3,
-  rotation: Quaternion,
-  scale: Vector3,
-}
+// export type ClipPlane = {
+//   iClipPlane: IClipPlane,
+//   geometry: PlaneGeometry,
+//   color: string,
+//   mesh: Mesh,
+//   position: Vector3,
+//   rotation: Quaternion,
+//   scale: Vector3,
+// }
