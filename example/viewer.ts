@@ -1,5 +1,5 @@
 import { PerspectiveCamera, Scene, WebGLRenderer, Vector3, Matrix4 } from 'three';
-import { PointCloudOctree, Potree, ClipMode, IClipBox, ClipBox, IClipSphere, ClipSphere} from '../src';
+import { PointCloudOctree, Potree, ClipMode, IClipBox, ClipBox, IClipSphere, ClipSphere, IClipPlane, ClipPlane, IClipCylinder, ClipCylinder} from '../src';
 
 // tslint:disable-next-line:no-duplicate-imports
 import * as THREE from 'three';
@@ -51,9 +51,13 @@ export class Viewer {
    */
   private clipSpheres: ClipSphere[] = [];
   /**
-   * Array of clipSpheres which are in the scene and need to be updated.
+   * Array of clipPlanes which are in the scene and need to be updated.
    */
-  // private clipPlanes: ClipPlane[] = [];
+  private clipPlanes: ClipPlane[] = [];
+  /**
+   * Array of clipPlanes which are in the scene and need to be updated.
+   */
+  private clipCylinders: ClipCylinder[] = [];
   /**
    * Initializes the viewer into the specified element.
    *
@@ -162,26 +166,45 @@ export class Viewer {
     this.scene.add(this.clipSpheres[0].mesh);
   }
 
-  // addClipPlane(clipPlane: IClipPlane): void {
-  //   const geometry = new THREE.PlaneGeometry( 5, 20, 32 );
-  //   const material = new THREE.MeshBasicMaterial({
-  //     color: '#ff00ff',
-  //     side: THREE.DoubleSide,
-  //     opacity: 0.25,
-  //     transparent: true, 
-  //   });
-  //   const plane = new THREE.Mesh( geometry, material );
-  //   this.clipPlanes.push({
-  //     iClipPlane: clipPlane,
-  //     geometry: geometry,
-  //     color: '#0000FF',
-  //     mesh: plane,
-  //     position: new THREE.Vector3(0, 0, 0),
-  //     rotation: new THREE.Quaternion(),
-  //     scale: new THREE.Vector3(1, 1, 1),
-  //   });
-  //   this.scene.add(plane);
-  // }
+  addClipPlane(clipPlane: IClipPlane): void {
+    const geometry = new THREE.PlaneGeometry( 5, 20, 32 );
+    const material = new THREE.MeshBasicMaterial({
+      color: '#ff00ff',
+      side: THREE.DoubleSide,
+      opacity: 0.25,
+      transparent: true, 
+    });
+    const plane = new THREE.Mesh( geometry, material );
+    this.clipPlanes.push({
+      iClipPlane: clipPlane,
+      geometry: geometry,
+      color: '#0000FF',
+      mesh: plane,
+      position: new THREE.Vector3(0, 0, 0),
+      rotation: new THREE.Quaternion(),
+      scale: new THREE.Vector3(1, 1, 1),
+    });
+    this.scene.add(plane);
+  }
+
+  addClipCylinder(clipCylinder: IClipCylinder): void {
+    const geometry = new THREE.CylinderGeometry( 1, 1, 1, 32 );
+    const material = new THREE.MeshBasicMaterial({
+      color: '#ff00ff',
+      wireframe: true,
+    });
+    const cylinder = new THREE.Mesh( geometry, material );
+    this.clipCylinders.push({
+      iClipCylinder: clipCylinder,
+      geometry: geometry,
+      color: '#0000FF',
+      mesh: cylinder,
+      position: new THREE.Vector3(0, 0, 0),
+      rotation: new THREE.Quaternion(),
+      scale: new THREE.Vector3(1, 1, 1),
+    });
+    this.scene.add(cylinder);
+  }
 
   updateClipMode() {
     const pcos = this.pointClouds;
@@ -271,65 +294,123 @@ export class Viewer {
     this.pointClouds[0].material.setClipSpheres([iClipSphere]);
   }
 
-  // translateClipPlane = (translation: Vector3, axis: string) => {
-  //   const currentPos = this.clipPlanes[0].position;
-  //   if (axis === 'x') {
-  //     this.clipPlanes[0].position = new Vector3(translation.x, currentPos.y, currentPos.z);
-  //   } else if (axis === 'y') {
-  //     this.clipPlanes[0].position = new Vector3(currentPos.x, translation.y, currentPos.z);
-  //   } else if (axis === 'PZ') {
-  //     this.clipPlanes[0].position = new Vector3(currentPos.x, currentPos.y, translation.z);
-  //   }
+  translateClipPlane = (translation: Vector3, axis: string) => {
+    const currentPos = this.clipPlanes[0].position;
+    if (axis === 'x') {
+      this.clipPlanes[0].position = new Vector3(translation.x, currentPos.y, currentPos.z);
+    } else if (axis === 'y') {
+      this.clipPlanes[0].position = new Vector3(currentPos.x, translation.y, currentPos.z);
+    } else if (axis === 'PZ') {
+      this.clipPlanes[0].position = new Vector3(currentPos.x, currentPos.y, translation.z);
+    }
     
-  //   this.clipPlanes[0].mesh.position.set(this.clipPlanes[0].position.x, this.clipPlanes[0].position.y, this.clipPlanes[0].position.z);
+    this.clipPlanes[0].mesh.position.set(this.clipPlanes[0].position.x, this.clipPlanes[0].position.y, this.clipPlanes[0].position.z);
 
-  //   let iClipPlane = this.clipPlanes[0].iClipPlane;
-  //   const m = new Matrix4();
-  //   m.compose(
-  //     this.clipPlanes[0].position,
-  //     this.clipPlanes[0].rotation,
-  //     this.clipPlanes[0].scale,
-  //   );
-  //   iClipPlane.matrix.getInverse(m);
-  //   console.log(iClipPlane.matrix);
+    let iClipPlane = this.clipPlanes[0].iClipPlane;
+    const m = new Matrix4();
+    m.compose(
+      this.clipPlanes[0].position,
+      this.clipPlanes[0].rotation,
+      this.clipPlanes[0].scale,
+    );
+    iClipPlane.matrix.getInverse(m);
+    console.log(iClipPlane.matrix);
 
-  //   let iClipPlane2 = this.clipPlanes[1].iClipPlane;
-  //   const m2 = new Matrix4();
-  //   m2.compose(
-  //     this.clipPlanes[0].position,
-  //     this.clipPlanes[0].rotation,
-  //     this.clipPlanes[0].scale,
-  //   );
-  //   iClipPlane2.matrix.getInverse(m2);
+    let iClipPlane2 = this.clipPlanes[1].iClipPlane;
+    const m2 = new Matrix4();
+    m2.compose(
+      this.clipPlanes[0].position,
+      this.clipPlanes[0].rotation,
+      this.clipPlanes[0].scale,
+    );
+    iClipPlane2.matrix.getInverse(m2);
 
-  //   this.pointClouds[0].material.setClipPlanes([iClipPlane, iClipPlane]);
-  // }
+    this.pointClouds[0].material.setClipPlanes([iClipPlane, iClipPlane]);
+  }
 
-  // rotateClipPlane = (rotationAngle: number) => {
-  //   this.clipPlanes[0].rotation.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
-  //   let newEuler = new THREE.Euler();
-  //   newEuler.setFromQuaternion(this.clipPlanes[0].rotation);
-  //   this.clipPlanes[0].mesh.rotation.set(newEuler.x, newEuler.y, newEuler.z);
-  //   let iClipPlane = this.clipPlanes[0].iClipPlane;
-  //   const m = new Matrix4;
-  //   m.compose(
-  //     this.clipPlanes[0].position,
-  //     this.clipPlanes[0].rotation,
-  //     this.clipPlanes[0].scale,
-  //   );
-  //   iClipPlane.matrix.getInverse(m);
+  rotateClipPlane = (rotationAngle: number) => {
+    this.clipPlanes[0].rotation.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
+    let newEuler = new THREE.Euler();
+    newEuler.setFromQuaternion(this.clipPlanes[0].rotation);
+    this.clipPlanes[0].mesh.rotation.set(newEuler.x, newEuler.y, newEuler.z);
+    let iClipPlane = this.clipPlanes[0].iClipPlane;
+    const m = new Matrix4;
+    m.compose(
+      this.clipPlanes[0].position,
+      this.clipPlanes[0].rotation,
+      this.clipPlanes[0].scale,
+    );
+    iClipPlane.matrix.getInverse(m);
 
-  //   let iClipPlane2 = this.clipPlanes[1].iClipPlane;
-  //   const m2 = new Matrix4;
-  //   m2.compose(
-  //     this.clipPlanes[1].position,
-  //     this.clipPlanes[1].rotation,
-  //     this.clipPlanes[1].scale,
-  //   );
-  //   iClipPlane2.matrix.getInverse(m2);
+    let iClipPlane2 = this.clipPlanes[1].iClipPlane;
+    const m2 = new Matrix4;
+    m2.compose(
+      this.clipPlanes[1].position,
+      this.clipPlanes[1].rotation,
+      this.clipPlanes[1].scale,
+    );
+    iClipPlane2.matrix.getInverse(m2);
 
-  //   this.pointClouds[0].material.setClipPlanes([iClipPlane, iClipPlane2]);
-  // }
+    this.pointClouds[0].material.setClipPlanes([iClipPlane, iClipPlane2]);
+  }
+
+  translateClipCylinder = (translation: Vector3, axis: string) => {
+    const currentPos = this.clipCylinders[0].position;
+    if (axis === 'x') {
+      this.clipCylinders[0].position = new Vector3(translation.x, currentPos.y, currentPos.z);
+    } else if (axis === 'y') {
+      this.clipCylinders[0].position = new Vector3(currentPos.x, translation.y, currentPos.z);
+    } else if (axis === 'z') {
+      this.clipCylinders[0].position = new Vector3(currentPos.x, currentPos.y, translation.z);
+    }
+    this.clipCylinders[0].mesh.position.set(this.clipCylinders[0].position.x, this.clipCylinders[0].position.y, this.clipCylinders[0].position.z);
+
+    let iClipCylinder = this.clipCylinders[0].iClipCylinder;
+    const m = new Matrix4();
+    m.compose(
+      this.clipCylinders[0].position,
+      this.clipCylinders[0].rotation,
+      this.clipCylinders[0].scale,
+    );
+    iClipCylinder.matrix.getInverse(m);
+    this.pointClouds[0].material.setClipCylinders([iClipCylinder]);
+  }
+
+  scaleClipCylinder = (scale: number) => {
+    this.clipCylinders[0].scale = new Vector3(1, scale, 1);
+    this.clipCylinders[0].mesh.scale.set(this.clipCylinders[0].scale.x, this.clipCylinders[0].scale.y, this.clipCylinders[0].scale.z);
+    let iClipCylinder = this.clipCylinders[0].iClipCylinder;
+    const m = new Matrix4;
+    m.compose(
+      this.clipCylinders[0].position,
+      this.clipCylinders[0].rotation,
+      this.clipCylinders[0].scale,
+    )
+    iClipCylinder.matrix.getInverse(m);
+    this.pointClouds[0].material.setClipCylinders([iClipCylinder]);
+  }
+
+  rotateClipCylinder = (rotationAngle: number, axis: string) => {
+    if (axis === 'x') {
+      this.clipCylinders[0].rotation.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
+    } else if (axis === 'y') {
+      this.clipCylinders[0].rotation.setFromAxisAngle(new Vector3(0, 1, 0), rotationAngle);
+    } else if (axis === 'z') {
+      this.clipCylinders[0].rotation.setFromAxisAngle(new Vector3(0, 0, 1), rotationAngle);
+    }
+    let newEuler = new THREE.Euler();
+    newEuler.setFromQuaternion(this.clipCylinders[0].rotation);
+    this.clipCylinders[0].mesh.rotation.set(newEuler.x, newEuler.y, newEuler.z);
+    let iClipCylinder = this.clipCylinders[0].iClipCylinder;
+    const m = new Matrix4;
+    m.compose(
+      this.clipCylinders[0].position,
+      this.clipCylinders[0].rotation,
+      this.clipCylinders[0].scale,
+    );
+    iClipCylinder.matrix.getInverse(m);
+    this.pointClouds[0].material.setClipCylinders([iClipCylinder]);
+  }
 
   addAxes() {
     this.addAxis(new THREE.Vector3(-10, 0, 0), new THREE.Vector3(10, 0, 0), '#FF0000');

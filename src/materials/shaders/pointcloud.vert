@@ -1,9 +1,10 @@
 precision highp float;
 precision highp int;
 
-#define max_clip_boxes 20
-#define max_clip_spheres 20
-// #define max_clip_planes 100
+#define max_clip_boxes 10
+#define max_clip_spheres 10
+#define max_clip_planes 10
+#define max_clip_cylinders 10
 
 attribute vec3 position;
 attribute vec3 color;
@@ -38,9 +39,13 @@ uniform float far;
 	uniform mat4 clipSpheres[max_clip_spheres];
 #endif
 
-// #if defined use_clip_plane
-// 	uniform mat4 clipPlanes[max_clip_planes];
-// #endif
+#if defined use_clip_plane
+ 	uniform mat4 clipPlanes[max_clip_planes];
+#endif
+
+#if defined use_clip_cylinder
+ 	uniform mat4 clipCylinders[max_clip_cylinders];
+#endif
 
 uniform float heightMin;
 uniform float heightMax;
@@ -53,7 +58,8 @@ uniform vec3 uColor;
 uniform float opacity;
 uniform float clipBoxCount;
 uniform float clipSphereCount;
-// uniform float clipPlaneCount;
+uniform float clipPlaneCount;
+uniform float clipCylinderCount;
 uniform float level;
 uniform float vnStart;
 uniform bool isLeafNode;
@@ -413,18 +419,31 @@ void doClipping() {
 		}
 	#endif
 
-	// #if defined use_clip_plane
-		// bool insideAll = true;
-		// for (int i = 0; i < max_clip_planes; i++) {
-			// if (i == int(clipPlaneCount)) {
-				// break;
-			// }
-			// vec4 planeLocal = clipPlanes[i] * modelMatrix * vec4(position, 1.0);
-			// bool insidePlane = planeLocal.z >= 0.0;
-			// insideAll = insideAll && insidePlane;
-		// }
-		// insideAny = insideAll || insideAny;
-	// #endif
+	#if defined use_clip_plane
+		bool insideAll = true;
+		for (int i = 0; i < max_clip_planes; i++) {
+			if (i == int(clipPlaneCount)) {
+				break;
+			}
+			vec4 planeLocal = clipPlanes[i] * modelMatrix * vec4(position, 1.0);
+			bool insidePlane = planeLocal.z >= 0.0;
+			insideAll = insideAll && insidePlane;
+		}
+		insideAny = insideAll || insideAny;
+	#endif
+
+	#if defined use_clip_cylinder
+		for (int i = 0; i < max_clip_cylinders; i++) {
+			if (i == int(clipCylinderCount)) {
+				break;
+			}
+
+			vec4 cylinderLocal = clipCylinders[i] * modelMatrix * vec4(position, 1.0);
+			bool withinCylinder = (cylinderLocal.y < 0.5) && (cylinderLocal.y > -0.5) && (length(cylinderLocal.xz) < 1.0);
+
+			insideAny = insideAny || withinCylinder;
+		}
+	#endif
 
 	if (!insideAny) {
 		#if defined clip_outside

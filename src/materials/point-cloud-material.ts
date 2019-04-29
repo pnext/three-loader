@@ -16,7 +16,7 @@ import {
   DEFAULT_RGB_GAMMA,
 } from '../constants';
 import { DEFAULT_CLASSIFICATION } from './classification';
-import { ClipMode, IClipBox, IClipSphere } from './clipping';
+import { ClipMode, IClipBox, IClipSphere, IClipPlane, IClipCylinder } from './clipping';
 import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
 import { SPECTRAL } from './gradients';
 import {
@@ -42,8 +42,10 @@ export interface IPointCloudMaterialUniforms {
   clipBoxes: IUniform<Float32Array>;
   clipSphereCount: IUniform<number>;
   clipSpheres: IUniform<Float32Array>;
-  // clipPlaneCount: IUniform<number>;
-  // clipPlanes: IUniform<Float32Array>;
+  clipPlaneCount: IUniform<number>;
+  clipPlanes: IUniform<Float32Array>;
+  clipCylinderCount: IUniform<number>;
+  clipCylinders: IUniform<Float32Array>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
   far: IUniform<number>;
@@ -139,8 +141,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   clipBoxes: IClipBox[] = [];
   numClipSpheres: number = 0;
   clipSpheres: IClipSphere[] = [];
-  // numClipPlanes: number = 0;
-  // clipPlanes: IClipPlane[] = [];
+  numClipPlanes: number = 0;
+  clipPlanes: IClipPlane[] = [];
+  numClipCylinders: number = 0;
+  clipCylinders: IClipCylinder[] = [];
   readonly visibleNodesTexture: Texture;
 
   private _gradient = SPECTRAL;
@@ -158,8 +162,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
     clipBoxes: makeUniform('Matrix4fv', [] as any),
     clipSphereCount: makeUniform('f', 0),
     clipSpheres: makeUniform('Matrix4fv', [] as any),
-    // clipPlaneCount: makeUniform('f', 0),
-    // clipPlanes: makeUniform('Matrix4fv', [] as any),
+    clipPlaneCount: makeUniform('f', 0),
+    clipPlanes: makeUniform('Matrix4fv', [] as any),
+    clipCylinderCount: makeUniform('f', 0),
+    clipCylinders: makeUniform('Matrix4fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     far: makeUniform('f', 1.0),
@@ -235,6 +241,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   @requiresShaderUpdate() useClipBox: boolean = false; // prettier-ignore
   @requiresShaderUpdate() useClipSphere: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() useClipPlane: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() useClipCylinder: boolean = false; // prettier-ignore
   @requiresShaderUpdate() weighted: boolean = false; // prettier-ignore
   @requiresShaderUpdate() pointColorType: PointColorType = PointColorType.RGB; // prettier-ignore
   @requiresShaderUpdate() pointSizeType: PointSizeType = PointSizeType.ADAPTIVE; // prettier-ignore
@@ -354,9 +362,13 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('use_clip_sphere');
     }
 
-    // if (this.numClipPlanes > 0) {
-    //   define('use_clip_plane');
-    // }
+    if (this.numClipPlanes > 0) {
+      define('use_clip_plane');
+    }
+
+    if (this.numClipCylinders > 0) {
+      define('use_clip_cylinder');
+    }
 
     define('MAX_POINT_LIGHTS 0');
     define('MAX_DIR_LIGHTS 0');
@@ -400,10 +412,9 @@ export class PointCloudMaterial extends RawShaderMaterial {
   }
 
   setClipSpheres(clipSpheres: IClipSphere[]): void {
-		if (!clipSpheres) {
-			return;
+    if (!clipSpheres) {
+      return;
     }
-    
     this.clipSpheres = clipSpheres;
 
 		const doUpdate =
@@ -432,38 +443,71 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.setUniform('clipSpheres', clipSpheresArray);
   }
   
-  // setClipPlanes(clipPlanes: IClipPlane[]): void {
-	// 	if (!clipPlanes) {
-	// 		return;
-  //   }
+  setClipPlanes(clipPlanes: IClipPlane[]): void {
+		if (!clipPlanes) {
+			return;
+    }
     
-  //   this.clipPlanes = clipPlanes;
+    this.clipPlanes = clipPlanes;
 
-	// 	const doUpdate =
-  //     this.numClipPlanes !== clipPlanes.length && (clipPlanes.length === 0 || this.numClipPlanes === 0);
+		const doUpdate =
+      this.numClipPlanes !== clipPlanes.length && (clipPlanes.length === 0 || this.numClipPlanes === 0);
 
-  //   this.numClipPlanes = clipPlanes.length;
-  //   this.setUniform('clipPlaneCount', this.numClipPlanes);
+    this.numClipPlanes = clipPlanes.length;
+    this.setUniform('clipPlaneCount', this.numClipPlanes);
 
-	// 	if (doUpdate) {
-	// 		this.updateShaderSource();
-  //   }
+		if (doUpdate) {
+			this.updateShaderSource();
+    }
 
-  //   const clipPlanesLength = this.numClipPlanes * 16;
-  //   let clipPlanesArray = new Float32Array(clipPlanesLength);
+    const clipPlanesLength = this.numClipPlanes * 16;
+    const clipPlanesArray = new Float32Array(clipPlanesLength);
 
-	// 	for (let i = 0; i < this.numClipPlanes; i++) {
-  //     clipPlanesArray.set(clipPlanes[i].matrix.elements, 16 * i);
-  //   }
+		for (let i = 0; i < this.numClipPlanes; i++) {
+      clipPlanesArray.set(clipPlanes[i].matrix.elements, 16 * i);
+    }
 
-  //   for (let i = 0; i < clipPlanesLength; i++) {
-  //     if (isNaN(clipPlanesArray[i])) {
-  //       clipPlanesArray[i] = Infinity;
-  //     }
-  //   }
+    for (let i = 0; i < clipPlanesLength; i++) {
+      if (isNaN(clipPlanesArray[i])) {
+        clipPlanesArray[i] = Infinity;
+      }
+    }
 
-  //   this.setUniform('clipPlanes', clipPlanesArray);
-	// }
+    this.setUniform('clipPlanes', clipPlanesArray);
+  }
+  
+  setClipCylinders(clipCylinders: IClipCylinder[]): void {
+    if (!clipCylinders) {
+      return;
+    }
+
+    this.clipCylinders = clipCylinders;
+
+    const doUpdate =
+      this.numClipCylinders !== clipCylinders.length && (clipCylinders.length === 0 || this.numClipCylinders === 0);
+
+    this.numClipCylinders = clipCylinders.length;
+    this.setUniform('clipCylinderCount', this.numClipCylinders);
+
+    if (doUpdate) {
+      this.updateShaderSource();
+    }
+
+    const clipCylindersLength = this.numClipCylinders * 16;
+    const clipCylindersArray = new Float32Array(clipCylindersLength);
+
+    for (let i = 0; i < this.numClipCylinders; i++) {
+      clipCylindersArray.set(clipCylinders[i].matrix.elements, 16 * i);
+    }
+
+    for (let i = 0; i < clipCylindersLength; i++) {
+      if (isNaN(clipCylindersArray[i])) {
+        clipCylindersArray[i] = Infinity;
+      }
+    }
+
+    this.setUniform('clipCylinders', clipCylindersArray);
+  }
 
   get gradient(): IGradient {
     return this._gradient;
