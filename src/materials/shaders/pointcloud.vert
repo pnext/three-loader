@@ -448,14 +448,18 @@ void doClipping() {
 	if (!insideAny) {
 		#if defined clip_outside
 			gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
-		#elif defined clip_highlight_inside && !defined(color_type_depth)
-			// float c = (vColor.r + vColor.g + vColor.b) / 6.0;
+		#elif defined clip_highlight_inside
+			vColor.g += 0.5;
+		#elif defined clip_highlight_outside
+			vColor.r += 0.5;
 		#endif
 	} else {
-		#if defined clip_highlight_inside
-			vColor.r += 0.5;
-		#elif defined clip_inside
+		#if defined clip_inside
 			gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
+		#elif defined clip_highlight_inside
+			vColor.r += 0.5;
+		#elif defined clip_highlight_outside
+			vColor.g += 0.5;
 		#endif
 	}
 }

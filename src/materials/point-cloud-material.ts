@@ -131,6 +131,7 @@ const CLIP_MODE_DEFS = {
   [ClipMode.CLIP_OUTSIDE]: 'clip_outside',
   [ClipMode.CLIP_INSIDE]: 'clip_inside',
   [ClipMode.HIGHLIGHT_INSIDE]: 'clip_highlight_inside',
+  [ClipMode.HIGHLIGHT_OUTSIDE]: 'clip_highlight_outside',
   [ClipMode.CLIP_OUTSIDE_PICK]: 'clip_outside_pick',
 };
 
