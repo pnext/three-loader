@@ -141,11 +141,18 @@ export class LRU {
   }
 
   disposeDescendants(node: Node): void {
+    // Collect all the nodes which are to be disposed and removed.
+    const nodesToDispose: Node[] = [];
     node.traverse(n => {
       if (n.loaded) {
-        n.dispose();
-        this.remove(n);
+        nodesToDispose.push(n);
       }
     });
+
+    // Dispose of all the nodes in one go.
+    for (const n of nodesToDispose) {
+      n.dispose();
+      this.remove(n);
+    }
   }
 }
