@@ -291,11 +291,11 @@ export class Potree implements IPotree {
         new Vector3(0.5, 0.5, 0.5),
       ).applyMatrix4(clipMatrixWorld);
       if (box2.intersectsBox(clipBoxWorld)) {
-        return true;
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 
   private updateVisibilityStructures = (() => {
