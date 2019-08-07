@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/pnext/three-loader/compare/v0.1.2...v0.1.3) (2019-08-07)
+
+
+### Bug Fixes
+
+* **lru:** collect all the nodes to remove and then remove them in one go ([4dcd3d4](https://github.com/pnext/three-loader/commit/4dcd3d4))
+
 ### [0.1.2](https://github.com/pnext/three-loader/compare/v0.1.0...v0.1.2) (2019-08-07)
 
 
