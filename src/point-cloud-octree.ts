@@ -443,7 +443,7 @@ export class PointCloudOctree extends PointCloudTree {
     renderer.setScissor(x, y, pickWndSize, pickWndSize);
     renderer.setScissorTest(true);
     renderer.state.buffers.depth.setTest(pickMaterial.depthTest);
-    renderer.state.buffers.depth.setMask(pickMaterial.depthWrite ? 1 : 0);
+    renderer.state.buffers.depth.setMask(pickMaterial.depthWrite ? true : false);
     renderer.state.setBlending(NoBlending);
 
     renderer.setRenderTarget(pickState.renderTarget);
