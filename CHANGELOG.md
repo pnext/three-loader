@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.4](https://github.com/pnext/three-loader/compare/v0.1.3...v0.1.4) (2019-08-15)
+
+
+### Bug Fixes
+
+* free more memory and prevent infinite loop when doing so ([437ebea](https://github.com/pnext/three-loader/commit/437ebea))
+
 ### [0.1.3](https://github.com/pnext/three-loader/compare/v0.1.2...v0.1.3) (2019-08-07)
 
 
