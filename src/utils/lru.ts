@@ -135,14 +135,14 @@ export class LRU {
     while (this.numPoints > this.pointBudget * 2) {
       const node = this.getLRUItem();
       if (node) {
-        this.disposeDescendants(node);
+        this.disposeSubtree(node);
       }
     }
   }
 
-  disposeDescendants(node: Node): void {
+  disposeSubtree(node: Node): void {
     // Collect all the nodes which are to be disposed and removed.
-    const nodesToDispose: Node[] = [];
+    const nodesToDispose: Node[] = [node];
     node.traverse(n => {
       if (n.loaded) {
         nodesToDispose.push(n);

@@ -1,4 +1,4 @@
-import { Box3, EventDispatcher, Object3D, Points, Sphere } from 'three';
+import { Box3, BufferGeometry, EventDispatcher, Object3D, Points, Sphere } from 'three';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { IPointCloudTreeNode } from './types';
 
@@ -22,6 +22,26 @@ export class PointCloudOctreeNode extends EventDispatcher implements IPointCloud
 
   dispose(): void {
     this.geometryNode.dispose();
+  }
+
+  disposeSceneNode(): void {
+    const node = this.sceneNode;
+
+    if (node.geometry instanceof BufferGeometry) {
+      const attributes = node.geometry.attributes;
+
+      // tslint:disable-next-line:forin
+      for (const key in attributes) {
+        if (key === 'position') {
+          delete attributes[key].array;
+        }
+
+        delete attributes[key];
+      }
+
+      node.geometry.dispose();
+      node.geometry = undefined as any;
+    }
   }
 
   traverse(cb: (node: IPointCloudTreeNode) => void, includeSelf?: boolean): void {

@@ -131,26 +131,28 @@ export class PointCloudMaterial extends RawShaderMaterial {
   fog = false;
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
-  readonly visibleNodesTexture: Texture;
+  visibleNodesTexture: Texture | undefined;
 
   private _gradient = SPECTRAL;
-  private gradientTexture = generateGradientTexture(this._gradient);
+  private gradientTexture: Texture | undefined = generateGradientTexture(this._gradient);
 
   private _classification: IClassification = DEFAULT_CLASSIFICATION;
-  private classificationTexture: Texture = generateClassificationTexture(this._classification);
+  private classificationTexture: Texture | undefined = generateClassificationTexture(
+    this._classification,
+  );
 
   uniforms: IPointCloudMaterialUniforms & Record<string, IUniform<any>> = {
     bbSize: makeUniform('fv', [0, 0, 0] as [number, number, number]),
     blendDepthSupplement: makeUniform('f', 0.0),
     blendHardness: makeUniform('f', 2.0),
-    classificationLUT: makeUniform('t', this.classificationTexture),
+    classificationLUT: makeUniform('t', this.classificationTexture || new Texture()),
     clipBoxCount: makeUniform('f', 0),
     clipBoxes: makeUniform('Matrix4fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     far: makeUniform('f', 1.0),
     fov: makeUniform('f', 1.0),
-    gradient: makeUniform('t', this.gradientTexture),
+    gradient: makeUniform('t', this.gradientTexture || new Texture()),
     heightMax: makeUniform('f', 1.0),
     heightMin: makeUniform('f', 0.0),
     intensityBrightness: makeUniform('f', 0),
@@ -175,7 +177,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     toModel: makeUniform('Matrix4f', []),
     transition: makeUniform('f', 0.5),
     uColor: makeUniform('c', new Color(0xffffff)),
-    visibleNodes: makeUniform('t', this.visibleNodesTexture),
+    visibleNodes: makeUniform('t', this.visibleNodesTexture || new Texture()),
     vnStart: makeUniform('f', 0.0),
     wClassification: makeUniform('f', 0),
     wElevation: makeUniform('f', 0),
@@ -187,48 +189,48 @@ export class PointCloudMaterial extends RawShaderMaterial {
     filterByNormalThreshold: makeUniform('f', 0),
   };
 
-  @uniform('bbSize') bbSize!: [number, number, number]; // prettier-ignore
-  @uniform('depthMap') depthMap!: Texture | null; // prettier-ignore
-  @uniform('far') far!: number; // prettier-ignore
-  @uniform('fov') fov!: number; // prettier-ignore
-  @uniform('heightMax') heightMax!: number; // prettier-ignore
-  @uniform('heightMin') heightMin!: number; // prettier-ignore
-  @uniform('intensityBrightness') intensityBrightness!: number; // prettier-ignore
-  @uniform('intensityContrast') intensityContrast!: number; // prettier-ignore
-  @uniform('intensityGamma') intensityGamma!: number; // prettier-ignore
-  @uniform('intensityRange') intensityRange!: [number, number]; // prettier-ignore
-  @uniform('maxSize') maxSize!: number; // prettier-ignore
-  @uniform('minSize') minSize!: number; // prettier-ignore
-  @uniform('near') near!: number; // prettier-ignore
-  @uniform('opacity', true) opacity!: number; // prettier-ignore
-  @uniform('rgbBrightness', true) rgbBrightness!: number; // prettier-ignore
-  @uniform('rgbContrast', true) rgbContrast!: number; // prettier-ignore
-  @uniform('rgbGamma', true) rgbGamma!: number; // prettier-ignore
-  @uniform('screenHeight') screenHeight!: number; // prettier-ignore
-  @uniform('screenWidth') screenWidth!: number; // prettier-ignore
-  @uniform('size') size!: number; // prettier-ignore
-  @uniform('spacing') spacing!: number; // prettier-ignore
-  @uniform('transition') transition!: number; // prettier-ignore
-  @uniform('uColor') color!: Color; // prettier-ignore
-  @uniform('wClassification') weightClassification!: number; // prettier-ignore
-  @uniform('wElevation') weightElevation!: number; // prettier-ignore
-  @uniform('wIntensity') weightIntensity!: number; // prettier-ignore
-  @uniform('wReturnNumber') weightReturnNumber!: number; // prettier-ignore
-  @uniform('wRGB') weightRGB!: number; // prettier-ignore
-  @uniform('wSourceID') weightSourceID!: number; // prettier-ignore
-  @uniform('opacityAttenuation') opacityAttenuation!: number; // prettier-ignore
-  @uniform('filterByNormalThreshold') filterByNormalThreshold!: number; // prettier-ignore
+  @uniform('bbSize') bbSize!: [number, number, number];
+  @uniform('depthMap') depthMap!: Texture | undefined;
+  @uniform('far') far!: number;
+  @uniform('fov') fov!: number;
+  @uniform('heightMax') heightMax!: number;
+  @uniform('heightMin') heightMin!: number;
+  @uniform('intensityBrightness') intensityBrightness!: number;
+  @uniform('intensityContrast') intensityContrast!: number;
+  @uniform('intensityGamma') intensityGamma!: number;
+  @uniform('intensityRange') intensityRange!: [number, number];
+  @uniform('maxSize') maxSize!: number;
+  @uniform('minSize') minSize!: number;
+  @uniform('near') near!: number;
+  @uniform('opacity', true) opacity!: number;
+  @uniform('rgbBrightness', true) rgbBrightness!: number;
+  @uniform('rgbContrast', true) rgbContrast!: number;
+  @uniform('rgbGamma', true) rgbGamma!: number;
+  @uniform('screenHeight') screenHeight!: number;
+  @uniform('screenWidth') screenWidth!: number;
+  @uniform('size') size!: number;
+  @uniform('spacing') spacing!: number;
+  @uniform('transition') transition!: number;
+  @uniform('uColor') color!: Color;
+  @uniform('wClassification') weightClassification!: number;
+  @uniform('wElevation') weightElevation!: number;
+  @uniform('wIntensity') weightIntensity!: number;
+  @uniform('wReturnNumber') weightReturnNumber!: number;
+  @uniform('wRGB') weightRGB!: number;
+  @uniform('wSourceID') weightSourceID!: number;
+  @uniform('opacityAttenuation') opacityAttenuation!: number;
+  @uniform('filterByNormalThreshold') filterByNormalThreshold!: number;
 
-  @requiresShaderUpdate() useClipBox: boolean = false; // prettier-ignore
-  @requiresShaderUpdate() weighted: boolean = false; // prettier-ignore
-  @requiresShaderUpdate() pointColorType: PointColorType = PointColorType.RGB; // prettier-ignore
-  @requiresShaderUpdate() pointSizeType: PointSizeType = PointSizeType.ADAPTIVE; // prettier-ignore
-  @requiresShaderUpdate() clipMode: ClipMode = ClipMode.DISABLED; // prettier-ignore
-  @requiresShaderUpdate() useEDL: boolean = false; // prettier-ignore
-  @requiresShaderUpdate() shape: PointShape = PointShape.SQUARE; // prettier-ignore
-  @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE; // prettier-ignore
-  @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED; // prettier-ignore
-  @requiresShaderUpdate() useFilterByNormal: boolean = false; // prettier-ignore
+  @requiresShaderUpdate() useClipBox: boolean = false;
+  @requiresShaderUpdate() weighted: boolean = false;
+  @requiresShaderUpdate() pointColorType: PointColorType = PointColorType.RGB;
+  @requiresShaderUpdate() pointSizeType: PointSizeType = PointSizeType.ADAPTIVE;
+  @requiresShaderUpdate() clipMode: ClipMode = ClipMode.DISABLED;
+  @requiresShaderUpdate() useEDL: boolean = false;
+  @requiresShaderUpdate() shape: PointShape = PointShape.SQUARE;
+  @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE;
+  @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED;
+  @requiresShaderUpdate() useFilterByNormal: boolean = false;
 
   attributes = {
     position: { type: 'fv', value: [] },
@@ -266,7 +268,31 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.updateShaderSource();
   }
 
-  updateShaderSource() {
+  dispose(): void {
+    super.dispose();
+
+    if (this.gradientTexture) {
+      this.gradientTexture.dispose();
+      this.gradientTexture = undefined;
+    }
+
+    if (this.visibleNodesTexture) {
+      this.visibleNodesTexture.dispose();
+      this.visibleNodesTexture = undefined;
+    }
+
+    if (this.classificationTexture) {
+      this.classificationTexture.dispose();
+      this.classificationTexture = undefined;
+    }
+
+    if (this.depthMap) {
+      this.depthMap.dispose();
+      this.depthMap = undefined;
+    }
+  }
+
+  updateShaderSource(): void {
     this.vertexShader = this.applyDefines(require('./shaders/pointcloud.vert').default);
     this.fragmentShader = this.applyDefines(require('./shaders/pointcloud.frag').default);
 

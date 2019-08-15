@@ -123,6 +123,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.root.dispose();
     }
 
+    this.pcoGeometry.root.traverse(n => this.potree.lru.remove(n));
     this.pcoGeometry.dispose();
     this.material.dispose();
 
@@ -136,7 +137,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.pickState = undefined;
     }
 
-    this.disposed = false;
+    this.disposed = true;
   }
 
   get pointSizeType(): PointSizeType {
@@ -151,25 +152,26 @@ export class PointCloudOctree extends PointCloudTree {
     geometryNode: PointCloudOctreeGeometryNode,
     parent?: PointCloudOctreeNode | null,
   ): PointCloudOctreeNode {
-    const sceneNode = new Points(geometryNode.geometry, this.material);
-    const node = new PointCloudOctreeNode(geometryNode, sceneNode);
-    sceneNode.name = geometryNode.name;
-    sceneNode.position.copy(geometryNode.boundingBox.min);
-    sceneNode.frustumCulled = false;
-    sceneNode.onBeforeRender = this.makeOnBeforeRender(node);
+    const points = new Points(geometryNode.geometry, this.material);
+    const node = new PointCloudOctreeNode(geometryNode, points);
+    points.name = geometryNode.name;
+    points.position.copy(geometryNode.boundingBox.min);
+    points.frustumCulled = false;
+    points.onBeforeRender = this.makeOnBeforeRender(node);
 
     if (parent) {
-      parent.sceneNode.add(sceneNode);
+      parent.sceneNode.add(points);
       parent.children[geometryNode.index] = node;
 
       geometryNode.oneTimeDisposeHandlers.push(() => {
+        node.disposeSceneNode();
         parent.sceneNode.remove(node.sceneNode);
         // Replace the tree node (rendered and in the GPU) with the geometry node.
         parent.children[geometryNode.index] = geometryNode;
       });
     } else {
       this.root = node;
-      this.add(sceneNode);
+      this.add(points);
     }
 
     return node;
@@ -297,8 +299,10 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     const texture = material.visibleNodesTexture;
-    texture.image.data.set(data);
-    texture.needsUpdate = true;
+    if (texture) {
+      texture.image.data.set(data);
+      texture.needsUpdate = true;
+    }
   }
 
   private helperSphere = new Sphere();

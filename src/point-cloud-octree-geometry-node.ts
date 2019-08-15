@@ -40,7 +40,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   boundingSphere: Sphere;
   mean: Vector3 = new Vector3();
   numPoints: number = 0;
-  geometry: BufferGeometry = new BufferGeometry();
+  geometry: BufferGeometry | undefined;
   loaded: boolean = false;
   loading: boolean = false;
   failed: boolean = false;
@@ -69,7 +69,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     }
 
     this.geometry.dispose();
-    this.geometry = new BufferGeometry();
+    this.geometry = undefined;
     this.loaded = false;
 
     this.oneTimeDisposeHandlers.forEach(handler => handler());
