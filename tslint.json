@@ -34,7 +34,6 @@
     "no-inferrable-types": [false],
     "no-invalid-template-strings": true,
     "no-invalid-this": true,
-    "no-redundant-jsdoc": true,
     "no-shadowed-variable": true,
     "no-sparse-arrays": true,
     "no-string-literal": false,
