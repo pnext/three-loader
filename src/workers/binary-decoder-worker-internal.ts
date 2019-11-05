@@ -60,7 +60,7 @@ export function handleMessage(event: MessageEvent) {
   };
 
   for (const pointAttribute of ctx.pointAttributes.attributes) {
-    decodeAndAddAttribute(pointAttribute, ctx);
+    decodeAndsetAttribute(pointAttribute, ctx);
     ctx.currentOffset += pointAttribute.byteSize;
   }
 
@@ -99,7 +99,7 @@ function addEmptyClassificationBuffer(ctx: Ctx): void {
   };
 }
 
-function decodeAndAddAttribute(attribute: IPointAttribute, ctx: Ctx): void {
+function decodeAndsetAttribute(attribute: IPointAttribute, ctx: Ctx): void {
   const decodedAttribute = decodePointAttribute(attribute, ctx);
   if (decodedAttribute === undefined) {
     return;
