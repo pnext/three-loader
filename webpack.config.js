@@ -1,6 +1,5 @@
 const path = require('path');
 const SizePlugin = require('size-plugin');
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
   entry: './src/index.ts',
@@ -20,6 +19,11 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.worker\.js$/,
+        loader: 'worker-loader',
+        options: { inline: true, fallback: false },
+      },
+      {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'babel-loader',
@@ -29,6 +33,7 @@ module.exports = {
         loader: 'ts-loader',
         exclude: /node_modules/,
       },
+
       { test: /\.(vs|fs|glsl|vert|frag)$/, loader: 'raw-loader' },
     ],
   },

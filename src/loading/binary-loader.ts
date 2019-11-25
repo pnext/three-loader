@@ -35,6 +35,8 @@ interface BinaryLoaderOptions {
   xhrRequest: XhrRequest;
 }
 
+type Callback = (node: PointCloudOctreeGeometryNode) => void;
+
 export class BinaryLoader {
   version: Version;
   boundingBox: Box3;
@@ -42,7 +44,7 @@ export class BinaryLoader {
   getUrl: GetUrlFn;
   disposed: boolean = false;
   xhrRequest: XhrRequest;
-  callbacks: ((node: PointCloudOctreeGeometryNode) => void)[];
+  callbacks: Callback[];
 
   private workers: Worker[] = [];
 
@@ -163,7 +165,10 @@ export class BinaryLoader {
       return worker;
     }
 
-    const ctor = require('worker-loader?inline!../workers/binary-decoder-worker.js');
+    const ctor = require('../workers/binary-decoder.worker.js');
+
+    console.log(ctor);
+
     return new ctor();
   }
 
@@ -187,19 +192,19 @@ export class BinaryLoader {
       const buffer = buffers[property].buffer;
 
       if (this.isAttribute(property, PointAttributeName.POSITION_CARTESIAN)) {
-        geometry.addAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
+        geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
       } else if (this.isAttribute(property, PointAttributeName.COLOR_PACKED)) {
-        geometry.addAttribute('color', new BufferAttribute(new Uint8Array(buffer), 3, true));
+        geometry.setAttribute('color', new BufferAttribute(new Uint8Array(buffer), 3, true));
       } else if (this.isAttribute(property, PointAttributeName.INTENSITY)) {
-        geometry.addAttribute('intensity', new BufferAttribute(new Float32Array(buffer), 1));
+        geometry.setAttribute('intensity', new BufferAttribute(new Float32Array(buffer), 1));
       } else if (this.isAttribute(property, PointAttributeName.CLASSIFICATION)) {
-        geometry.addAttribute('classification', new BufferAttribute(new Uint8Array(buffer), 1));
+        geometry.setAttribute('classification', new BufferAttribute(new Uint8Array(buffer), 1));
       } else if (this.isAttribute(property, PointAttributeName.NORMAL_SPHEREMAPPED)) {
-        geometry.addAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
+        geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
       } else if (this.isAttribute(property, PointAttributeName.NORMAL_OCT16)) {
-        geometry.addAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
+        geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
       } else if (this.isAttribute(property, PointAttributeName.NORMAL)) {
-        geometry.addAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
+        geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
       }
     });
   }
@@ -207,13 +212,13 @@ export class BinaryLoader {
   private addIndices(geometry: BufferGeometry, indices: ArrayBuffer): void {
     const indicesAttribute = new Uint8BufferAttribute(indices, 4);
     indicesAttribute.normalized = true;
-    geometry.addAttribute('indices', indicesAttribute);
+    geometry.setAttribute('indices', indicesAttribute);
   }
 
   private addNormalAttribute(geometry: BufferGeometry, numPoints: number): void {
     if (!geometry.getAttribute('normal')) {
       const buffer = new Float32Array(numPoints * 3);
-      geometry.addAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
+      geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
     }
   }
 
