@@ -8,8 +8,12 @@ const targetEl = document.createElement('div');
 targetEl.className = 'container';
 document.body.appendChild(targetEl);
 
+const targetEl2 = document.createElement('div');
+targetEl2.className = 'container';
+document.body.appendChild(targetEl2);
+
 const viewer = new Viewer();
-viewer.initialize(targetEl);
+viewer.initialize(targetEl, targetEl2);
 
 let pointCloud: PointCloudOctree | undefined;
 let loaded: boolean = false;
@@ -44,12 +48,23 @@ loadBtn.addEventListener('click', () => {
       pointCloud = pco;
       pointCloud.rotateX(-Math.PI / 2);
       pointCloud.material.size = 1.0;
+      pco.showBoundingBox = true
 
       const camera = viewer.camera;
       camera.far = 1000;
       camera.updateProjectionMatrix();
       camera.position.set(0, 0, 10);
       camera.lookAt(new Vector3());
+      //@ts-ignore
+      targetEl.addEventListener('click', () => console.log('num visible pts', viewer.pointClouds[0].numVisiblePoints))
+
+      const camera2 = viewer.camera2;
+      camera2.far = 1000;
+      camera2.updateProjectionMatrix();
+      camera2.position.set(0, 0, 10);
+      camera2.lookAt(new Vector3());
+      //@ts-ignore
+      targetEl2.addEventListener('click', () => console.log('num visible pts', viewer.pointClouds[0].numVisiblePoints))
 
       viewer.add(pco);
     })
@@ -67,7 +82,7 @@ slider.addEventListener('change', () => {
     return;
   }
 
-  pointCloud.potree.pointBudget = parseInt(slider.value, 10);
+  pointCloud.potree.pointBudget = parseInt(slider.value, 10) * 10;
   console.log(pointCloud.potree.pointBudget);
 });
 

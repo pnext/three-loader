@@ -7,6 +7,10 @@ const OrbitControls = require('three-orbit-controls')(THREE);
 
 export class Viewer {
   /**
+   * Our scene which will contain the point cloud.
+   */
+  scene: Scene = new Scene();
+  /**
    * The element where we will insert our canvas.
    */
   private targetEl: HTMLElement | undefined;
@@ -15,10 +19,6 @@ export class Viewer {
    */
   private renderer = new WebGLRenderer();
   /**
-   * Our scene which will contain the point cloud.
-   */
-  scene: Scene = new Scene();
-  /**
    * The camera used to view the scene.
    */
   camera: PerspectiveCamera = new PerspectiveCamera(45, NaN, 0.1, 1000);
@@ -26,6 +26,23 @@ export class Viewer {
    * Controls which update the position of the camera.
    */
   cameraControls!: any;
+
+  /**
+   * The element where we will insert our canvas.
+   */
+  private targetEl2: HTMLElement | undefined;
+  /**
+   * The ThreeJS renderer used to render the scene.
+   */
+  private renderer2 = new WebGLRenderer();
+  /**
+   * The camera used to view the scene.
+   */
+  camera2: PerspectiveCamera = new PerspectiveCamera(45, NaN, 0.1, 1000);
+  /**
+   * Controls which update the position of the camera.
+   */
+  cameraControls2!: any;
   /**
    * Out potree instance which handles updating point clouds, keeps track of loaded nodes, etc.
    */
@@ -49,15 +66,19 @@ export class Viewer {
    * @param targetEl
    *    The element into which we should add the canvas where we will render the scene.
    */
-  initialize(targetEl: HTMLElement): void {
-    if (this.targetEl || !targetEl) {
+  initialize(targetEl: HTMLElement, targetEl2: HTMLElement): void {
+    if ((this.targetEl || !targetEl) || (this.targetEl2 || !targetEl2)) {
       return;
     }
 
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
+    
+    this.targetEl2 = targetEl2;
+    targetEl2.appendChild(this.renderer2.domElement);
 
     this.cameraControls = new OrbitControls(this.camera, this.targetEl);
+    this.cameraControls2 = new OrbitControls(this.camera2, this.targetEl2);
 
     this.resize();
     window.addEventListener('resize', this.resize);
@@ -69,9 +90,12 @@ export class Viewer {
    * Performs any cleanup necessary to destroy/remove the viewer from the page.
    */
   destroy(): void {
-    if (this.targetEl) {
+    if (this.targetEl && this.targetEl2) {
       this.targetEl.removeChild(this.renderer.domElement);
       this.targetEl = undefined;
+
+      this.targetEl2.removeChild(this.renderer2.domElement);
+      this.targetEl2 = undefined;
     }
 
     window.removeEventListener('resize', this.resize);
@@ -124,12 +148,13 @@ export class Viewer {
     // Alternatively, you could use Three's OrbitControls or any other
     // camera control system.
     this.cameraControls.update();
+    this.cameraControls2.update();
 
     // This is where most of the potree magic happens. It updates the
     // visiblily of the octree nodes based on the camera frustum and it
     // triggers any loads/unloads which are necessary to keep the number
     // of visible points in check.
-    this.potree.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    this.potree.updatePointClouds(this.pointClouds, [this.camera, this.camera2], [this.renderer, this.renderer2]);
   }
 
   /**
@@ -138,6 +163,9 @@ export class Viewer {
   render(): void {
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
+
+    this.renderer2.clear();
+    this.renderer2.render(this.scene, this.camera2);
   }
 
   /**
@@ -160,13 +188,18 @@ export class Viewer {
    * Triggered anytime the window gets resized.
    */
   resize = () => {
-    if (!this.targetEl) {
+    if (!this.targetEl || !this.targetEl2) {
       return;
     }
 
-    const { width, height } = this.targetEl.getBoundingClientRect();
+    const {width, height} = this.targetEl.getBoundingClientRect();
+
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+
+    this.camera2.aspect = width / height;
+    this.camera2.updateProjectionMatrix();
+    this.renderer2.setSize(width, height);
   };
 }
