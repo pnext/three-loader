@@ -54,10 +54,17 @@ export class Potree implements IPotree {
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
-    camera: Camera,
-    renderer: WebGLRenderer,
+    cameras: Camera[],
+    renderers: WebGLRenderer[],
   ): IVisibilityUpdateResult {
-    const result = this.updateVisibility(pointClouds, camera, renderer);
+    const perspectiveTypeTest = cameras.every(camera => camera.type === 'PerspectiveCamera');
+    const orthographicTypeTest = cameras.every(camera => camera.type === 'OrthographicCamera');
+
+    if (!perspectiveTypeTest && !orthographicTypeTest) {
+      throw new Error('Cameras must all be of same type, perspective or orthographic.');
+    }
+
+    const result = this.updateVisibility(pointClouds, cameras, renderers);
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
@@ -68,8 +75,9 @@ export class Potree implements IPotree {
       pointCloud.updateMaterial(
         pointCloud.material,
         pointCloud.visibleNodes,
-        camera as PerspectiveCamera,
-        renderer,
+        // fix
+        cameras[0] as PerspectiveCamera,
+        renderers[0],
       );
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
@@ -94,8 +102,8 @@ export class Potree implements IPotree {
 
   private updateVisibility(
     pointClouds: PointCloudOctree[],
-    camera: Camera,
-    renderer: WebGLRenderer,
+    cameras: Camera[],
+    renderers: WebGLRenderer[],
   ): IVisibilityUpdateResult {
     let numVisiblePoints = 0;
 
@@ -105,7 +113,7 @@ export class Potree implements IPotree {
     // calculate object space frustum and cam pos and setup priority queue
     const { frustums, cameraPositions, priorityQueue } = this.updateVisibilityStructures(
       pointClouds,
-      camera,
+      cameras,
     );
 
     let loadedToGPUThisFrame = 0;
@@ -126,9 +134,11 @@ export class Potree implements IPotree {
 
       const maxLevel = pointCloud.maxLevel !== undefined ? pointCloud.maxLevel : Infinity;
 
+      const isIntersecting = frustums[pointCloudIndex].some((frustum) => frustum.intersectsBox(node.boundingBox))
+
       if (
         node.level > maxLevel ||
-        !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
+        !isIntersecting ||
         this.shouldClip(pointCloud, node.boundingBox)
       ) {
         continue;
@@ -160,17 +170,19 @@ export class Potree implements IPotree {
         pointCloud.visibleGeometry.push(node.geometryNode);
       }
 
-      const halfHeight =
-        0.5 * renderer.getSize(this._rendererSize).height * renderer.getPixelRatio();
+      const halfHeights = renderers.map(
+        renderer => 0.5 * renderer.getSize(this._rendererSize).height * renderer.getPixelRatio(),
+      );
 
       this.updateChildVisibility(
         queueItem,
         priorityQueue,
         pointCloud,
         node,
-        cameraPositions[pointCloudIndex],
-        camera,
-        halfHeight,
+        cameraPositions,
+        pointCloudIndex,
+        cameras,
+        halfHeights,
       );
     } // end priority queue loop
 
@@ -213,9 +225,10 @@ export class Potree implements IPotree {
     priorityQueue: BinaryHeap<QueueItem>,
     pointCloud: PointCloudOctree,
     node: IPointCloudTreeNode,
-    cameraPosition: Vector3,
-    camera: Camera,
-    halfHeight: number,
+    cameraPositions: Vector3[][],
+    pointCloudIndex: number,
+    cameras: Camera[],
+    halfHeights: number[],
   ): void {
     const children = node.children;
     for (let i = 0; i < children.length; i++) {
@@ -225,30 +238,41 @@ export class Potree implements IPotree {
       }
 
       const sphere = child.boundingSphere;
-      const distance = sphere.center.distanceTo(cameraPosition);
       const radius = sphere.radius;
+      const distances = []
+      const screenPixelRadii = []
+      
+      for (let i = 0; i < cameras.length; i++) {
+        const camera = cameras[i];
+        const distance = sphere.center.distanceTo(cameraPositions[pointCloudIndex][i]);
+        distances.push(distance)
+        // halfHeight from renderers which are 1:1 with cameras
+        const halfHeight = halfHeights[i]
+  
+        let projectionFactor = 0.0;
+  
+        if (camera.type === PERSPECTIVE_CAMERA) {
+          const perspective = camera as PerspectiveCamera;
+          const fov = (perspective.fov * Math.PI) / 180.0;
+          const slope = Math.tan(fov / 2.0);
+          projectionFactor = halfHeight / (slope * distance);
+        } else {
+          const orthographic = camera as OrthographicCamera;
+          projectionFactor = (2 * halfHeight) / (orthographic.top - orthographic.bottom);
+        }
 
-      let projectionFactor = 0.0;
-
-      if (camera.type === PERSPECTIVE_CAMERA) {
-        const perspective = camera as PerspectiveCamera;
-        const fov = (perspective.fov * Math.PI) / 180.0;
-        const slope = Math.tan(fov / 2.0);
-        projectionFactor = halfHeight / (slope * distance);
-      } else {
-        const orthographic = camera as OrthographicCamera;
-        projectionFactor = (2 * halfHeight) / (orthographic.top - orthographic.bottom);
+        screenPixelRadii.push(radius * projectionFactor);
       }
-
-      const screenPixelRadius = radius * projectionFactor;
+      const minDistance = distances.sort((a, b) => a - b)[0]
+      const maxScreenPixelRadius = screenPixelRadii.sort((a, b) => b - a)[0]
 
       // Don't add the node if it'll be too small on the screen.
-      if (screenPixelRadius < pointCloud.minNodePixelSize) {
+      if (maxScreenPixelRadius < pointCloud.minNodePixelSize) {
         continue;
       }
 
       // Nodes which are larger will have priority in loading/displaying.
-      const weight = distance < radius ? Number.MAX_VALUE : screenPixelRadius + 1 / distance;
+      const weight = minDistance < radius ? Number.MAX_VALUE : maxScreenPixelRadius + 1 / minDistance;
 
       priorityQueue.push(new QueueItem(queueItem.pointCloudIndex, weight, child, node));
     }
@@ -305,14 +329,14 @@ export class Potree implements IPotree {
 
     return (
       pointClouds: PointCloudOctree[],
-      camera: Camera,
+      cameras: Camera[],
     ): {
-      frustums: Frustum[];
-      cameraPositions: Vector3[];
+      frustums: Frustum[][];
+      cameraPositions: Vector3[][];
       priorityQueue: BinaryHeap<QueueItem>;
     } => {
-      const frustums: Frustum[] = [];
-      const cameraPositions = [];
+      const frustums: Frustum[][] = [];
+      const cameraPositions: Vector3[][] = [];
       const priorityQueue = new BinaryHeap<QueueItem>(x => 1 / x.weight);
 
       for (let i = 0; i < pointClouds.length; i++) {
@@ -326,25 +350,31 @@ export class Potree implements IPotree {
         pointCloud.visibleNodes = [];
         pointCloud.visibleGeometry = [];
 
-        camera.updateMatrixWorld(false);
+        const posPerCamera: Vector3[] = []
+        const frustumsPerCamera: Frustum[] = []
+        cameras.forEach(camera => {
+          camera.updateMatrixWorld(false);
 
-        // Furstum in object space.
-        const inverseViewMatrix = camera.matrixWorldInverse;
-        const worldMatrix = pointCloud.matrixWorld;
-        frustumMatrix
-          .identity()
-          .multiply(camera.projectionMatrix)
-          .multiply(inverseViewMatrix)
-          .multiply(worldMatrix);
-        frustums.push(new Frustum().setFromMatrix(frustumMatrix));
+          // Furstum in object space.
+          const inverseViewMatrix = camera.matrixWorldInverse;
+          const worldMatrix = pointCloud.matrixWorld;
+          frustumMatrix
+            .identity()
+            .multiply(camera.projectionMatrix)
+            .multiply(inverseViewMatrix)
+            .multiply(worldMatrix);
+          frustumsPerCamera.push(new Frustum().setFromMatrix(frustumMatrix));
 
-        // Camera position in object space
-        inverseWorldMatrix.getInverse(worldMatrix);
-        cameraMatrix
-          .identity()
-          .multiply(inverseWorldMatrix)
-          .multiply(camera.matrixWorld);
-        cameraPositions.push(new Vector3().setFromMatrixPosition(cameraMatrix));
+          // Camera position in object space
+          inverseWorldMatrix.getInverse(worldMatrix);
+          cameraMatrix
+            .identity()
+            .multiply(inverseWorldMatrix)
+            .multiply(camera.matrixWorld);
+            posPerCamera.push(new Vector3().setFromMatrixPosition(cameraMatrix));
+        });
+        cameraPositions.push(posPerCamera)
+        frustums.push(frustumsPerCamera)
 
         if (pointCloud.visible && pointCloud.root !== null) {
           const weight = Number.MAX_VALUE;
