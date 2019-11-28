@@ -1,4 +1,4 @@
-import { Box3, Camera, Sphere, Vector3, WebGLRenderer } from 'three';
+import { Box3, Sphere, Vector3, WebGLRenderer, OrthographicCamera, PerspectiveCamera } from 'three';
 import { GetUrlFn, XhrRequest } from './loading/types';
 import { PointCloudOctree } from './point-cloud-octree';
 import { LRU } from './utils/lru';
@@ -48,8 +48,8 @@ export interface IPotree {
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
-    cameras: Camera[],
-    renderers: WebGLRenderer[],
+    cameras: OrthographicCamera | PerspectiveCamera | OrthographicCamera[] | PerspectiveCamera[],
+    renderers: WebGLRenderer | WebGLRenderer[],
   ): IVisibilityUpdateResult;
 }
 

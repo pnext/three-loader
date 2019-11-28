@@ -54,17 +54,19 @@ export class Potree implements IPotree {
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
-    cameras: Camera[],
-    renderers: WebGLRenderer[],
+    cameras: OrthographicCamera | PerspectiveCamera | OrthographicCamera[] | PerspectiveCamera[],
+    renderers: WebGLRenderer | WebGLRenderer[],
   ): IVisibilityUpdateResult {
-    const perspectiveTypeTest = cameras.every(camera => camera.type === 'PerspectiveCamera');
-    const orthographicTypeTest = cameras.every(camera => camera.type === 'OrthographicCamera');
+    const renderersArr = Array.isArray(renderers) ? renderers : [renderers]
+    const camerasArr = Array.isArray(cameras) ? cameras : [cameras]
+    const firstCameraType = camerasArr[0].type
+    const cameraTypeTest = camerasArr.every(camera => camera.type === firstCameraType);
 
-    if (!perspectiveTypeTest && !orthographicTypeTest) {
+    if (!cameraTypeTest) {
       throw new Error('Cameras must all be of same type, perspective or orthographic.');
     }
 
-    const result = this.updateVisibility(pointClouds, cameras, renderers);
+    const result = this.updateVisibility(pointClouds, camerasArr, renderersArr);
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
@@ -76,8 +78,8 @@ export class Potree implements IPotree {
         pointCloud.material,
         pointCloud.visibleNodes,
         // fix
-        cameras[0] as PerspectiveCamera,
-        renderers[0],
+        camerasArr[0] as PerspectiveCamera,
+        renderersArr[0],
       );
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
@@ -352,7 +354,9 @@ export class Potree implements IPotree {
 
         const posPerCamera: Vector3[] = []
         const frustumsPerCamera: Frustum[] = []
-        cameras.forEach(camera => {
+
+        for (let i = 0; i < cameras.length; i++) {
+          const camera = cameras[i]
           camera.updateMatrixWorld(false);
 
           // Furstum in object space.
@@ -372,7 +376,8 @@ export class Potree implements IPotree {
             .multiply(inverseWorldMatrix)
             .multiply(camera.matrixWorld);
             posPerCamera.push(new Vector3().setFromMatrixPosition(cameraMatrix));
-        });
+        };
+        
         cameraPositions.push(posPerCamera)
         frustums.push(frustumsPerCamera)
 
