@@ -3,6 +3,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   Camera,
+  Color,
   Geometry,
   LinearFilter,
   Material,
@@ -451,7 +452,14 @@ export class PointCloudOctree extends PointCloudTree {
     renderer.state.setBlending(NoBlending);
 
     renderer.setRenderTarget(pickState.renderTarget);
+
+    // Save the current clear color and clear the renderer with black color and alpha 0.
+    const oldClearColor = renderer.getClearColor();
+    const oldClearAlpha = renderer.getClearAlpha();
+    renderer.setClearColor(new Color(0, 0, 0), 0);
     renderer.clear(true, true, true);
+    renderer.setClearColor(oldClearColor, oldClearAlpha);
+
     renderer.render(pickState.scene, camera);
 
     // Read the pixel from the pick render target.
