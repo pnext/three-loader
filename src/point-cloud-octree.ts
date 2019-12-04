@@ -3,7 +3,6 @@ import {
   BufferAttribute,
   BufferGeometry,
   Camera,
-  Color,
   Geometry,
   LinearFilter,
   Material,
@@ -22,7 +21,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { DEFAULT_MIN_NODE_PIXEL_SIZE, DEFAULT_PICK_WINDOW_SIZE } from './constants';
+import { DEFAULT_MIN_NODE_PIXEL_SIZE, DEFAULT_PICK_WINDOW_SIZE, COLOR_BLACK } from './constants';
 import { ClipMode, PointCloudMaterial, PointColorType, PointSizeType } from './materials';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
@@ -456,7 +455,7 @@ export class PointCloudOctree extends PointCloudTree {
     // Save the current clear color and clear the renderer with black color and alpha 0.
     const oldClearColor = renderer.getClearColor();
     const oldClearAlpha = renderer.getClearAlpha();
-    renderer.setClearColor(new Color(0, 0, 0), 0);
+    renderer.setClearColor(COLOR_BLACK, 0);
     renderer.clear(true, true, true);
     renderer.setClearColor(oldClearColor, oldClearAlpha);
 
