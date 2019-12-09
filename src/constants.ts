@@ -1,4 +1,4 @@
-import {Color} from "three";
+import { Color } from 'three';
 
 export const DEFAULT_RGB_BRIGHTNESS = 0;
 export const DEFAULT_RGB_CONTRAST = 0;

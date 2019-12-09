@@ -21,7 +21,7 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
-import { DEFAULT_MIN_NODE_PIXEL_SIZE, DEFAULT_PICK_WINDOW_SIZE, COLOR_BLACK } from './constants';
+import { COLOR_BLACK, DEFAULT_MIN_NODE_PIXEL_SIZE, DEFAULT_PICK_WINDOW_SIZE } from './constants';
 import { ClipMode, PointCloudMaterial, PointColorType, PointSizeType } from './materials';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
