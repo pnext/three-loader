@@ -25,8 +25,6 @@ uniform float screenWidth;
 uniform float screenHeight;
 uniform float fov;
 uniform float spacing;
-uniform float near;
-uniform float far;
 
 #if defined use_clip_box
 	uniform mat4 clipBoxes[max_clip_boxes];

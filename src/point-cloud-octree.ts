@@ -254,8 +254,6 @@ export class PointCloudOctree extends PointCloudTree {
     material.fov = camera.fov * (Math.PI / 180);
     material.screenWidth = renderer.domElement.clientWidth * pixelRatio;
     material.screenHeight = renderer.domElement.clientHeight * pixelRatio;
-    material.near = camera.near;
-    material.far = camera.far;
     material.spacing = this.pcoGeometry.spacing * maxScale;
     material.uniforms.octreeSize.value = this.pcoGeometry.boundingBox.getSize(helperVec3).x;
 

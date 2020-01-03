@@ -42,7 +42,6 @@ export interface IPointCloudMaterialUniforms {
   clipBoxes: IUniform<Float32Array>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
-  far: IUniform<number>;
   fov: IUniform<number>;
   gradient: IUniform<Texture>;
   heightMax: IUniform<number>;
@@ -54,7 +53,6 @@ export interface IPointCloudMaterialUniforms {
   level: IUniform<number>;
   maxSize: IUniform<number>;
   minSize: IUniform<number>;
-  near: IUniform<number>;
   octreeSize: IUniform<number>;
   opacity: IUniform<number>;
   pcIndex: IUniform<number>;
@@ -150,7 +148,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     clipBoxes: makeUniform('Matrix4fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
-    far: makeUniform('f', 1.0),
     fov: makeUniform('f', 1.0),
     gradient: makeUniform('t', this.gradientTexture || new Texture()),
     heightMax: makeUniform('f', 1.0),
@@ -163,7 +160,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     level: makeUniform('f', 0.0),
     maxSize: makeUniform('f', DEFAULT_MAX_POINT_SIZE),
     minSize: makeUniform('f', DEFAULT_MIN_POINT_SIZE),
-    near: makeUniform('f', 0.1),
     octreeSize: makeUniform('f', 0),
     opacity: makeUniform('f', 1.0),
     pcIndex: makeUniform('f', 0),
@@ -191,7 +187,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   @uniform('bbSize') bbSize!: [number, number, number];
   @uniform('depthMap') depthMap!: Texture | undefined;
-  @uniform('far') far!: number;
   @uniform('fov') fov!: number;
   @uniform('heightMax') heightMax!: number;
   @uniform('heightMin') heightMin!: number;
@@ -201,7 +196,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('intensityRange') intensityRange!: [number, number];
   @uniform('maxSize') maxSize!: number;
   @uniform('minSize') minSize!: number;
-  @uniform('near') near!: number;
   @uniform('opacity', true) opacity!: number;
   @uniform('rgbBrightness', true) rgbBrightness!: number;
   @uniform('rgbContrast', true) rgbContrast!: number;

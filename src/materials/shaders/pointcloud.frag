@@ -15,8 +15,6 @@ uniform float blendHardness;
 uniform float blendDepthSupplement;
 uniform float fov;
 uniform float spacing;
-uniform float near;
-uniform float far;
 uniform float pcIndex;
 uniform float screenWidth;
 uniform float screenHeight;
