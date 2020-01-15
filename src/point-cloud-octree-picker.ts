@@ -48,6 +48,11 @@ interface IPickState {
   scene: Scene;
 }
 
+interface RenderedNode {
+  node: PointCloudOctreeNode;
+  octree: PointCloudOctree;
+}
+
 export class PointCloudOctreePicker {
   private static readonly helperVec3 = new Vector3();
   private static readonly helperSphere = new Sphere();
@@ -154,8 +159,8 @@ export class PointCloudOctreePicker {
     ray: Ray,
     pickState: IPickState,
     params: Partial<PickParams>,
-  ): PointCloudOctreeNode[] {
-    const renderedNodes: PointCloudOctreeNode[] = [];
+  ): RenderedNode[] {
+    const renderedNodes: RenderedNode[] = [];
     for (const octree of octrees) {
       // Get all the octree nodes which intersect the picking ray. We only need to render those.
       const nodes = PointCloudOctreePicker.nodesOnRay(octree, ray);
@@ -180,7 +185,7 @@ export class PointCloudOctreePicker {
 
       renderer.render(pickState.scene, camera);
 
-      renderedNodes.push(...nodes);
+      nodes.forEach(node => renderedNodes.push({ node, octree }));
     }
     return renderedNodes;
   }
@@ -323,20 +328,19 @@ export class PointCloudOctreePicker {
     return hit;
   }
 
-  private static getPickPoint(
-    hit: PointCloudHit | null,
-    nodes: PointCloudOctreeNode[],
-  ): PickPoint | null {
+  private static getPickPoint(hit: PointCloudHit | null, nodes: RenderedNode[]): PickPoint | null {
     if (!hit) {
       return null;
     }
 
     const point: PickPoint = {};
 
-    const points = nodes[hit.pcIndex] && nodes[hit.pcIndex].sceneNode;
+    const points = nodes[hit.pcIndex] && nodes[hit.pcIndex].node.sceneNode;
     if (!points) {
       return null;
     }
+
+    point.pointCloud = nodes[hit.pcIndex].octree;
 
     const attributes: BufferAttribute[] = (points.geometry as any).attributes;
 
