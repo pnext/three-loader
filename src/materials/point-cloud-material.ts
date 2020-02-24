@@ -13,10 +13,13 @@ import {
   Scene,
   Texture,
   Vector3,
+  Vector4,
   VertexColors,
   WebGLRenderer,
+  WebGLRenderTarget
 } from 'three';
 import {
+  DEFAULT_HIGHLIGHT_COLOR,
   DEFAULT_MAX_POINT_SIZE,
   DEFAULT_MIN_POINT_SIZE,
   DEFAULT_RGB_BRIGHTNESS,
@@ -88,6 +91,10 @@ export interface IPointCloudMaterialUniforms {
   wSourceID: IUniform<number>;
   opacityAttenuation: IUniform<number>;
   filterByNormalThreshold: IUniform<number>;
+  highlightedPointCoordinate: IUniform<Vector3>;
+  highlightedPointColor: IUniform<Vector4>;
+  enablePointHighlighting: IUniform<boolean>;
+  highlightedPointScale: IUniform<number>;
 }
 
 const TREE_TYPE_DEFS = {
@@ -198,6 +205,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
     wSourceID: makeUniform('f', 0),
     opacityAttenuation: makeUniform('f', 1),
     filterByNormalThreshold: makeUniform('f', 0),
+    highlightedPointCoordinate: makeUniform('fv', new Vector3()),
+    highlightedPointColor: makeUniform('fv', DEFAULT_HIGHLIGHT_COLOR.clone()),
+    enablePointHighlighting: makeUniform('b', true),
+    highlightedPointScale: makeUniform('f', 2.0)
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -230,6 +241,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('wSourceID') weightSourceID!: number;
   @uniform('opacityAttenuation') opacityAttenuation!: number;
   @uniform('filterByNormalThreshold') filterByNormalThreshold!: number;
+  @uniform('highlightedPointCoordinate') highlightedPointCoordinate!: Vector3;
+  @uniform('highlightedPointColor') highlightedPointColor!: Vector4;
+  @uniform('enablePointHighlighting') enablePointHighlighting!: boolean;
+  @uniform('highlightedPointScale') highlightedPointScale!: number;
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;
@@ -241,6 +256,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE;
   @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED;
   @requiresShaderUpdate() useFilterByNormal: boolean = false;
+  @requiresShaderUpdate() highlightPoint: boolean = false;
 
   attributes = {
     position: { type: 'fv', value: [] },
@@ -377,6 +393,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('use_clip_box');
     }
 
+    if (this.highlightPoint) {
+      define('highlight_point');
+    }
+
     define('MAX_POINT_LIGHTS 0');
     define('MAX_DIR_LIGHTS 0');
 
@@ -508,8 +528,14 @@ export class PointCloudMaterial extends RawShaderMaterial {
     } else {
       this.fov = Math.PI / 2; // will result in slope = 1 in the shader
     }
-    this.screenWidth = renderer.domElement.clientWidth * pixelRatio;
-    this.screenHeight = renderer.domElement.clientHeight * pixelRatio;
+    const renderTarget = renderer.getRenderTarget();
+    if (renderTarget !== null && renderTarget instanceof WebGLRenderTarget) {
+      this.screenWidth = renderTarget.width;
+      this.screenHeight = renderTarget.height;
+    } else {
+      this.screenWidth = renderer.domElement.clientWidth * pixelRatio;
+      this.screenHeight = renderer.domElement.clientHeight * pixelRatio;
+    }
 
     const maxScale = Math.max(octree.scale.x, octree.scale.y, octree.scale.z);
     this.spacing = octree.pcoGeometry.spacing * maxScale;

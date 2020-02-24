@@ -66,6 +66,12 @@ uniform sampler2D gradient;
 uniform sampler2D classificationLUT;
 uniform sampler2D depthMap;
 
+#ifdef highlight_point
+	uniform vec3 highlightedPointCoordinate;
+	uniform bool enablePointHighlighting;
+	uniform float highlightedPointScale;
+#endif
+
 varying vec3 vColor;
 
 #if !defined(color_type_point_index)
@@ -92,6 +98,9 @@ varying vec3 vColor;
 	varying vec3 vNormal;
 #endif
 
+#ifdef highlight_point
+	varying float vHighlight;
+#endif
 
 // ---------------------
 // OCTREE
@@ -412,8 +421,25 @@ void main() {
 	#if defined(weighted_splats) || defined(paraboloid_point_shape)
 		vRadius = pointSize / projFactor;
 	#endif
-	
+
 	gl_PointSize = pointSize;
+
+	// ---------------------
+	// HIGHLIGHTING
+	// ---------------------
+
+	#ifdef highlight_point
+		vec4 mPosition = modelMatrix * vec4(position, 1.0);
+		if (enablePointHighlighting && abs(mPosition.x - highlightedPointCoordinate.x) < 0.0001 &&
+			abs(mPosition.y - highlightedPointCoordinate.y) < 0.0001 &&
+			abs(mPosition.z - highlightedPointCoordinate.z) < 0.0001) {
+			vHighlight = 1.0;
+			gl_PointSize = pointSize * highlightedPointScale;
+		}
+		else {
+			vHighlight = 0.0;
+		}
+	#endif
 
 	// ---------------------
 	// OPACITY
