@@ -21,6 +21,10 @@ uniform float screenHeight;
 
 uniform sampler2D depthMap;
 
+#ifdef highlight_point
+	uniform vec4 highlightedPointColor;
+#endif
+
 varying vec3 vColor;
 
 #if !defined(color_type_point_index)
@@ -47,6 +51,10 @@ varying vec3 vColor;
 	varying vec3 vNormal;
 #endif
 
+#ifdef highlight_point
+	varying float vHighlight;
+#endif
+
 float specularStrength = 1.0;
 
 void main() {
@@ -64,7 +72,7 @@ void main() {
 			discard;
 		}
 	#endif
-	
+
 	#if defined weighted_splats
 		vec2 uv = gl_FragCoord.xy / vec2(screenWidth, screenHeight);
 		float sDepth = texture2D(depthMap, uv).r;
@@ -240,5 +248,11 @@ void main() {
 		#if defined(use_edl)
 			gl_FragColor.a = vLogDepth;
 		#endif
-	#endif	
+	#endif
+
+	#ifdef highlight_point
+		if (vHighlight > 0.0) {
+			gl_FragColor = highlightedPointColor;
+		}
+	#endif
 }
