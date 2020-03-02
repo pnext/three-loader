@@ -435,8 +435,7 @@ void main() {
 			abs(mPosition.z - highlightedPointCoordinate.z) < 0.0001) {
 			vHighlight = 1.0;
 			gl_PointSize = pointSize * highlightedPointScale;
-		}
-		else {
+		} else {
 			vHighlight = 0.0;
 		}
 	#endif
