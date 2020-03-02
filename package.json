@@ -27,7 +27,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "three": "^0.113.2"
+    "three": "^0.114.0"
   },
   "devDependencies": {
     "@babel/core": "^7.7.5",
@@ -47,7 +47,7 @@
     "size-plugin": "^2.0.1",
     "standard-version": "7.0.1",
     "style-loader": "^1.0.1",
-    "three": "0.113.2",
+    "three": "0.114.0",
     "three-orbit-controls": "^82.1.0",
     "ts-loader": "^6.2.1",
     "tslint": "^5.20.1",

@@ -14,9 +14,8 @@ import {
   Texture,
   Vector3,
   Vector4,
-  VertexColors,
   WebGLRenderer,
-  WebGLRenderTarget
+  WebGLRenderTarget,
 } from 'three';
 import {
   DEFAULT_HIGHLIGHT_COLOR,
@@ -208,7 +207,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     highlightedPointCoordinate: makeUniform('fv', new Vector3()),
     highlightedPointColor: makeUniform('fv', DEFAULT_HIGHLIGHT_COLOR.clone()),
     enablePointHighlighting: makeUniform('b', true),
-    highlightedPointScale: makeUniform('f', 2.0)
+    highlightedPointScale: makeUniform('f', 2.0),
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -289,7 +288,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.defaultAttributeValues.classification = [0, 0, 0];
     this.defaultAttributeValues.indices = [0, 0, 0, 0];
 
-    this.vertexColors = VertexColors;
+    this.vertexColors = true;
 
     this.updateShaderSource();
   }
