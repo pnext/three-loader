@@ -3,6 +3,7 @@ export * from './point-attributes';
 export * from './point-cloud-octree-geometry-node';
 export * from './point-cloud-octree-geometry';
 export * from './point-cloud-octree-node';
+export * from './point-cloud-octree-picker';
 export * from './point-cloud-octree';
 export * from './point-cloud-tree';
 export * from './potree';
