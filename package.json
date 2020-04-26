@@ -1,7 +1,7 @@
 {
   "name": "@pnext/three-loader",
   "private": false,
-  "version": "0.1.9",
+  "version": "0.2.0-beta.2",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": [
     "Hugo Campos <hugo.campos@pix4d.com>"
@@ -47,7 +47,7 @@
     "size-plugin": "^2.0.1",
     "standard-version": "7.1.0",
     "style-loader": "^1.0.2",
-    "three": "0.115.0",
+    "three": "0.116.1",
     "three-orbit-controls": "^82.1.0",
     "ts-loader": "^6.2.2",
     "tslint": "^6.1.1",
