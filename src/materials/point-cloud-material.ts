@@ -5,8 +5,7 @@ import {
   NearestFilter,
   NoBlending,
   RawShaderMaterial,
-  Texture,
-  VertexColors,
+  Texture
 } from 'three';
 import {
   DEFAULT_MAX_POINT_SIZE,
@@ -263,7 +262,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.defaultAttributeValues.classification = [0, 0, 0];
     this.defaultAttributeValues.indices = [0, 0, 0, 0];
 
-    this.vertexColors = VertexColors;
+    this.vertexColors = true;
 
     this.updateShaderSource();
   }
