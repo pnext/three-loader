@@ -5,6 +5,7 @@ import {
   Matrix4,
   OrthographicCamera,
   PerspectiveCamera,
+  Ray,
   Vector2,
   Vector3,
   WebGLRenderer,
@@ -21,8 +22,9 @@ import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
+import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { isGeometryNode, isTreeNode } from './type-predicates';
-import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult } from './types';
+import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PickPoint } from './types';
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
@@ -37,6 +39,7 @@ export class QueueItem {
 }
 
 export class Potree implements IPotree {
+  private static picker: PointCloudOctreePicker | undefined;
   private _pointBudget: number = DEFAULT_POINT_BUDGET;
   private _rendererSize: Vector2 = new Vector2();
 
@@ -65,12 +68,7 @@ export class Potree implements IPotree {
         continue;
       }
 
-      pointCloud.updateMaterial(
-        pointCloud.material,
-        pointCloud.visibleNodes,
-        camera as PerspectiveCamera,
-        renderer,
-      );
+      pointCloud.material.updateMaterial(pointCloud, pointCloud.visibleNodes, camera, renderer);
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
     }
@@ -78,6 +76,17 @@ export class Potree implements IPotree {
     this.lru.freeMemory();
 
     return result;
+  }
+
+  static pick(
+    pointClouds: PointCloudOctree[],
+    renderer: WebGLRenderer,
+    camera: Camera,
+    ray: Ray,
+    params: Partial<PickParams> = {},
+  ): PickPoint | null {
+    Potree.picker = Potree.picker || new PointCloudOctreePicker();
+    return Potree.picker.pick(renderer, camera, ray, pointClouds, params);
   }
 
   get pointBudget(): number {

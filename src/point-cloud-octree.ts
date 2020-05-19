@@ -1,65 +1,13 @@
-import {
-  Box3,
-  BufferAttribute,
-  BufferGeometry,
-  Camera,
-  Geometry,
-  LinearFilter,
-  Material,
-  Matrix4,
-  NearestFilter,
-  NoBlending,
-  Object3D,
-  PerspectiveCamera,
-  Points,
-  Ray,
-  RGBAFormat,
-  Scene,
-  Sphere,
-  Vector3,
-  Vector4,
-  WebGLRenderer,
-  WebGLRenderTarget,
-} from 'three';
-import { COLOR_BLACK, DEFAULT_MIN_NODE_PIXEL_SIZE, DEFAULT_PICK_WINDOW_SIZE } from './constants';
-import { ClipMode, PointCloudMaterial, PointColorType, PointSizeType } from './materials';
+import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, WebGLRenderer } from 'three';
+import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
+import { PointCloudMaterial, PointSizeType } from './materials';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
+import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudTreeNode, IPotree, PickPoint, PointCloudHit } from './types';
+import { IPointCloudTreeNode, IPotree, PickPoint } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
-import { clamp } from './utils/math';
-import { byLevelAndIndex } from './utils/utils';
-
-export interface PickParams {
-  pickWindowSize: number;
-  pickOutsideClipRegion: boolean;
-  /**
-   * If provided, the picking will use this pixel position instead of the `Ray` passed to the `pick`
-   * method.
-   */
-  pixelPosition: Vector3;
-  /**
-   * Function which gets called after a picking material has been created and setup and before the
-   * point cloud is rendered into the picking render target. This gives applications a chance to
-   * customize the renderTarget and the material.
-   *
-   * @param material
-   *    The pick material.
-   * @param renterTarget
-   *    The render target used for picking.
-   */
-  onBeforePickRender: (material: PointCloudMaterial, renterTarget: WebGLRenderTarget) => void;
-}
-
-interface IPickState {
-  renderTarget: WebGLRenderTarget;
-  material: PointCloudMaterial;
-  scene: Scene;
-}
-
-const helperVec3 = new Vector3();
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
@@ -81,8 +29,7 @@ export class PointCloudOctree extends PointCloudTree {
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
   private visibleBounds: Box3 = new Box3();
-  private visibleNodeTextureOffsets = new Map<string, number>();
-  private pickState: IPickState | undefined;
+  private picker: PointCloudOctreePicker | undefined;
 
   constructor(
     potree: IPotree,
@@ -129,12 +76,10 @@ export class PointCloudOctree extends PointCloudTree {
 
     this.visibleNodes = [];
     this.visibleGeometry = [];
-    this.visibleNodeTextureOffsets.clear();
 
-    if (this.pickState) {
-      this.pickState.material.dispose();
-      this.pickState.renderTarget.dispose();
-      this.pickState = undefined;
+    if (this.picker) {
+      this.picker.dispose();
+      this.picker = undefined;
     }
 
     this.disposed = true;
@@ -157,7 +102,7 @@ export class PointCloudOctree extends PointCloudTree {
     points.name = geometryNode.name;
     points.position.copy(geometryNode.boundingBox.min);
     points.frustumCulled = false;
-    points.onBeforeRender = this.makeOnBeforeRender(node);
+    points.onBeforeRender = PointCloudMaterial.makeOnBeforeRender(this, node);
 
     if (parent) {
       parent.sceneNode.add(points);
@@ -175,36 +120,6 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     return node;
-  }
-
-  private makeOnBeforeRender(node: PointCloudOctreeNode) {
-    return (
-      _renderer: WebGLRenderer,
-      _scene: Scene,
-      _camera: Camera,
-      _geometry: Geometry | BufferGeometry,
-      material: Material,
-    ) => {
-      const materialUniforms = (material as PointCloudMaterial).uniforms;
-
-      materialUniforms.level.value = node.level;
-      materialUniforms.isLeafNode.value = node.isLeafNode;
-
-      const vnStart = this.visibleNodeTextureOffsets.get(node.name);
-      if (vnStart !== undefined) {
-        materialUniforms.vnStart.value = vnStart;
-      }
-
-      const pcIndex = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
-      materialUniforms.pcIndex.value = pcIndex;
-
-      // Note: when changing uniforms in onBeforeRender, the flag uniformsNeedUpdate has to be
-      // set to true to instruct ThreeJS to upload them. See also
-      // https://github.com/mrdoob/three.js/issues/9870#issuecomment-368750182.
-
-      // Remove the cast to any when uniformsNeedUpdate has been added to the typings.
-      (material as any) /*ShaderMaterial*/.uniformsNeedUpdate = true;
-    };
   }
 
   updateVisibleBounds() {
@@ -240,86 +155,6 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     bbRoot.children = visibleBoxes;
-  }
-
-  updateMaterial(
-    material: PointCloudMaterial,
-    visibleNodes: PointCloudOctreeNode[],
-    camera: PerspectiveCamera,
-    renderer: WebGLRenderer,
-  ): void {
-    const maxScale = Math.max(this.scale.x, this.scale.y, this.scale.z);
-    const pixelRatio = renderer.getPixelRatio();
-
-    material.fov = camera.fov * (Math.PI / 180);
-    material.screenWidth = renderer.domElement.clientWidth * pixelRatio;
-    material.screenHeight = renderer.domElement.clientHeight * pixelRatio;
-    material.near = camera.near;
-    material.far = camera.far;
-    material.spacing = this.pcoGeometry.spacing * maxScale;
-    material.uniforms.octreeSize.value = this.pcoGeometry.boundingBox.getSize(helperVec3).x;
-
-    if (
-      material.pointSizeType === PointSizeType.ADAPTIVE ||
-      material.pointColorType === PointColorType.LOD
-    ) {
-      this.updateVisibilityTextureData(visibleNodes, material);
-    }
-  }
-
-  private updateVisibilityTextureData(nodes: PointCloudOctreeNode[], material: PointCloudMaterial) {
-    nodes.sort(byLevelAndIndex);
-
-    const data = new Uint8Array(nodes.length * 4);
-    const offsetsToChild = new Array(nodes.length).fill(Infinity);
-
-    this.visibleNodeTextureOffsets.clear();
-
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-
-      this.visibleNodeTextureOffsets.set(node.name, i);
-
-      if (i > 0) {
-        const parentName = node.name.slice(0, -1);
-        const parentOffset = this.visibleNodeTextureOffsets.get(parentName)!;
-        const parentOffsetToChild = i - parentOffset;
-
-        offsetsToChild[parentOffset] = Math.min(offsetsToChild[parentOffset], parentOffsetToChild);
-
-        // tslint:disable:no-bitwise
-        const offset = parentOffset * 4;
-        data[offset] = data[offset] | (1 << node.index);
-        data[offset + 1] = offsetsToChild[parentOffset] >> 8;
-        data[offset + 2] = offsetsToChild[parentOffset] % 256;
-        // tslint:enable:no-bitwise
-      }
-
-      data[i * 4 + 3] = node.name.length;
-    }
-
-    const texture = material.visibleNodesTexture;
-    if (texture) {
-      texture.image.data.set(data);
-      texture.needsUpdate = true;
-    }
-  }
-
-  private helperSphere = new Sphere();
-
-  nodesOnRay(nodes: PointCloudOctreeNode[], ray: Ray): PointCloudOctreeNode[] {
-    const nodesOnRay: PointCloudOctreeNode[] = [];
-
-    const rayClone = ray.clone();
-    for (const node of nodes) {
-      const sphere = this.helperSphere.copy(node.boundingSphere).applyMatrix4(this.matrixWorld);
-
-      if (rayClone.intersectsSphere(sphere)) {
-        nodesOnRay.push(node);
-      }
-    }
-
-    return nodesOnRay;
   }
 
   updateMatrixWorld(force: boolean): void {
@@ -379,249 +214,12 @@ export class PointCloudOctree extends PointCloudTree {
 
   pick(
     renderer: WebGLRenderer,
-    camera: PerspectiveCamera,
+    camera: Camera,
     ray: Ray,
     params: Partial<PickParams> = {},
   ): PickPoint | null {
-    const pixelRatio = renderer.getPixelRatio();
-    const pickWndSize = Math.floor(
-      (params.pickWindowSize || DEFAULT_PICK_WINDOW_SIZE) * pixelRatio,
-    );
-
-    const width = Math.ceil(renderer.domElement.clientWidth * pixelRatio);
-    const height = Math.ceil(renderer.domElement.clientHeight * pixelRatio);
-
-    const pickState = this.pickState ? this.pickState : (this.pickState = this.getPickState());
-    const pickMaterial = pickState.material;
-
-    // Get all the octree nodes which intersect the picking ray. We only need to render those.
-    const nodes: PointCloudOctreeNode[] = this.nodesOnRay(this.visibleNodes, ray);
-    if (nodes.length === 0) {
-      return null;
-    }
-
-    // Create copies of the nodes so we can render them differently than in the normal point cloud.
-    const tempNodes = [];
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      node.pcIndex = i + 1;
-
-      const sceneNode = node.sceneNode;
-      const tempNode = new Points(sceneNode.geometry, pickMaterial);
-      tempNode.matrix = sceneNode.matrix;
-      tempNode.matrixWorld = sceneNode.matrixWorld;
-      tempNode.matrixAutoUpdate = false;
-      tempNode.frustumCulled = false;
-      (tempNode as any).pcIndex = i + 1;
-      tempNode.onBeforeRender = this.makeOnBeforeRender(node);
-
-      tempNodes.push(tempNode);
-    }
-
-    pickState.scene.autoUpdate = false;
-    pickState.scene.children = tempNodes;
-
-    this.updatePickMaterial(pickMaterial, params);
-    this.updateMaterial(pickMaterial, nodes, camera, renderer);
-    this.updatePickRenderTarget(this.pickState, width, height);
-
-    if (params.onBeforePickRender) {
-      params.onBeforePickRender(pickMaterial, pickState.renderTarget);
-    }
-
-    const pixelPosition = helperVec3; // Use helper vector to prevent extra allocations.
-
-    if (params.pixelPosition) {
-      pixelPosition.copy(params.pixelPosition);
-    } else {
-      pixelPosition.addVectors(camera.position, ray.direction).project(camera);
-      pixelPosition.x = (pixelPosition.x + 1) * width * 0.5;
-      pixelPosition.y = (pixelPosition.y + 1) * height * 0.5;
-    }
-
-    const halfPickWndSize = (pickWndSize - 1) / 2;
-    const x = Math.floor(clamp(pixelPosition.x - halfPickWndSize, 0, width));
-    const y = Math.floor(clamp(pixelPosition.y - halfPickWndSize, 0, height));
-
-    // Render the intersected nodes onto the pick render target, clipping to a small pick window.
-    renderer.setScissor(x, y, pickWndSize, pickWndSize);
-    renderer.setScissorTest(true);
-    renderer.state.buffers.depth.setTest(pickMaterial.depthTest);
-    renderer.state.buffers.depth.setMask(pickMaterial.depthWrite ? true : false);
-    renderer.state.setBlending(NoBlending);
-
-    renderer.setRenderTarget(pickState.renderTarget);
-
-    // Save the current clear color and clear the renderer with black color and alpha 0.
-    const oldClearColor = renderer.getClearColor();
-    const oldClearAlpha = renderer.getClearAlpha();
-    renderer.setClearColor(COLOR_BLACK, 0);
-    renderer.clear(true, true, true);
-    renderer.setClearColor(oldClearColor, oldClearAlpha);
-
-    renderer.render(pickState.scene, camera);
-
-    // Read the pixel from the pick render target.
-    const pixels = new Uint8Array(4 * pickWndSize * pickWndSize);
-    renderer.readRenderTargetPixels(pickState.renderTarget, x, y, pickWndSize, pickWndSize, pixels);
-    renderer.setScissorTest(false);
-    renderer.setRenderTarget(null!);
-
-    const ibuffer = new Uint32Array(pixels.buffer);
-
-    // Find closest hit inside pixelWindow boundaries
-    let min = Number.MAX_VALUE;
-    let hit: PointCloudHit | null = null;
-    for (let u = 0; u < pickWndSize; u++) {
-      for (let v = 0; v < pickWndSize; v++) {
-        const offset = u + v * pickWndSize;
-        const distance =
-          Math.pow(u - (pickWndSize - 1) / 2, 2) + Math.pow(v - (pickWndSize - 1) / 2, 2);
-
-        const pcIndex = pixels[4 * offset + 3];
-        pixels[4 * offset + 3] = 0;
-        const pIndex = ibuffer[offset];
-
-        if (pcIndex > 0 && distance < min) {
-          hit = {
-            pIndex: pIndex,
-            pcIndex: pcIndex - 1,
-          };
-          min = distance;
-        }
-      }
-    }
-
-    return this.getPickPoint(hit, nodes);
-  }
-
-  private getPickPoint(hit: PointCloudHit | null, nodes: PointCloudOctreeNode[]): PickPoint | null {
-    if (!hit) {
-      return null;
-    }
-
-    const point: PickPoint = {};
-
-    const points = nodes[hit.pcIndex] && nodes[hit.pcIndex].sceneNode;
-    if (!points) {
-      return null;
-    }
-
-    const attributes: BufferAttribute[] = (points.geometry as any).attributes;
-
-    for (const property in attributes) {
-      if (!attributes.hasOwnProperty(property)) {
-        continue;
-      }
-
-      const values = attributes[property];
-
-      // tslint:disable-next-line:prefer-switch
-      if (property === 'position') {
-        this.addPositionToPickPoint(point, hit, values, points);
-      } else if (property === 'normal') {
-        this.addNormalToPickPoint(point, hit, values);
-      } else if (property === 'indices') {
-        // TODO
-      } else {
-        if (values.itemSize === 1) {
-          point[property] = values.array[hit.pIndex];
-        } else {
-          const value = [];
-          for (let j = 0; j < values.itemSize; j++) {
-            value.push(values.array[values.itemSize * hit.pIndex + j]);
-          }
-          point[property] = value;
-        }
-      }
-    }
-
-    return point;
-  }
-
-  private addPositionToPickPoint(
-    point: PickPoint,
-    hit: PointCloudHit,
-    values: BufferAttribute,
-    points: Points,
-  ): void {
-    const x = values.array[3 * hit.pIndex];
-    const y = values.array[3 * hit.pIndex + 1];
-    const z = values.array[3 * hit.pIndex + 2];
-
-    point.position = new Vector3(x, y, z).applyMatrix4(points.matrixWorld);
-  }
-
-  private addNormalToPickPoint(
-    point: PickPoint,
-    hit: PointCloudHit,
-    values: BufferAttribute,
-  ): void {
-    const normalsArray = values.array;
-
-    const x = normalsArray[3 * hit.pIndex];
-    const y = normalsArray[3 * hit.pIndex + 1];
-    const z = normalsArray[3 * hit.pIndex + 2];
-
-    const normal = new Vector4(x, y, z, 0);
-    const m = new Matrix4();
-    m.getInverse(this.matrixWorld);
-    m.transpose();
-    normal.applyMatrix4(m);
-
-    point.normal = new Vector3(normal.x, normal.y, normal.z);
-    point.datasetNormal = new Vector3(x, y, z);
-  }
-
-  private getPickState() {
-    const scene = new Scene();
-
-    const material = new PointCloudMaterial();
-    material.pointColorType = PointColorType.POINT_INDEX;
-
-    return {
-      renderTarget: this.makePickRenderTarget(),
-      material: material,
-      scene: scene,
-    };
-  }
-
-  private updatePickMaterial(pickMaterial: PointCloudMaterial, params: Partial<PickParams>): void {
-    const material = this.material;
-
-    pickMaterial.pointSizeType = material.pointSizeType;
-    pickMaterial.shape = material.shape;
-    pickMaterial.size = material.size;
-    pickMaterial.minSize = material.minSize;
-    pickMaterial.maxSize = material.maxSize;
-    pickMaterial.classification = material.classification;
-
-    if (params.pickOutsideClipRegion) {
-      pickMaterial.clipMode = ClipMode.DISABLED;
-    } else {
-      pickMaterial.clipMode = material.clipMode;
-      pickMaterial.setClipBoxes(
-        material.clipMode === ClipMode.CLIP_OUTSIDE ? material.clipBoxes : [],
-      );
-    }
-  }
-
-  private updatePickRenderTarget(pickState: IPickState, width: number, height: number): void {
-    if (pickState.renderTarget.width === width && pickState.renderTarget.height === height) {
-      return;
-    }
-
-    pickState.renderTarget.dispose();
-    pickState.renderTarget = this.makePickRenderTarget();
-    pickState.renderTarget.setSize(width, height);
-  }
-
-  private makePickRenderTarget() {
-    return new WebGLRenderTarget(1, 1, {
-      minFilter: LinearFilter,
-      magFilter: NearestFilter,
-      format: RGBAFormat,
-    });
+    this.picker = this.picker || new PointCloudOctreePicker();
+    return this.picker.pick(renderer, camera, ray, [this], params);
   }
 
   get progress() {
