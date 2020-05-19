@@ -5,8 +5,6 @@ uniform mat4 projectionMatrix;
 
 uniform float screenWidth;
 uniform float screenHeight;
-uniform float near;
-uniform float far;
 
 uniform sampler2D map;
 

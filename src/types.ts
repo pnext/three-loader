@@ -56,7 +56,7 @@ export interface IPotree {
 export interface PickPoint {
   position?: Vector3;
   normal?: Vector3;
-  datasetNormal?: Vector3;
+  pointCloud?: PointCloudOctree;
   [property: string]: any;
 }
 
