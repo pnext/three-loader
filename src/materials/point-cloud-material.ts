@@ -1,11 +1,19 @@
 import {
   AdditiveBlending,
+  BufferGeometry,
+  Camera,
   Color,
+  Geometry,
   LessEqualDepth,
+  Material,
   NearestFilter,
   NoBlending,
+  PerspectiveCamera,
   RawShaderMaterial,
-  Texture
+  Scene,
+  Texture,
+  Vector3,
+  WebGLRenderer,
 } from 'three';
 import {
   DEFAULT_MAX_POINT_SIZE,
@@ -13,7 +21,11 @@ import {
   DEFAULT_RGB_BRIGHTNESS,
   DEFAULT_RGB_CONTRAST,
   DEFAULT_RGB_GAMMA,
+  PERSPECTIVE_CAMERA,
 } from '../constants';
+import { PointCloudOctree } from '../point-cloud-octree';
+import { PointCloudOctreeNode } from '../point-cloud-octree-node';
+import { byLevelAndIndex } from '../utils/utils';
 import { DEFAULT_CLASSIFICATION } from './classification';
 import { ClipMode, IClipBox } from './clipping';
 import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
@@ -41,7 +53,6 @@ export interface IPointCloudMaterialUniforms {
   clipBoxes: IUniform<Float32Array>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
-  far: IUniform<number>;
   fov: IUniform<number>;
   gradient: IUniform<Texture>;
   heightMax: IUniform<number>;
@@ -53,7 +64,6 @@ export interface IPointCloudMaterialUniforms {
   level: IUniform<number>;
   maxSize: IUniform<number>;
   minSize: IUniform<number>;
-  near: IUniform<number>;
   octreeSize: IUniform<number>;
   opacity: IUniform<number>;
   pcIndex: IUniform<number>;
@@ -126,11 +136,14 @@ const CLIP_MODE_DEFS = {
 };
 
 export class PointCloudMaterial extends RawShaderMaterial {
+  private static helperVec3 = new Vector3();
+
   lights = false;
   fog = false;
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
   visibleNodesTexture: Texture | undefined;
+  private visibleNodeTextureOffsets = new Map<string, number>();
 
   private _gradient = SPECTRAL;
   private gradientTexture: Texture | undefined = generateGradientTexture(this._gradient);
@@ -149,7 +162,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     clipBoxes: makeUniform('Matrix4fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
-    far: makeUniform('f', 1.0),
     fov: makeUniform('f', 1.0),
     gradient: makeUniform('t', this.gradientTexture || new Texture()),
     heightMax: makeUniform('f', 1.0),
@@ -162,7 +174,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     level: makeUniform('f', 0.0),
     maxSize: makeUniform('f', DEFAULT_MAX_POINT_SIZE),
     minSize: makeUniform('f', DEFAULT_MIN_POINT_SIZE),
-    near: makeUniform('f', 0.1),
     octreeSize: makeUniform('f', 0),
     opacity: makeUniform('f', 1.0),
     pcIndex: makeUniform('f', 0),
@@ -190,7 +201,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   @uniform('bbSize') bbSize!: [number, number, number];
   @uniform('depthMap') depthMap!: Texture | undefined;
-  @uniform('far') far!: number;
   @uniform('fov') fov!: number;
   @uniform('heightMax') heightMax!: number;
   @uniform('heightMin') heightMin!: number;
@@ -200,7 +210,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('intensityRange') intensityRange!: [number, number];
   @uniform('maxSize') maxSize!: number;
   @uniform('minSize') minSize!: number;
-  @uniform('near') near!: number;
+  @uniform('octreeSize') octreeSize!: number;
   @uniform('opacity', true) opacity!: number;
   @uniform('rgbBrightness', true) rgbBrightness!: number;
   @uniform('rgbContrast', true) rgbContrast!: number;
@@ -280,6 +290,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.visibleNodesTexture = undefined;
     }
 
+    this.clearVisibleNodeTextureOffsets();
+
     if (this.classificationTexture) {
       this.classificationTexture.dispose();
       this.classificationTexture = undefined;
@@ -289,6 +301,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.depthMap.dispose();
       this.depthMap = undefined;
     }
+  }
+
+  clearVisibleNodeTextureOffsets(): void {
+    this.visibleNodeTextureOffsets.clear();
   }
 
   updateShaderSource(): void {
@@ -476,6 +492,107 @@ export class PointCloudMaterial extends RawShaderMaterial {
     } else if (value !== uObj.value) {
       uObj.value = value;
     }
+  }
+
+  updateMaterial(
+    octree: PointCloudOctree,
+    visibleNodes: PointCloudOctreeNode[],
+    camera: Camera,
+    renderer: WebGLRenderer,
+  ): void {
+    const pixelRatio = renderer.getPixelRatio();
+
+    if (camera.type === PERSPECTIVE_CAMERA) {
+      this.fov = (camera as PerspectiveCamera).fov * (Math.PI / 180);
+    } else {
+      this.fov = Math.PI / 2; // will result in slope = 1 in the shader
+    }
+    this.screenWidth = renderer.domElement.clientWidth * pixelRatio;
+    this.screenHeight = renderer.domElement.clientHeight * pixelRatio;
+
+    const maxScale = Math.max(octree.scale.x, octree.scale.y, octree.scale.z);
+    this.spacing = octree.pcoGeometry.spacing * maxScale;
+    this.octreeSize = octree.pcoGeometry.boundingBox.getSize(PointCloudMaterial.helperVec3).x;
+
+    if (
+      this.pointSizeType === PointSizeType.ADAPTIVE ||
+      this.pointColorType === PointColorType.LOD
+    ) {
+      this.updateVisibilityTextureData(visibleNodes);
+    }
+  }
+
+  private updateVisibilityTextureData(nodes: PointCloudOctreeNode[]) {
+    nodes.sort(byLevelAndIndex);
+
+    const data = new Uint8Array(nodes.length * 4);
+    const offsetsToChild = new Array(nodes.length).fill(Infinity);
+
+    this.visibleNodeTextureOffsets.clear();
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+
+      this.visibleNodeTextureOffsets.set(node.name, i);
+
+      if (i > 0) {
+        const parentName = node.name.slice(0, -1);
+        const parentOffset = this.visibleNodeTextureOffsets.get(parentName)!;
+        const parentOffsetToChild = i - parentOffset;
+
+        offsetsToChild[parentOffset] = Math.min(offsetsToChild[parentOffset], parentOffsetToChild);
+
+        // tslint:disable:no-bitwise
+        const offset = parentOffset * 4;
+        data[offset] = data[offset] | (1 << node.index);
+        data[offset + 1] = offsetsToChild[parentOffset] >> 8;
+        data[offset + 2] = offsetsToChild[parentOffset] % 256;
+        // tslint:enable:no-bitwise
+      }
+
+      data[i * 4 + 3] = node.name.length;
+    }
+
+    const texture = this.visibleNodesTexture;
+    if (texture) {
+      texture.image.data.set(data);
+      texture.needsUpdate = true;
+    }
+  }
+
+  static makeOnBeforeRender(
+    octree: PointCloudOctree,
+    node: PointCloudOctreeNode,
+    pcIndex?: number,
+  ) {
+    return (
+      _renderer: WebGLRenderer,
+      _scene: Scene,
+      _camera: Camera,
+      _geometry: Geometry | BufferGeometry,
+      material: Material,
+    ) => {
+      const pointCloudMaterial = material as PointCloudMaterial;
+      const materialUniforms = pointCloudMaterial.uniforms;
+
+      materialUniforms.level.value = node.level;
+      materialUniforms.isLeafNode.value = node.isLeafNode;
+
+      const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(node.name);
+      if (vnStart !== undefined) {
+        materialUniforms.vnStart.value = vnStart;
+      }
+
+      materialUniforms.pcIndex.value =
+        pcIndex !== undefined ? pcIndex : octree.visibleNodes.indexOf(node);
+
+      // Note: when changing uniforms in onBeforeRender, the flag uniformsNeedUpdate has to be
+      // set to true to instruct ThreeJS to upload them. See also
+      // https://github.com/mrdoob/three.js/issues/9870#issuecomment-368750182.
+
+      // Remove the cast to any after updating to Three.JS >= r113
+      (material as any) /*ShaderMaterial*/.uniformsNeedUpdate = true;
+    };
   }
 }
 
