@@ -187,6 +187,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     toModel: makeUniform('Matrix4f', []),
     transition: makeUniform('f', 0.5),
     uColor: makeUniform('c', new Color(0xffffff)),
+    // @ts-ignore
     visibleNodes: makeUniform('t', this.visibleNodesTexture || new Texture()),
     vnStart: makeUniform('f', 0.0),
     wClassification: makeUniform('f', 0),
