@@ -348,7 +348,7 @@ export class Potree implements IPotree {
         frustums.push(new Frustum().setFromProjectionMatrix(frustumMatrix));
 
         // Camera position in object space
-        inverseWorldMatrix.getInverse(worldMatrix);
+        inverseWorldMatrix.copy(worldMatrix).invert();
         cameraMatrix
           .identity()
           .multiply(inverseWorldMatrix)
