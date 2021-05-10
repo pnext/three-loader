@@ -3,7 +3,6 @@ import {
   BufferGeometry,
   Camera,
   Color,
-  Geometry,
   LessEqualDepth,
   Material,
   NearestFilter,
@@ -596,7 +595,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
       _renderer: WebGLRenderer,
       _scene: Scene,
       _camera: Camera,
-      _geometry: Geometry | BufferGeometry,
+      _geometry: BufferGeometry,
       material: Material,
     ) => {
       const pointCloudMaterial = material as PointCloudMaterial;
