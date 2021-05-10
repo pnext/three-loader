@@ -321,7 +321,7 @@ export class Potree implements IPotree {
       priorityQueue: BinaryHeap<QueueItem>;
     } => {
       const frustums: Frustum[] = [];
-      const cameraPositions = [];
+      const cameraPositions: Vector3[] = [];
       const priorityQueue = new BinaryHeap<QueueItem>(x => 1 / x.weight);
 
       for (let i = 0; i < pointClouds.length; i++) {
