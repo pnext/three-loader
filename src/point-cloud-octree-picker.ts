@@ -363,7 +363,7 @@ export class PointCloudOctreePicker {
         if (values.itemSize === 1) {
           point[property] = values.array[hit.pIndex];
         } else {
-          const value = [];
+          const value: number[] = [];
           for (let j = 0; j < values.itemSize; j++) {
             value.push(values.array[values.itemSize * hit.pIndex + j]);
           }
