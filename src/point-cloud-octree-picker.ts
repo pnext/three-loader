@@ -13,6 +13,7 @@ import {
   Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
+  Color,
 } from 'three';
 import { COLOR_BLACK, DEFAULT_PICK_WINDOW_SIZE } from './constants';
 import { ClipMode, PointCloudMaterial, PointColorType } from './materials';
@@ -56,7 +57,7 @@ interface RenderedNode {
 export class PointCloudOctreePicker {
   private static readonly helperVec3 = new Vector3();
   private static readonly helperSphere = new Sphere();
-
+  private static readonly clearColor = new Color();
   private pickState: IPickState | undefined;
 
   dispose() {
@@ -144,11 +145,11 @@ export class PointCloudOctreePicker {
     renderer.setRenderTarget(pickState.renderTarget);
 
     // Save the current clear color and clear the renderer with black color and alpha 0.
-    const oldClearColor = renderer.getClearColor();
+    renderer.getClearColor(this.clearColor);
     const oldClearAlpha = renderer.getClearAlpha();
     renderer.setClearColor(COLOR_BLACK, 0);
     renderer.clear(true, true, true);
-    renderer.setClearColor(oldClearColor, oldClearAlpha);
+    renderer.setClearColor(this.clearColor, oldClearAlpha);
   }
 
   private static render(
@@ -362,7 +363,7 @@ export class PointCloudOctreePicker {
         if (values.itemSize === 1) {
           point[property] = values.array[hit.pIndex];
         } else {
-          const value = [];
+          const value: number[] = [];
           for (let j = 0; j < values.itemSize; j++) {
             value.push(values.array[values.itemSize * hit.pIndex + j]);
           }

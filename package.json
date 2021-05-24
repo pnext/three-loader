@@ -1,7 +1,7 @@
 {
   "name": "@pnext/three-loader",
   "private": false,
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": [
     "Hugo Campos <hugo.campos@pix4d.com>"
@@ -27,12 +27,13 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "three": "^0.120.1"
+    "three": "^0.124.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@babel/preset-env": "^7.11.5",
     "@types/node": "^13.13.21",
+    "@types/three": "^0.127.1",
     "babel-core": "^6.26.3",
     "babel-loader": "^8.1.0",
     "babel-preset-env": "^1.7.0",
@@ -47,7 +48,7 @@
     "size-plugin": "^2.0.1",
     "standard-version": "^9.0.0",
     "style-loader": "^1.2.1",
-    "three": "0.120.1",
+    "three": "0.128.0",
     "three-orbit-controls": "^82.1.0",
     "ts-loader": "^6.2.2",
     "tslint": "^6.1.3",

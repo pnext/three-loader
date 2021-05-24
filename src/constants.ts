@@ -1,4 +1,4 @@
-import { Color } from 'three';
+import { Color, Vector4 } from 'three';
 
 export const DEFAULT_RGB_BRIGHTNESS = 0;
 export const DEFAULT_RGB_CONTRAST = 0;
@@ -12,3 +12,4 @@ export const MAX_LOADS_TO_GPU = 2;
 export const MAX_NUM_NODES_LOADING = 4;
 export const PERSPECTIVE_CAMERA = 'PerspectiveCamera';
 export const COLOR_BLACK = new Color(0, 0, 0);
+export const DEFAULT_HIGHLIGHT_COLOR = new Vector4(1, 0, 0, 1);
