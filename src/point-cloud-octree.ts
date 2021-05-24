@@ -147,7 +147,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.parent.add(bbRoot);
     }
 
-    const visibleBoxes = [];
+    const visibleBoxes: (Object3D | null)[] = [];
     for (const node of this.visibleNodes) {
       if (node.boundingBoxNode !== undefined && node.isLeafNode) {
         visibleBoxes.push(node.boundingBoxNode);
