@@ -12,7 +12,7 @@ const viewer = new Viewer();
 viewer.initialize(targetEl);
 
 const clippingPlane = new Plane()
-const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffee00);
+const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
 viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
@@ -79,6 +79,7 @@ slider.addEventListener('change', () => {
 
 const clippingSlider = document.createElement('input');
 clippingSlider.type = 'range';
+clippingSlider.value = String(clippingPlane.constant);
 clippingSlider.min = String(-1);
 clippingSlider.max = String(2.5);
 clippingSlider.step = String(0.1);
