@@ -17,6 +17,8 @@ export interface IPointCloudMaterialUniforms {
     classificationLUT: IUniform<Texture>;
     clipBoxCount: IUniform<number>;
     clipBoxes: IUniform<Float32Array>;
+    clipping: IUniform<boolean>;
+    clippingPlanes: IUniform<any[]>;
     depthMap: IUniform<Texture | null>;
     diffuse: IUniform<[number, number, number]>;
     fov: IUniform<number>;
