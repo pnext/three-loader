@@ -54,6 +54,7 @@ export interface IPointCloudMaterialUniforms {
   clipBoxCount: IUniform<number>;
   clipBoxes: IUniform<Float32Array>;
   clipping: IUniform<boolean>;
+  numClippingPlanes: IUniform<number>;
   clippingPlanes: IUniform<any[]>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
@@ -161,6 +162,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this._classification,
   );
 
+  defines: any = {
+    NUM_CLIP_PLANES: 0
+  };
+
   uniforms: IPointCloudMaterialUniforms & Record<string, IUniform<any>> = {
     bbSize: makeUniform('fv', [0, 0, 0] as [number, number, number]),
     blendDepthSupplement: makeUniform('f', 0.0),
@@ -169,6 +174,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     clipBoxCount: makeUniform('f', 0),
     clipBoxes: makeUniform('Matrix4fv', [] as any),
     clipping: makeUniform('b', true),
+    numClippingPlanes: makeUniform('f', 0),
     clippingPlanes: makeUniform('fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
@@ -275,6 +281,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   constructor(parameters: Partial<IPointCloudMaterialParameters> = {}) {
     super();
+
+    this.setValues({
+      defines: this.defines
+    });
 
     const tex = (this.visibleNodesTexture = generateDataTexture(2048, 1, new Color(0xffffff)));
     tex.minFilter = NearestFilter;
@@ -617,7 +627,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
         }
         materialUniforms.clippingPlanes.value = flattenedPlanes;
       }
-
+      pointCloudMaterial.defines.NUM_CLIP_PLANES = material.clippingPlanes.length;
       materialUniforms.level.value = node.level;
       materialUniforms.isLeafNode.value = node.isLeafNode;
 

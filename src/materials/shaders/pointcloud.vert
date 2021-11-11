@@ -30,7 +30,9 @@ uniform float spacing;
 	uniform mat4 clipBoxes[max_clip_boxes];
 #endif
 
-uniform vec4 clippingPlanes[NUM_CLIPPING_PLANES];
+#if NUM_CLIP_PLANES > 0
+	uniform vec4 clippingPlanes[NUM_CLIP_PLANES];
+#endif
 
 uniform float heightMin;
 uniform float heightMax;
@@ -383,15 +385,6 @@ void main() {
 	vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 	vec4 mPosition = modelMatrix * vec4(position, 1.0);
 
-	vec4 plane;
-	vec3 vClipPosition = -(modelMatrix * vec4(position, 1.0)).xyz;
-	for (int i = 0; i < NUM_CLIPPING_PLANES; i++) {
-		plane = clippingPlanes[i];
-		if (dot(vClipPosition, plane.xyz) > plane.w) {
-		  gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // Instead of discard
-		};
-	}
-
 	gl_Position = projectionMatrix * mvPosition;
 
 	#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)
@@ -552,6 +545,17 @@ void main() {
 			#if defined clip_highlight_inside
 				vColor.r += 0.5;
 			#endif
+		}
+	#endif
+
+	#if NUM_CLIP_PLANES > 0
+		vec4 plane;
+		vec3 vClipPosition = -(modelMatrix * vec4(position, 1.0)).xyz;
+		for (int i = 0; i < NUM_CLIP_PLANES; i++) {
+			plane = clippingPlanes[i];
+			if (dot(vClipPosition, plane.xyz) > plane.w) {
+				gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
+			};
 		}
 	#endif
 }

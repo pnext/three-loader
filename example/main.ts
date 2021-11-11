@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { Plane, PlaneHelper, Vector3 } from 'three';
 import { PointCloudOctree } from '../src';
 import { Viewer } from './viewer';
 
@@ -10,6 +10,10 @@ document.body.appendChild(targetEl);
 
 const viewer = new Viewer();
 viewer.initialize(targetEl);
+
+const clippingPlane = new Plane()
+const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffee00);
+viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
 let loaded: boolean = false;
@@ -45,6 +49,8 @@ loadBtn.addEventListener('click', () => {
       pointCloud.rotateX(-Math.PI / 2);
       pointCloud.material.size = 1.0;
 
+      pointCloud.material.clippingPlanes = [clippingPlane]
+
       const camera = viewer.camera;
       camera.far = 1000;
       camera.updateProjectionMatrix();
@@ -71,9 +77,22 @@ slider.addEventListener('change', () => {
   console.log(pointCloud.potree.pointBudget);
 });
 
+const clippingSlider = document.createElement('input');
+clippingSlider.type = 'range';
+clippingSlider.min = String(-1);
+clippingSlider.max = String(2.5);
+clippingSlider.step = String(0.1);
+clippingSlider.className = 'clipping-slider';
+
+clippingSlider.addEventListener('input', () => {
+  clippingPlane.constant = -Number(clippingSlider.value);
+});
+
 const btnContainer = document.createElement('div');
 btnContainer.className = 'btn-container';
 document.body.appendChild(btnContainer);
 btnContainer.appendChild(unloadBtn);
 btnContainer.appendChild(loadBtn);
 btnContainer.appendChild(slider);
+btnContainer.appendChild(clippingSlider);
+loadBtn.click();
