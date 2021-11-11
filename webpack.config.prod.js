@@ -16,6 +16,6 @@ module.exports = Object.assign(baseConfig, {
       failOnError: true,
       cwd: process.cwd(),
     }),
-    new BundleAnalyzerPlugin(),
+    new BundleAnalyzerPlugin({ analyzerMode: 'static' })
   ],
 });
