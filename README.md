@@ -10,7 +10,7 @@ And of course, suggestions for better/easier APIs or new features, as well as PR
 
 ```typescript
 import { Scene } from 'three';
-import { PointCloudOctree, Potree } from 'resonai/potree-loader';
+import { PointCloudOctree, Potree } from '@resonai/potree-loader';
 
 const scene = new Scene();
 // Manages the necessary state for loading/updating one or more point clouds.

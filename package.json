@@ -1,5 +1,5 @@
 {
-  "name": "resonai/potree-loader",
+  "name": "@resonai/potree-loader",
   "private": false,
   "version": "0.2.6-beta.1",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript. Based on repository by PNext",
