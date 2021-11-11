@@ -4,7 +4,7 @@ const webpack = require('webpack');
 const baseConfig = require('./webpack.config');
 
 module.exports = Object.assign(baseConfig, {
-  devtool: 'none',
+  devtool: false,
   stats: 'normal',
   plugins: [
     ...baseConfig.plugins,
@@ -16,6 +16,6 @@ module.exports = Object.assign(baseConfig, {
       failOnError: true,
       cwd: process.cwd(),
     }),
-    new BundleAnalyzerPlugin(),
+    new BundleAnalyzerPlugin({ analyzerMode: 'static' })
   ],
 });

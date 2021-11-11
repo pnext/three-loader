@@ -13,9 +13,9 @@ module.exports = {
   },
   devtool: 'source-map',
   devServer: {
-    contentBase: buildPath,
+    static: buildPath,
     compress: true,
-    port: 5000,
+    port: 5050,
   },
   stats: 'errors-only',
   resolve: {
@@ -25,8 +25,7 @@ module.exports = {
     rules: [
       {
         test: /\.worker\.js$/,
-        loader: 'worker-loader',
-        options: { inline: true, fallback: false },
+        loader: 'worker-loader'
       },
       {
         test: /\.js$/,
