@@ -77,4 +77,5 @@ To create a production-ready build of the library which can be published to NPM,
 # Thank You!
 
 Thank you to Markus Schütz for his work on Potree, on which this project is based.
+
 Thank you to the original repository by [PNext](https://github.com/pnext)
