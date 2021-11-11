@@ -3,6 +3,7 @@ import {
   BufferGeometry,
   Camera,
   Color,
+  GLSL3,
   LessEqualDepth,
   Material,
   NearestFilter,
@@ -283,7 +284,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     super();
 
     this.setValues({
-      defines: this.defines
+      defines: this.defines,
+      glslVersion: GLSL3
     });
 
     const tex = (this.visibleNodesTexture = generateDataTexture(2048, 1, new Color(0xffffff)));

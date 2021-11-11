@@ -1,8 +1,24 @@
 import { Plane, PlaneHelper, Vector3 } from 'three';
 import { PointCloudOctree } from '../src';
+import { PointOpacityType, PointShape, PointSizeType, PointColorType } from '../src/materials/enums';
 import { Viewer } from './viewer';
 
+// @ts-ignore
+import { GUI } from 'three/examples/jsm/libs/dat.gui.module.js';
+
 require('./main.css');
+
+let gui: GUI;
+
+const parameters = {
+  budget: 1e5,
+  'points size': 1,
+  'clipping plane': 0,
+  shape: PointShape.SQUARE,
+  pointSizeType: PointSizeType.FIXED,
+  pointColorType: PointColorType.RGB,
+  pointOpacityType: PointOpacityType.FIXED
+};
 
 const targetEl = document.createElement('div');
 targetEl.className = 'container';
@@ -11,34 +27,14 @@ document.body.appendChild(targetEl);
 const viewer = new Viewer();
 viewer.initialize(targetEl);
 
+
 const clippingPlane = new Plane()
 const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
 viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
-let loaded: boolean = false;
 
-const unloadBtn = document.createElement('button');
-unloadBtn.textContent = 'Unload';
-unloadBtn.addEventListener('click', () => {
-  if (!loaded) {
-    return;
-  }
-
-  viewer.unload();
-  loaded = false;
-  pointCloud = undefined;
-});
-
-const loadBtn = document.createElement('button');
-loadBtn.textContent = 'Load';
-loadBtn.addEventListener('click', () => {
-  if (loaded) {
-    return;
-  }
-
-  loaded = true;
-
+const load = () => {
   viewer
     .load(
       'cloud.js',
@@ -46,10 +42,15 @@ loadBtn.addEventListener('click', () => {
     )
     .then(pco => {
       pointCloud = pco;
+      pointCloud.potree.pointBudget = parameters.budget;
       pointCloud.rotateX(-Math.PI / 2);
-      pointCloud.material.size = 1.0;
+      pointCloud.material.size = parameters['points size'];
+      pointCloud.material.pointOpacityType = parameters.pointOpacityType;
+      pointCloud.material.shape = parameters.shape;
+      pointCloud.material.pointSizeType = parameters.pointSizeType;
+      pointCloud.material.pointColorType = parameters.pointColorType;
 
-      pointCloud.material.clippingPlanes = [clippingPlane]
+      pointCloud.material.clippingPlanes = [clippingPlane];
 
       const camera = viewer.camera;
       camera.far = 1000;
@@ -60,40 +61,51 @@ loadBtn.addEventListener('click', () => {
       viewer.add(pco);
     })
     .catch(err => console.error(err));
-});
+}
+load();
+initGui();
 
-const slider = document.createElement('input');
-slider.type = 'range';
-slider.min = String(10_000);
-slider.max = String(500_000);
-slider.className = 'budget-slider';
+function initGui() {
+  gui = new GUI();
 
-slider.addEventListener('change', () => {
-  if (!pointCloud) {
-    return;
-  }
+  gui.add(parameters, 'budget', 1e3, 1e6).onChange(function (val: number) {
+    if (pointCloud) {
+      pointCloud.potree.pointBudget = val;
+    }
+  });
 
-  pointCloud.potree.pointBudget = parseInt(slider.value, 10);
-  console.log(pointCloud.potree.pointBudget);
-});
+  gui.add(parameters, 'points size', 1, 10).onChange(function (val: number) {
+    if (pointCloud) {
+      pointCloud.material.size = val;
+    }
+  });
 
-const clippingSlider = document.createElement('input');
-clippingSlider.type = 'range';
-clippingSlider.value = String(clippingPlane.constant);
-clippingSlider.min = String(-1);
-clippingSlider.max = String(2.5);
-clippingSlider.step = String(0.1);
-clippingSlider.className = 'clipping-slider';
+  gui.add(parameters, 'clipping plane', -1, 2.5, 0.1).onChange(function (val: number) {
+    clippingPlane.constant = -val;
+  });
 
-clippingSlider.addEventListener('input', () => {
-  clippingPlane.constant = -Number(clippingSlider.value);
-});
-
-const btnContainer = document.createElement('div');
-btnContainer.className = 'btn-container';
-document.body.appendChild(btnContainer);
-btnContainer.appendChild(unloadBtn);
-btnContainer.appendChild(loadBtn);
-btnContainer.appendChild(slider);
-btnContainer.appendChild(clippingSlider);
-loadBtn.click();
+  const pointOpacityTypeDict = Object.fromEntries(Object.entries(PointOpacityType).filter(([_, v]) => typeof v !== 'string'))
+  gui.add(parameters, 'pointOpacityType', pointOpacityTypeDict).onChange(function (val: PointOpacityType) {
+    if (pointCloud) {
+      pointCloud.material.pointOpacityType = val;
+    }
+  });
+  const shapeDict = Object.fromEntries(Object.entries(PointShape).filter(([_, v]) => typeof v !== 'string'))
+  gui.add(parameters, 'shape', shapeDict).onChange(function (val: PointShape) {
+    if (pointCloud) {
+      pointCloud.material.shape = val;
+    }
+  });
+  const pointSizeTypeDict = Object.fromEntries(Object.entries(PointSizeType).filter(([_, v]) => typeof v !== 'string'))
+  gui.add(parameters, 'pointSizeType', pointSizeTypeDict).onChange(function (val: PointSizeType) {
+    if (pointCloud) {
+      pointCloud.material.pointSizeType = val;
+    }
+  });
+  const pointColorTypeDict = Object.fromEntries(Object.entries(PointColorType).filter(([_, v]) => typeof v !== 'string'))
+  gui.add(parameters, 'pointColorType', pointColorTypeDict).onChange(function (val: PointColorType) {
+    if (pointCloud) {
+      pointCloud.material.pointColorType = val;
+    }
+  });
+}
