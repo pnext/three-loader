@@ -15,7 +15,7 @@
     "url": "https://github.com/resonai/potree-loader/issues"
   },
   "license": "MIT",
-  "main": "build/potree.js",
+  "main": "build/index.js",
   "typings": "build/declarations/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
