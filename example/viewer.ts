@@ -1,9 +1,7 @@
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { PointCloudOctree, Potree } from '../src';
 
-// tslint:disable-next-line:no-duplicate-imports
-import * as THREE from 'three';
-const OrbitControls = require('three-orbit-controls')(THREE);
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export class Viewer {
   /**
