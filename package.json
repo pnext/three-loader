@@ -1,5 +1,5 @@
 {
-  "name": "resonai/three-loader",
+  "name": "resonai/potree-loader",
   "private": false,
   "version": "0.2.6-beta.1",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript. Based on repository by PNext",
@@ -9,10 +9,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/resonai/three-loader.git"
+    "url": "git+https://github.com/resonai/potree-loader.git"
   },
   "bugs": {
-    "url": "https://github.com/resonai/three-loader/issues"
+    "url": "https://github.com/resonai/potree-loader/issues"
   },
   "license": "MIT",
   "main": "build/potree.js",
@@ -76,6 +76,6 @@
     "gis",
     "photogrammetry"
   ],
-  "homepage": "https://github.com/resonai/three-loader#readme",
+  "homepage": "https://github.com/resonai/potree-loader#readme",
   "author": ""
 }
