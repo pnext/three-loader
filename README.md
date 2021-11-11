@@ -66,7 +66,7 @@ You can also start the example application (`/example`) by running:
 ```bash
 > yarn start:example
 ```
-And run it by going to (http://localhost:5050)
+And run it by going to http://localhost:5050
 
 To create a production-ready build of the library which can be published to NPM, you can run the following command:
 
@@ -77,4 +77,4 @@ To create a production-ready build of the library which can be published to NPM,
 # Thank You!
 
 Thank you to Markus Schütz for his work on Potree, on which this project is based.
-Thank you to the original repository by (https://github.com/pnext)[PNext]
+Thank you to the original repository by [PNext](https://github.com/pnext)
