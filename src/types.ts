@@ -45,6 +45,7 @@ export interface IPotree {
   lru: LRU;
 
   loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
+  loadResonaiPointCloud(url: string, jsonFile: GetUrlFn, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],

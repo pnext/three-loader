@@ -98,6 +98,26 @@ export class Viewer {
     );
   }
 
+  /**
+   * Loads a point cloud into the viewer and returns it.
+   *
+   * @param jsonFile
+   *    The path to the pointcloud file to load.
+   * @param locJSON
+   *    The JSON object of loc.json which maps where to find each node's ybf.
+   */
+    loadResonaiPotree(jsonFile: string, locJSON: any): Promise<PointCloudOctree> {
+      console.log('loadResonaiPotree', jsonFile, locJSON);
+      return this.potree.loadResonaiPointCloud(
+        // The file name of the point cloud which is to be loaded.
+        jsonFile,
+        // Given index of the node should return the full path to the node's ybf.
+        (index) => {
+          return locJSON.paths_map[locJSON.node_locations[index]]
+        }
+      );
+    }
+
   add(pco: PointCloudOctree): void {
     this.scene.add(pco);
     this.pointClouds.push(pco);
