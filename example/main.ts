@@ -13,6 +13,11 @@ require('./main.css');
 
 let gui: GUI;
 
+enum DemoPotree {
+  LION = 0,
+  YBF = 1,
+}
+
 const parameters = {
   budget: 1e5,
   'points size': 1,
@@ -20,7 +25,8 @@ const parameters = {
   shape: PointShape.SQUARE,
   pointSizeType: PointSizeType.FIXED,
   pointColorType: PointColorType.RGB,
-  pointOpacityType: PointOpacityType.FIXED
+  pointOpacityType: PointOpacityType.FIXED,
+  demoPotree: DemoPotree.YBF
 };
 
 const targetEl = document.createElement('div');
@@ -115,7 +121,15 @@ const locJSON = 'gs://resonai-irocket-public/snap-rotem-colin-163663587959616984
 }
 */
 // (3221225552 & 2**31) // get MSB
-const load = () => {
+
+const loadLion = () => {
+  viewer.load('cloud.js',
+              'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/')
+    .then(onPCOLoad)
+    .catch(err => console.error(err));
+}
+
+const loadYBF = () => {
   fetch(gsToPath(locJSON)).then(res => {
     res.text().then(text => {
       viewer.loadResonaiPotree(jsonFile, JSON5.parse(text))
@@ -124,11 +138,32 @@ const load = () => {
     })
   })
 }
-load();
+
+switch (parameters.demoPotree) {
+  case DemoPotree.LION:
+    loadLion();
+    break;
+  case DemoPotree.YBF:
+    loadYBF();
+    break;
+}
 initGui();
 
 function initGui() {
   gui = new GUI();
+
+  const loadOptions = Object.fromEntries(Object.entries(DemoPotree).filter(([_, v]) => typeof v !== 'string'))
+  gui.add(parameters, 'demoPotree', loadOptions).onChange(function (val: DemoPotree) {
+    viewer.unload();
+    switch (DemoPotree[val]) {
+      case DemoPotree[DemoPotree.LION]:
+        loadLion();
+        break;
+      case DemoPotree[DemoPotree.YBF]:
+        loadYBF();
+        break;
+    }
+  });
 
   gui.add(parameters, 'budget', 1e3, 1e6).onChange(function (val: number) {
     if (pointCloud) {
