@@ -10,6 +10,7 @@ import { createChildAABB } from '../utils/bounds';
 import { getIndexFromName } from '../utils/utils';
 import { Version } from '../version';
 import { BinaryLoader } from './binary-loader';
+import { YBFLoader } from './ybf-loader';
 import { GetUrlFn, XhrRequest } from './types';
 import { gsToPath } from '../utils/utils';
 
@@ -150,10 +151,10 @@ function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
   return (data: POCJson): Promise<PointCloudOctreeGeometry> => {
     console.log('parseResonai', data);
     const { offset, boundingBox, tightBoundingBox } = getResonaiBoundingBoxes(data);
-
-    const loader = new BinaryLoader({
+    const fakeVersion = '1.8' // TODO(Shai) what to do with this?
+    const loader = new YBFLoader({
       getUrl,
-      version: data.version,
+      version: fakeVersion,
       boundingBox,
       scale: 1,
       xhrRequest,
@@ -178,7 +179,7 @@ function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
 
     const nodes: Record<string, PointCloudOctreeGeometryNode> = {};
 
-    const version = new Version(data.version);
+    const version = new Version(fakeVersion);
 
     return loadRoot(pco, data, nodes, version).then(() => {
       if (version.upTo('1.4')) {
