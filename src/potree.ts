@@ -48,20 +48,20 @@ export class Potree implements IPotree {
   lru = new LRU(this._pointBudget);
 
   loadPointCloud(
-    url: string,
+    potreeName: string, // "cloud.js"
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
   ): Promise<PointCloudOctree> {
-    return loadPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    return loadPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
   loadResonaiPointCloud(
-    url: string,
+    potreeName: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
   ): Promise<PointCloudOctree> {
-    console.log('loadResonaiPointCloud', url, getUrl)
-    return loadResonaiPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    console.log('loadResonaiPointCloud', potreeName, getUrl)
+    return loadResonaiPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
   updatePointClouds(

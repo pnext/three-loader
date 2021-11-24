@@ -100,6 +100,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
    * Gets the url of the hierarchy file for this node.
    */
   getHierarchyUrl(): string {
+    console.log('here');
     return `${this.pcoGeometry.octreeDir}/${this.getHierarchyBaseUrl()}/${this.name}.hrc`;
   }
 
@@ -190,7 +191,10 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
       .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
-      .then(data => this.loadHierarchy(this, data));
+      .then(data => {
+        console.log(data);
+        this.loadHierarchy(this, data)
+      });
   }
 
   /**
@@ -228,6 +232,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       // From the last bit, all the way to the 8th one from the right.
       let mask = 1;
       for (let i = 0; i < 8 && offset + 1 < buffer.byteLength; i++) {
+        // N & 2^^i !== 0
         if ((stackNodeData.children & mask) !== 0) {
           const nodeData = this.getNodeData(stackNodeData.name + i, offset, view);
 
@@ -252,7 +257,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   }
 
   // tslint:enable:no-bitwise
-
   private getNodeData(name: string, offset: number, view: DataView): NodeData {
     const children = view.getUint8(offset);
     const numPoints = view.getUint32(offset + 1, true);

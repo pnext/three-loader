@@ -94,6 +94,7 @@ export class Viewer {
       // The file name of the point cloud which is to be loaded.
       fileName,
       // Given the relative URL of a file, should return a full URL.
+      // r0.bin => "gs://myfile/r0.bin"
       url => `${baseUrl}${url}`,
     );
   }
@@ -112,6 +113,7 @@ export class Viewer {
         // The file name of the point cloud which is to be loaded.
         jsonFile,
         // Given index of the node should return the full path to the node's ybf.
+        // 5 => "gs://snapshot3/010.ybf"
         (index) => {
           return locJSON.paths_map[locJSON.node_locations[index]]
         }

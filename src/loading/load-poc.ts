@@ -10,7 +10,7 @@ import { createChildAABB } from '../utils/bounds';
 import { getIndexFromName } from '../utils/utils';
 import { Version } from '../version';
 import { BinaryLoader } from './binary-loader';
-import { YBFLoader } from './ybf-loader';
+// import { YBFLoader } from './ybf-loader';
 import { GetUrlFn, XhrRequest } from './types';
 import { gsToPath } from '../utils/utils';
 
@@ -49,12 +49,12 @@ interface POCJson {
  *    An observable which emits once when the first LOD of the point cloud is loaded.
  */
 export function loadPOC(
-  url: string,
+  potreeName: string, // "cloud.js"
   getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
 ): Promise<PointCloudOctreeGeometry> {
-  console.log('loadPOC', url)
-  return Promise.resolve(getUrl(url)).then(transformedUrl => {
+  console.log('loadPOC', potreeName)
+  return Promise.resolve(getUrl(potreeName)).then(transformedUrl => {
     return xhrRequest(transformedUrl, { mode: 'cors' })
       .then(res => res.json())
       .then(parse(transformedUrl, getUrl, xhrRequest));
@@ -72,10 +72,46 @@ export function loadResonaiPOC(
     .then(parseResonai(gsToPath(url), getUrl, xhrRequest));
 }
 
-function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
+function parse(
+  url: string, // gs://myfiles/cloud.js
+  getUrl: GetUrlFn,
+  xhrRequest: XhrRequest) {
   return (data: POCJson): Promise<PointCloudOctreeGeometry> => {
+    /*
+      {
+        "version": "1.7",
+        "octreeDir": "data",
+        "boundingBox": {
+                "lx": -0.748212993144989,
+                "ly": -2.78040599822998,
+                "lz": 2.54782128334045,
+                "ux": 3.89967638254166,
+                "uy": 1.86748337745667,
+                "uz": 7.1957106590271
+        },
+        "tightBoundingBox": {
+                "lx": -0.748212993144989,
+                "ly": -2.78040599822998,
+                "lz": 2.55100011825562,
+                "ux": 2.4497377872467,
+                "uy": 1.48934376239777,
+                "uz": 7.1957106590271
+        },
+        "pointAttributes": [
+                "POSITION_CARTESIAN",
+                "COLOR_PACKED",
+                "NORMAL_SPHEREMAPPED"
+        ],
+        "spacing": 0.0750000029802322,
+        "scale": 0.001,
+        "hierarchyStepSize": 6
+      }
+    */
+
+    // offset = [lx, ly, lz]
     const { offset, boundingBox, tightBoundingBox } = getBoundingBoxes(data);
 
+    // can read *.bin => geometry
     const loader = new BinaryLoader({
       getUrl,
       version: data.version,
@@ -152,7 +188,7 @@ function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
     console.log('parseResonai', data);
     const { offset, boundingBox, tightBoundingBox } = getResonaiBoundingBoxes(data);
     const fakeVersion = '1.8' // TODO(Shai) what to do with this?
-    const loader = new YBFLoader({
+    const loader = new BinaryLoader({ // should be YBFLoader
       getUrl,
       version: fakeVersion,
       boundingBox,
@@ -171,7 +207,7 @@ function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
     pco.url = url;
     pco.octreeDir = data.octreeDir;
     pco.needsUpdate = true;
-    pco.spacing = data.spacing;
+    pco.spacing = data.spacing * 2;
     pco.hierarchyStepSize = data.hierarchyStepSize;
     pco.projection = data.projection;
     pco.offset = offset;

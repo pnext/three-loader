@@ -9,7 +9,9 @@ import { Version } from '../version';
 import { GetUrlFn, XhrRequest } from './types';
 
 // @ts-ignore
-import YBFLoaderWorker from '../workers/ybf-decoder.worker.js';
+// import YBFLoaderWorker from '../workers/ybf-decoder.worker.js';
+// @ts-ignore
+import BinaryLoaderWorker from '../workers/binary-decoder.worker.js';
 
 interface AttributeData {
   attribute: {

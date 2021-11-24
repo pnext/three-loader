@@ -19,14 +19,14 @@ enum DemoPotree {
 }
 
 const parameters = {
-  budget: 1e5,
+  budget: 1e4,
   'points size': 1,
   'clipping plane': 0,
   shape: PointShape.SQUARE,
   pointSizeType: PointSizeType.FIXED,
   pointColorType: PointColorType.RGB,
   pointOpacityType: PointOpacityType.FIXED,
-  demoPotree: DemoPotree.YBF
+  demoPotree: DemoPotree.LION
 };
 
 const targetEl = document.createElement('div');
