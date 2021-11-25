@@ -8,7 +8,7 @@ module.exports = {
   context: path.resolve('./example'),
   entry: './main.ts',
   output: {
-    filename: 'example.bundle.js',
+    filename: 'example.bundle.[hash:8].js',
     path: buildPath,
   },
   devtool: 'source-map',
@@ -17,7 +17,9 @@ module.exports = {
     compress: true,
     port: 5050,
   },
-  stats: 'errors-only',
+  stats: {
+    children: true
+  },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },

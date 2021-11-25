@@ -2,16 +2,12 @@
 // Converted to Typescript and adapted from https://github.com/potree/potree
 // -------------------------------------------------------------------------------------------------
 
-import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
-import { Version } from '../version';
-import { GetUrlFn, XhrRequest } from './types';
 
 // @ts-ignore
-// import YBFLoaderWorker from '../workers/ybf-decoder.worker.js';
-// @ts-ignore
-import BinaryLoaderWorker from '../workers/binary-decoder.worker.js';
+import YBFLoaderWorker from '../workers/ybf-loader.worker.js';
 
 interface AttributeData {
   attribute: {
@@ -33,43 +29,23 @@ interface WorkerResponse {
 }
 
 interface YBFLoaderOptions {
-  getUrl?: GetUrlFn;
-  version: string;
-  boundingBox: Box3;
-  scale: number;
-  xhrRequest: XhrRequest;
+  url: string;
 }
 
 type Callback = (node: PointCloudOctreeGeometryNode) => void;
 
 export class YBFLoader {
-  version: Version;
-  boundingBox: Box3;
-  scale: number;
-  getUrl: GetUrlFn;
+  url: string;
   disposed: boolean = false;
-  xhrRequest: XhrRequest;
   callbacks: Callback[];
 
   private workers: Worker[] = [];
 
   constructor({
-    getUrl = s => Promise.resolve(s),
-    version,
-    boundingBox,
-    scale,
-    xhrRequest,
+    url
   }: YBFLoaderOptions) {
-    if (typeof version === 'string') {
-      this.version = new Version(version);
-    } else {
-      this.version = version;
-    }
 
-    this.xhrRequest = xhrRequest;
-    this.getUrl = getUrl;
-    this.boundingBox = boundingBox;
-    this.scale = scale;
+    this.url = url;
     this.callbacks = [];
   }
 
@@ -85,21 +61,12 @@ export class YBFLoader {
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
-      .then(url => this.xhrRequest(url, { mode: 'cors' }))
+    return Promise.resolve(this.url)
+      .then(url => fetch(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
       .then(buffer => {
         return new Promise(resolve => this.parse(node, buffer, resolve));
       });
-  }
-
-  private getNodeUrl(node: PointCloudOctreeGeometryNode): string {
-    let url = node.getUrl();
-    if (this.version.equalOrHigher('1.4')) {
-      url += '.bin';
-    }
-
-    return url;
   }
 
   private parse(
@@ -115,11 +82,7 @@ export class YBFLoader {
     const worker = this.getWorker();
 
     const pointAttributes = node.pcoGeometry.pointAttributes;
-    const numPoints = buffer.byteLength / pointAttributes.byteSize;
-
-    if (this.version.upTo('1.5')) {
-      node.numPoints = numPoints;
-    }
+    // const numPoints = buffer.byteLength / pointAttributes.byteSize;
 
     worker.onmessage = (e: WorkerResponse) => {
       if (this.disposed) {
@@ -134,10 +97,12 @@ export class YBFLoader {
 
       this.addBufferAttributes(geometry, data.attributeBuffers);
       this.addIndices(geometry, data.indices);
-      this.addNormalAttribute(geometry, numPoints);
+      // this.addNormalAttribute(geometry, numPoints);
 
-      node.mean = new Vector3().fromArray(data.mean);
-      node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
+      node.mean = new Vector3().fromArray([0, 0, 0]);
+      geometry.computeBoundingBox();
+      console.log(geometry.boundingBox);
+      node.tightBoundingBox = geometry.boundingBox;
       node.loaded = true;
       node.loading = false;
       node.failed = false;
@@ -153,10 +118,8 @@ export class YBFLoader {
     const message = {
       buffer,
       pointAttributes,
-      version: this.version.version,
       min: node.boundingBox.min.toArray(),
       offset: node.pcoGeometry.offset.toArray(),
-      scale: this.scale,
       spacing: node.spacing,
       hasChildren: node.hasChildren,
     };
@@ -169,19 +132,11 @@ export class YBFLoader {
     if (worker) {
       return worker;
     }
-    return new BinaryLoaderWorker();
+    return new YBFLoaderWorker();
   }
 
   private releaseWorker(worker: Worker): void {
     this.workers.push(worker);
-  }
-
-  private getTightBoundingBox({ min, max }: { min: number[]; max: number[] }): Box3 {
-    const box = new Box3(new Vector3().fromArray(min), new Vector3().fromArray(max));
-    box.max.sub(box.min);
-    box.min.set(0, 0, 0);
-
-    return box;
   }
 
   private addBufferAttributes(
@@ -191,20 +146,10 @@ export class YBFLoader {
     Object.keys(buffers).forEach(property => {
       const buffer = buffers[property].buffer;
 
-      if (this.isAttribute(property, PointAttributeName.POSITION_CARTESIAN)) {
+      if (property === 'position') {
         geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
-      } else if (this.isAttribute(property, PointAttributeName.COLOR_PACKED)) {
+      } else if (property === 'color') {
         geometry.setAttribute('color', new BufferAttribute(new Uint8Array(buffer), 3, true));
-      } else if (this.isAttribute(property, PointAttributeName.INTENSITY)) {
-        geometry.setAttribute('intensity', new BufferAttribute(new Float32Array(buffer), 1));
-      } else if (this.isAttribute(property, PointAttributeName.CLASSIFICATION)) {
-        geometry.setAttribute('classification', new BufferAttribute(new Uint8Array(buffer), 1));
-      } else if (this.isAttribute(property, PointAttributeName.NORMAL_SPHEREMAPPED)) {
-        geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
-      } else if (this.isAttribute(property, PointAttributeName.NORMAL_OCT16)) {
-        geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
-      } else if (this.isAttribute(property, PointAttributeName.NORMAL)) {
-        geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
       }
     });
   }
@@ -215,14 +160,14 @@ export class YBFLoader {
     geometry.setAttribute('indices', indicesAttribute);
   }
 
-  private addNormalAttribute(geometry: BufferGeometry, numPoints: number): void {
-    if (!geometry.getAttribute('normal')) {
-      const buffer = new Float32Array(numPoints * 3);
-      geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
-    }
-  }
+  // private addNormalAttribute(geometry: BufferGeometry, numPoints: number): void {
+  //   if (!geometry.getAttribute('normal')) {
+  //     const buffer = new Float32Array(numPoints * 3);
+  //     geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
+  //   }
+  // }
 
-  private isAttribute(property: string, name: PointAttributeName): boolean {
-    return parseInt(property, 10) === name;
-  }
+  // private isAttribute(): boolean {
+  //   return true;
+  // }
 }

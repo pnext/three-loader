@@ -1,5 +1,5 @@
 import { Box3, Vector3 } from 'three';
-import { BinaryLoader, XhrRequest } from './loading';
+import { YBFLoader, XhrRequest } from './loading';
 import { PointAttributes } from './point-attributes';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 
@@ -12,13 +12,13 @@ export class PointCloudOctreeGeometry {
   nodes: Record<string, PointCloudOctreeGeometryNode> = {};
   numNodesLoading: number = 0;
   maxNumNodesLoading: number = 3;
-  spacing: number = 0;
+  spacing: number = 0.1;
   pointAttributes: PointAttributes = new PointAttributes([]);
   projection: any = null;
   url: string | null = null;
 
   constructor(
-    public loader: BinaryLoader,
+    public loader: YBFLoader,
     public boundingBox: Box3,
     public tightBoundingBox: Box3,
     public offset: Vector3,

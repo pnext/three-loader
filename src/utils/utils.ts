@@ -1,7 +1,7 @@
 import { IPointCloudTreeNode } from '../types';
 
 export function getIndexFromName(name: string) {
-  return parseInt(name.charAt(name.length - 1), 10);
+  return parseInt(name.charAt(name.length - 1), 10) || 0;
 }
 
 /**

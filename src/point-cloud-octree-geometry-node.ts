@@ -15,7 +15,7 @@ export interface NodeData {
   name: string;
 }
 
-const NODE_STRIDE = 5;
+// const NODE_STRIDE = 5;
 
 export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPointCloudTreeNode {
   id: number = PointCloudOctreeGeometryNode.idCount++;
@@ -23,7 +23,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   pcoGeometry: PointCloudOctreeGeometry;
   index: number;
   level: number = 0;
-  spacing: number = 0;
+  spacing: number = 0.2;
   hasChildren: boolean = false;
   readonly children: ReadonlyArray<PointCloudOctreeGeometryNode | null> = [
     null,
@@ -39,7 +39,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   tightBoundingBox: Box3;
   boundingSphere: Sphere;
   mean: Vector3 = new Vector3();
-  numPoints: number = 0;
+  numPoints: number = 50000;
   geometry: BufferGeometry | undefined;
   loaded: boolean = false;
   loading: boolean = false;
@@ -81,17 +81,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
    */
   getUrl(): string {
     const geometry = this.pcoGeometry;
-    const version = geometry.loader.version;
     const pathParts = [geometry.octreeDir];
-
-    if (geometry.loader && version.equalOrHigher('1.5')) {
-      pathParts.push(this.getHierarchyBaseUrl());
-      pathParts.push(this.name);
-    } else if (version.equalOrHigher('1.4')) {
-      pathParts.push(this.name);
-    } else if (version.upTo('1.3')) {
-      pathParts.push(this.name);
-    }
 
     return pathParts.join('/');
   }
@@ -99,10 +89,10 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   /**
    * Gets the url of the hierarchy file for this node.
    */
-  getHierarchyUrl(): string {
-    console.log('here');
-    return `${this.pcoGeometry.octreeDir}/${this.getHierarchyBaseUrl()}/${this.name}.hrc`;
-  }
+  // getHierarchyUrl(): string {
+  //   console.log('here');
+  //   return `${this.pcoGeometry.octreeDir}/${this.getHierarchyBaseUrl()}/${this.name}.hrc`;
+  // }
 
   /**
    * Adds the specified node as a child of the current node.
@@ -150,15 +140,14 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
     let promise: Promise<void>;
 
-    if (
-      this.pcoGeometry.loader.version.equalOrHigher('1.5') &&
-      this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
-      this.hasChildren
-    ) {
-      promise = this.loadHierachyThenPoints();
-    } else {
-      promise = this.loadPoints();
-    }
+    // if (
+    //   this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
+    //   this.hasChildren
+    // ) {
+    //   promise = this.loadHierachyThenPoints();
+    // } else {
+    // }
+    promise = this.loadPoints();
 
     return promise.catch(reason => {
       this.loading = false;
@@ -183,85 +172,84 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     return this.pcoGeometry.loader.load(this);
   }
 
-  private loadHierachyThenPoints(): Promise<any> {
-    if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
-      return Promise.resolve();
-    }
+  // private loadHierachyThenPoints(): Promise<any> {
+  //   if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
+  //     return Promise.resolve();
+  //   }
 
-    return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
-      .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
-      .then(res => res.arrayBuffer())
-      .then(data => {
-        console.log(data);
-        this.loadHierarchy(this, data)
-      });
-  }
+  //   return this.pcoGeometry.xhrRequest(this.pcoGeometry.url || '', { mode: 'cors' })
+  //     .then(res => res.arrayBuffer())
+  //     .then(data => {
+  //       console.log(data);
+  //       this.loadHierarchy(this, data)
+  //     });
+  // }
 
   /**
    * Gets the url of the folder where the hierarchy is, relative to the octreeDir.
    */
-  private getHierarchyBaseUrl(): string {
-    const hierarchyStepSize = this.pcoGeometry.hierarchyStepSize;
-    const indices = this.name.substr(1);
-    const numParts = Math.floor(indices.length / hierarchyStepSize);
+  // private getHierarchyBaseUrl(): string {
+  //   const hierarchyStepSize = this.pcoGeometry.hierarchyStepSize;
+  //   const indices = this.name.substr(1);
+  //   const numParts = Math.floor(indices.length / hierarchyStepSize);
 
-    let path = 'r/';
-    for (let i = 0; i < numParts; i++) {
-      path += `${indices.substr(i * hierarchyStepSize, hierarchyStepSize)}/`;
-    }
+  //   let path = 'r/';
+  //   for (let i = 0; i < numParts; i++) {
+  //     path += `${indices.substr(i * hierarchyStepSize, hierarchyStepSize)}/`;
+  //   }
 
-    return path.slice(0, -1);
-  }
+  //   return path.slice(0, -1);
+  // }
 
   // tslint:disable:no-bitwise
-  private loadHierarchy(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer) {
-    const view = new DataView(buffer);
+  // private loadHierarchy(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer) {
+  //   const view = new DataView(buffer);
 
-    const firstNodeData = this.getNodeData(node.name, 0, view);
-    node.numPoints = firstNodeData.numPoints;
+  //   const firstNodeData = this.getNodeData(node.name, 0, view);
+  //   node.numPoints = firstNodeData.numPoints;
 
-    // Nodes which need be visited.
-    const stack: NodeData[] = [firstNodeData];
-    // Nodes which have already been decoded. We will take nodes from the stack and place them here.
-    const decoded: NodeData[] = [];
+  //   // Nodes which need be visited.
+  //   const stack: NodeData[] = [firstNodeData];
+  //   // Nodes which have already been decoded. We will take nodes from the stack and place them here.
+  //   const decoded: NodeData[] = [];
 
-    let offset = NODE_STRIDE;
-    while (stack.length > 0) {
-      const stackNodeData = stack.shift()!;
+  //   let offset = NODE_STRIDE;
+  //   while (stack.length > 0) {
+  //     const stackNodeData = stack.shift()!;
 
-      // From the last bit, all the way to the 8th one from the right.
-      let mask = 1;
-      for (let i = 0; i < 8 && offset + 1 < buffer.byteLength; i++) {
-        // N & 2^^i !== 0
-        if ((stackNodeData.children & mask) !== 0) {
-          const nodeData = this.getNodeData(stackNodeData.name + i, offset, view);
+  //     // From the last bit, all the way to the 8th one from the right.
+  //     let mask = 1;
+  //     for (let i = 0; i < 8 && offset + 1 < buffer.byteLength; i++) {
+  //       // N & 2^^i !== 0
+  //       if ((stackNodeData.children & mask) !== 0) {
+  //         const nodeData = this.getNodeData(stackNodeData.name + i, offset, view);
 
-          decoded.push(nodeData); // Node is decoded.
-          stack.push(nodeData); // Need to check its children.
+  //         decoded.push(nodeData); // Node is decoded.
+  //         stack.push(nodeData); // Need to check its children.
 
-          offset += NODE_STRIDE; // Move over to the next node in the buffer.
-        }
+  //         offset += NODE_STRIDE; // Move over to the next node in the buffer.
+  //       }
 
-        mask = mask * 2;
-      }
-    }
+  //       mask = mask * 2;
+  //     }
+  //   }
 
-    node.pcoGeometry.needsUpdate = true;
+  //   node.pcoGeometry.needsUpdate = true;
 
-    // Map containing all the nodes.
-    const nodes = new Map<string, PointCloudOctreeGeometryNode>();
-    nodes.set(node.name, node);
-    decoded.forEach(nodeData => this.addNode(nodeData, node.pcoGeometry, nodes));
+  //   // Map containing all the nodes.
+  //   const nodes = new Map<string, PointCloudOctreeGeometryNode>();
+  //   nodes.set(node.name, node);
+  //   decoded.forEach(nodeData => this.addNode(nodeData, node.pcoGeometry, nodes));
 
-    node.loadPoints();
-  }
+  //   node.loadPoints();
+  // }
 
   // tslint:enable:no-bitwise
-  private getNodeData(name: string, offset: number, view: DataView): NodeData {
-    const children = view.getUint8(offset);
-    const numPoints = view.getUint32(offset + 1, true);
-    return { children: children, numPoints: numPoints, name };
-  }
+  // private getNodeData(name: string, offset: number, view: DataView): NodeData {
+  //   const children = view.getUint8(offset);
+  //   const numPoints = view.getUint32(offset + 1, true);
+  //   return { children: children, numPoints: numPoints, name };
+  // }
 
   addNode(
     { name, numPoints, children }: NodeData,

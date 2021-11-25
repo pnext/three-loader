@@ -17,7 +17,8 @@ import {
   PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
-import { GetUrlFn, loadPOC, loadResonaiPOC } from './loading';
+// import { GetUrlFn, loadPOC, loadResonaiPOC } from './loading';
+import { loadSingle } from './loading'
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
@@ -47,22 +48,29 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  loadPointCloud(
-    potreeName: string, // "cloud.js"
-    getUrl: GetUrlFn,
+  // loadPointCloud(
+  //   potreeName: string, // "cloud.js"
+  //   getUrl: GetUrlFn,
+  //   xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+  // ): Promise<PointCloudOctree> {
+  //   return loadPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+  // }
+
+  loadSingle(
+    url: string,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
   ): Promise<PointCloudOctree> {
-    return loadPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    return loadSingle(url, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
-  loadResonaiPointCloud(
-    potreeName: string,
-    getUrl: GetUrlFn,
-    xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-  ): Promise<PointCloudOctree> {
-    console.log('loadResonaiPointCloud', potreeName, getUrl)
-    return loadResonaiPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
-  }
+  // loadResonaiPointCloud(
+  //   potreeName: string,
+  //   getUrl: GetUrlFn,
+  //   xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+  // ): Promise<PointCloudOctree> {
+  //   console.log('loadResonaiPointCloud', potreeName, getUrl)
+  //   return loadResonaiPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+  // }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
