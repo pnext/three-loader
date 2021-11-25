@@ -32,6 +32,19 @@ import { YBFLoader } from './ybf-loader';
 //   hierarchy: [string, number][]; // [name, numPoints][]
 // }
 
+interface MinBoundingBoxData {
+  lx: number;
+  ly: number;
+  lz: number;
+}
+
+interface POCResonaiJson {
+  minBoundingBox: MinBoundingBoxData;
+  //pointAttributes: PointAttributeStringName[];
+  scale: number;
+  nodes: [number][]; // [name, numPoints][]
+}
+
 /**
  *
  * @param url
@@ -58,6 +71,14 @@ import { YBFLoader } from './ybf-loader';
 
 export function loadSingle(
   url: string,
+  xhrRequest: XhrRequest,
+): Promise<PointCloudOctreeGeometry> {
+  return parseSingle(url, xhrRequest)();
+}
+
+export function loadResonaiPOC(
+  url: string, // gs://bla/bla/r.po
+  getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
 ): Promise<PointCloudOctreeGeometry> {
   return parseSingle(url, xhrRequest)();
@@ -270,6 +291,93 @@ function parseSingle(
 //   return { offset, boundingBox, tightBoundingBox };
 // }
 
+function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
+  return (data: POCJson): Promise<PointCloudOctreeGeometry> => {
+    console.log('parseResonai', data);
+    const { offset, boundingBox, tightBoundingBox } = getResonaiBoundingBoxes(data);
+    const fakeVersion = '1.8' // TODO(Shai) what to do with this?
+    const loader = new BinaryLoader({ // should be YBFLoader
+      getUrl,
+      version: fakeVersion,
+      boundingBox,
+      scale: 1,
+      xhrRequest,
+    });
+
+    const pco = new PointCloudOctreeGeometry(
+      loader,
+      boundingBox,
+      tightBoundingBox,
+      offset,
+      xhrRequest,
+    );
+
+    pco.url = url;
+    // pco.octreeDir = data.octreeDir;
+    pco.needsUpdate = true;
+    // pco.spacing = data.spacing * 2;
+    // pco.hierarchyStepSize = data.hierarchyStepSize;
+    // pco.projection = data.projection;
+    // pco.offset = offset;
+    pco.pointAttributes = new PointAttributes(data.pointAttributes);
+
+    const nodes: Record<string, PointCloudOctreeGeometryNode> = {};
+
+    const version = new Version(fakeVersion);
+
+    return loadResonaiRoot(pco, data, nodes, version).then(() => {
+      if (version.upTo('1.4')) {
+        loadRemainingHierarchy(pco, data, nodes);
+      }
+
+      pco.nodes = nodes;
+      return pco;
+    });
+  };
+}
+
+function getBoundingBoxes(
+  data: POCJson,
+): { offset: Vector3; boundingBox: Box3; tightBoundingBox: Box3 } {
+  const min = new Vector3(data.boundingBox.lx, data.boundingBox.ly, data.boundingBox.lz);
+  const max = new Vector3(data.boundingBox.ux, data.boundingBox.uy, data.boundingBox.uz);
+  const boundingBox = new Box3(min, max);
+  const tightBoundingBox = boundingBox.clone();
+
+  const offset = min.clone();
+
+  if (data.tightBoundingBox) {
+    const { lx, ly, lz, ux, uy, uz } = data.tightBoundingBox;
+    tightBoundingBox.min.set(lx, ly, lz);
+    tightBoundingBox.max.set(ux, uy, uz);
+  }
+
+  boundingBox.min.sub(offset);
+  boundingBox.max.sub(offset);
+  tightBoundingBox.min.sub(offset);
+  tightBoundingBox.max.sub(offset);
+
+  return { offset, boundingBox, tightBoundingBox };
+}
+
+function getResonaiBoundingBoxes(
+  data: any, // TODO(Shai) implement interface?
+): { offset: Vector3; boundingBox: Box3; tightBoundingBox: Box3 } {
+  const min = new Vector3(...data.min_bounding_box)
+  const max = min.clone().addScalar(data.scale);
+  const boundingBox = new Box3(min, max);
+  const tightBoundingBox = boundingBox.clone();
+
+  const offset = min.clone();
+
+  boundingBox.min.sub(offset);
+  boundingBox.max.sub(offset);
+  tightBoundingBox.min.sub(offset);
+  tightBoundingBox.max.sub(offset);
+
+  return { offset, boundingBox, tightBoundingBox };
+}
+
 function loadRoot(
   pco: PointCloudOctreeGeometry,
   nodes: Record<string, PointCloudOctreeGeometryNode>
@@ -315,3 +423,55 @@ function loadRoot(
 //     level: name.length - 1,
 //   };
 // }
+function loadResonaiRoot(
+  pco: PointCloudOctreeGeometry,
+  data: POCJson,
+  nodes: Record<string, PointCloudOctreeGeometryNode>,
+  version: Version,
+): Promise<void> {
+  const name = 'r';
+
+  const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox);
+  root.hasChildren = true;
+  // root.spacing = pco.spacing;
+
+  if (version.upTo('1.5')) {
+    root.numPoints = data.hierarchy[0][1];
+  } else {
+    root.numPoints = 0;
+  }
+
+  pco.root = root;
+  nodes[name] = root;
+  return pco.root.loadResonai();
+}
+
+
+function loadRemainingHierarchy(
+  pco: PointCloudOctreeGeometry,
+  data: POCJson,
+  nodes: Record<string, PointCloudOctreeGeometryNode>,
+): void {
+  for (let i = 1; i < data.hierarchy.length; i++) {
+    const [name, numPoints] = data.hierarchy[i];
+    const { index, parentName, level } = parseName(name);
+    const parentNode = nodes[parentName];
+
+    const boundingBox = createChildAABB(parentNode.boundingBox, index);
+    const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox);
+    node.level = level;
+    node.numPoints = numPoints;
+    node.spacing = pco.spacing / Math.pow(2, node.level);
+
+    nodes[name] = node;
+    parentNode.addChild(node);
+  }
+}
+
+function parseName(name: string): { index: number; parentName: string; level: number } {
+  return {
+    index: getIndexFromName(name),
+    parentName: name.substring(0, name.length - 1),
+    level: name.length - 1,
+  };
+}

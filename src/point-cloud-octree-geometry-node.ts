@@ -157,6 +157,35 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     });
   }
 
+  loadResonai(): Promise<void> {
+    if (!this.canLoad()) {
+      return Promise.resolve();
+    }
+
+    this.loading = true;
+    this.pcoGeometry.numNodesLoading++;
+    this.pcoGeometry.needsUpdate = true;
+
+    let promise: Promise<void>;
+
+    if (
+      this.pcoGeometry.loader.version.equalOrHigher('1.5') &&
+      this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
+      this.hasChildren
+    ) {
+      promise = this.loadResonaiHierachyThenPoints();
+    } else {
+      promise = this.loadResonaiPoints();
+    }
+
+    return promise.catch(reason => {
+      this.loading = false;
+      this.failed = true;
+      this.pcoGeometry.numNodesLoading--;
+      throw reason;
+    });
+  }
+
   private canLoad(): boolean {
     return (
       !this.loading &&
@@ -177,6 +206,17 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   //     return Promise.resolve();
   //   }
 
+  private loadResonaiPoints(): Promise<void> {
+    this.pcoGeometry.needsUpdate = true;
+    // ybf loader
+    return this.pcoGeometry.loader.load(this);
+  }
+
+  private loadHierachyThenPoints(): Promise<any> {
+    if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
+      return Promise.resolve();
+    }
+
   //   return this.pcoGeometry.xhrRequest(this.pcoGeometry.url || '', { mode: 'cors' })
   //     .then(res => res.arrayBuffer())
   //     .then(data => {
@@ -184,6 +224,20 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   //       this.loadHierarchy(this, data)
   //     });
   // }
+
+  private loadResonaiHierachyThenPoints(): Promise<any> {
+    if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
+      return Promise.resolve();
+    }
+
+    return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
+      .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
+      .then(res => res.arrayBuffer())
+      .then(data => {
+        console.log(data);
+        this.loadResonaiHierarchy(this, data)
+      });
+  }
 
   /**
    * Gets the url of the folder where the hierarchy is, relative to the octreeDir.
@@ -244,12 +298,60 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   //   node.loadPoints();
   // }
 
+  private loadResonaiHierarchy(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer) {
+    const view = new DataView(buffer);
+
+    const firstNodeData = this.getNodeData(node.name, 0, view);
+    node.numPoints = firstNodeData.numPoints;
+
+    // Nodes which need be visited.
+    const stack: NodeData[] = [firstNodeData];
+    // Nodes which have already been decoded. We will take nodes from the stack and place them here.
+    const decoded: NodeData[] = [];
+
+    let idx = 0;
+    while (stack.length > 0) {
+      const stackNodeData = stack.shift()!;
+
+      // From the last bit, all the way to the 8th one from the right.
+      let mask = 1;
+      for (let i = 0; i < 8; i++) {
+        // N & 2^^i !== 0
+        if ((stackNodeData.children & mask) !== 0) {
+          const nodeData = this.getNodeData(stackNodeData.name + '_' + i, idx, view);
+          idx += 1
+
+          decoded.push(nodeData); // Node is decoded.
+          stack.push(nodeData); // Need to check its children.
+        }
+        mask = mask * 2;
+      }
+    }
+
+    node.pcoGeometry.needsUpdate = true;
+
+    // Map containing all the nodes.
+    const nodes = new Map<string, PointCloudOctreeGeometryNode>();
+    nodes.set(node.name, node);
+    decoded.forEach(nodeData => this.addNode(nodeData, node.pcoGeometry, nodes));
+
+    node.loadResonaiPoints();
+  }
+
   // tslint:enable:no-bitwise
   // private getNodeData(name: string, offset: number, view: DataView): NodeData {
   //   const children = view.getUint8(offset);
   //   const numPoints = view.getUint32(offset + 1, true);
   //   return { children: children, numPoints: numPoints, name };
   // }
+
+  private getResonaiNodeData(name: string, offset: number, view: DataView): NodeData {
+    const code = view.nodes[offset];
+    const children = code >> 24;
+    const mask = (1 << 24) - 1;
+    const numPoints = code & mask;
+    return { children: children, numPoints: numPoints, name };
+  }
 
   addNode(
     { name, numPoints, children }: NodeData,
