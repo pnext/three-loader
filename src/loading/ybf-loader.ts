@@ -5,6 +5,7 @@
 import { BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
+import { GetUrlFn } from './types';
 
 // @ts-ignore
 import YBFLoaderWorker from '../workers/ybf-loader.worker.js';
@@ -30,6 +31,8 @@ interface WorkerResponse {
 
 interface YBFLoaderOptions {
   url: string;
+  getUrl?: GetUrlFn;
+  //xhrRequest?: XhrRequest;
 }
 
 type Callback = (node: PointCloudOctreeGeometryNode) => void;
@@ -38,13 +41,16 @@ export class YBFLoader {
   url: string;
   disposed: boolean = false;
   callbacks: Callback[];
+  getUrl: GetUrlFn;
+  //xhrRequest: XhrRequest;
 
   private workers: Worker[] = [];
 
   constructor({
-    url
+    url,
+    getUrl = s => Promise.resolve(s),
   }: YBFLoaderOptions) {
-
+    this.getUrl = getUrl;
     this.url = url;
     this.callbacks = [];
   }

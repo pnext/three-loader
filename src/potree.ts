@@ -17,7 +17,7 @@ import {
   PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
-// import { GetUrlFn, loadPOC, loadResonaiPOC } from './loading';
+import { GetUrlFn, loadResonaiPOC } from './loading';
 import { loadSingle } from './loading'
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
@@ -63,14 +63,14 @@ export class Potree implements IPotree {
     return loadSingle(url, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
-  // loadResonaiPointCloud(
-  //   potreeName: string,
-  //   getUrl: GetUrlFn,
-  //   xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-  // ): Promise<PointCloudOctree> {
-  //   console.log('loadResonaiPointCloud', potreeName, getUrl)
-  //   return loadResonaiPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
-  // }
+  loadResonaiPointCloud(
+    potreeName: string, // gs://bla/bla/r.json
+    getUrl: GetUrlFn,
+    xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+  ): Promise<PointCloudOctree> {
+    console.log('loadResonaiPointCloud', potreeName, getUrl)
+    return loadResonaiPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+  }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],

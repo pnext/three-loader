@@ -9,10 +9,13 @@ import { IPointCloudTreeNode } from './types';
 import { createChildAABB } from './utils/bounds';
 import { getIndexFromName } from './utils/utils';
 
+const JSON5 = require('json5');
+
 export interface NodeData {
   children: number;
   numPoints: number;
   name: string;
+  indexInList: number;
 }
 
 // const NODE_STRIDE = 5;
@@ -38,12 +41,14 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   boundingBox: Box3;
   tightBoundingBox: Box3;
   boundingSphere: Sphere;
+  hierarchyUrl: string = '';
   mean: Vector3 = new Vector3();
   numPoints: number = 50000;
   geometry: BufferGeometry | undefined;
   loaded: boolean = false;
   loading: boolean = false;
   failed: boolean = false;
+  indexInList: number = 0;
   parent: PointCloudOctreeGeometryNode | null = null;
   oneTimeDisposeHandlers: (() => void)[] = [];
   isLeafNode: boolean = true;
@@ -169,7 +174,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     let promise: Promise<void>;
 
     if (
-      this.pcoGeometry.loader.version.equalOrHigher('1.5') &&
       this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
       this.hasChildren
     ) {
@@ -212,11 +216,11 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     return this.pcoGeometry.loader.load(this);
   }
 
-  private loadHierachyThenPoints(): Promise<any> {
-    if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
-      return Promise.resolve();
-    }
-
+  // private loadHierachyThenPoints(): Promise<any> {
+  //   if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
+  //     return Promise.resolve();
+  //   }
+  // }
   //   return this.pcoGeometry.xhrRequest(this.pcoGeometry.url || '', { mode: 'cors' })
   //     .then(res => res.arrayBuffer())
   //     .then(data => {
@@ -230,14 +234,13 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
-      .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
-      .then(res => res.arrayBuffer())
-      .then(data => {
-        console.log(data);
-        this.loadResonaiHierarchy(this, data)
-      });
-  }
+    return Promise.resolve(fetch(this.hierarchyUrl).then(res => {
+      res.text().then(text => {
+        console.log(text);
+        this.loadResonaiHierarchy(this, JSON5.parse(text));
+      })
+  }))
+}
 
   /**
    * Gets the url of the folder where the hierarchy is, relative to the octreeDir.
@@ -298,10 +301,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   //   node.loadPoints();
   // }
 
-  private loadResonaiHierarchy(node: PointCloudOctreeGeometryNode, buffer: ArrayBuffer) {
-    const view = new DataView(buffer);
+  private loadResonaiHierarchy(node: PointCloudOctreeGeometryNode, hierarchyData: any) {
 
-    const firstNodeData = this.getNodeData(node.name, 0, view);
+    const firstNodeData = this.getResonaiNodeData(node.name, 0, hierarchyData);
     node.numPoints = firstNodeData.numPoints;
 
     // Nodes which need be visited.
@@ -318,7 +320,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       for (let i = 0; i < 8; i++) {
         // N & 2^^i !== 0
         if ((stackNodeData.children & mask) !== 0) {
-          const nodeData = this.getNodeData(stackNodeData.name + '_' + i, idx, view);
+          const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
           idx += 1
 
           decoded.push(nodeData); // Node is decoded.
@@ -345,23 +347,24 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   //   return { children: children, numPoints: numPoints, name };
   // }
 
-  private getResonaiNodeData(name: string, offset: number, view: DataView): NodeData {
-    const code = view.nodes[offset];
+  private getResonaiNodeData(name: string, offset: number, hierarchyData: any): NodeData {
+    const code = hierarchyData.nodes[offset];
     const children = code >> 24;
     const mask = (1 << 24) - 1;
     const numPoints = code & mask;
-    return { children: children, numPoints: numPoints, name };
+    const indexInList = offset;
+    return { children: children, numPoints: numPoints, name , indexInList};
   }
 
   addNode(
-    { name, numPoints, children }: NodeData,
+    { name, numPoints, children, indexInList }: NodeData,
     pco: PointCloudOctreeGeometry,
     nodes: Map<string, PointCloudOctreeGeometryNode>,
   ): void {
     const index = getIndexFromName(name);
-    const parentName = name.substring(0, name.length - 1);
+    const parentName = name.substring(0, name.length - 2);
     const parentNode = nodes.get(parentName)!;
-    const level = name.length - 1;
+    const level = (name.length + 1) / 2;
     const boundingBox = createChildAABB(parentNode.boundingBox, index);
 
     const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox);
@@ -369,6 +372,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     node.numPoints = numPoints;
     node.hasChildren = children > 0;
     node.spacing = pco.spacing / Math.pow(2, level);
+    node.indexInList = indexInList;
 
     parentNode.addChild(node);
     nodes.set(name, node);
