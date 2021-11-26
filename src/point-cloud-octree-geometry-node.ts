@@ -313,11 +313,15 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const stack: NodeData[] = [firstNodeData];
     // Nodes which have already been decoded. We will take nodes from the stack and place them here.
     const decoded: NodeData[] = [];
+    hierarchyData.nodes.forEach((number: any) => {
+      const binary: string = Number(number).toString(2).padStart(32, '0')
+      console.log(binary.slice(0, 8), binary.slice(8));
+    })
 
     let idx = 0;
     // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
-    // while (stack.length > 0) {
-    for (let j = 0; j < 800; j++) {
+    while (stack.length > 0) {
+    // for (let j = 0; j < 800; j++) {
       const stackNodeData = stack.shift()!;
 
       // From the last bit, all the way to the 8th one from the right.
@@ -325,9 +329,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       for (let i = 0; i < 8; i++) {
         // N & 2^^i !== 0
         // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
-        if (true || (stackNodeData.children & mask) !== 0) {
-          // const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + (7 - i), idx, hierarchyData);
-          const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
+        if ((stackNodeData.children & mask) !== 0) {
+          const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + (7 - i), idx, hierarchyData);
+          // const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
           idx += 1
 
           decoded.push(nodeData); // Node is decoded.
@@ -357,7 +361,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   private getResonaiNodeData(name: string, offset: number, hierarchyData: any): NodeData {
     console.log('name:', name);
     const code = hierarchyData.nodes[offset];
-    const children = code >> 24;
+    // https://stackoverflow.com/questions/22335853/hack-to-convert-javascript-number-to-uint32
+    // Force the number to be a UInt32 and not overflow
+    const children = code >>> 24;
     console.log('# children:', children);
     const mask = (1 << 24) - 1;
     const numPoints = code & mask;
