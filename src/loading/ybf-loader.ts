@@ -51,6 +51,7 @@ export class YBFLoader {
     getUrl = s => Promise.resolve(s),
   }: YBFLoaderOptions) {
     this.getUrl = getUrl;
+    console.log('ybf-loader constructor:', url);
     this.url = url;
     this.callbacks = [];
   }
@@ -67,8 +68,11 @@ export class YBFLoader {
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.url)
-      .then(url => fetch(url, { mode: 'cors' }))
+    return Promise.resolve(this.getUrl(node.name))
+      .then(url => {
+        console.log('fetching:', url);
+        return fetch(url, { mode: 'cors' });
+      })
       .then(res => res.arrayBuffer())
       .then(buffer => {
         return new Promise(resolve => this.parse(node, buffer, resolve));

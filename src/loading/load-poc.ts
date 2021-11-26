@@ -304,7 +304,7 @@ function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
     console.log('parseResonai', data);
     const boundingBox = getResonaiBoundingBoxes(data);
     const loader = new YBFLoader({
-      url
+      url, getUrl
     });
 
     const pco = new PointCloudOctreeGeometry(

@@ -1,6 +1,6 @@
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { PointCloudOctree, Potree } from '../src';
-
+import { gsToPath } from '../src/utils/utils';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export class Viewer {
@@ -120,8 +120,9 @@ export class Viewer {
         jsonFile,
         // Given index of the node should return the full path to the node's ybf.
         // 5 => "gs://snapshot3/010.ybf"
-        (index) => {
-          return locJSON.paths_map[locJSON.node_locations[index]]
+        (name) => {
+          // return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
+          return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
         }
       );
     }

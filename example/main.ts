@@ -30,7 +30,7 @@ const parameters = {
   pointSizeType: PointSizeType.FIXED,
   pointColorType: PointColorType.RGB,
   pointOpacityType: PointOpacityType.FIXED,
-  demoPotree: DemoPotree.YBF
+  demoPotree: DemoPotree.RESONAI_POTREE
 };
 
 const targetEl = document.createElement('div');

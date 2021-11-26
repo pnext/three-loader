@@ -177,8 +177,10 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
       this.hasChildren
     ) {
+      console.log('here1');
       promise = this.loadResonaiHierachyThenPoints();
     } else {
+      console.log('here2');
       promise = this.loadResonaiPoints();
     }
 
