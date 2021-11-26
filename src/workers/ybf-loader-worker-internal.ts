@@ -111,17 +111,22 @@ const parseAsBufferGeometry = (ybf, { polygon = false } = {}) => {
 }
 
 export async function handleMessage(event) {
-  const geometry = parseAsBufferGeometry(event.data.buffer);
-  const indices = new ArrayBuffer(geometry.attributes.position.count * 4);
-  const iIndices = new Uint32Array(indices);
-  for (let i = 0; i < geometry.attributes.position.count; i++) {
-    iIndices[i] = i;
-  }
-  postMessage({
-    indices: iIndices,
-    attributeBuffers: {
-      position: { buffer: geometry.attributes.position.array },
-      color: { buffer: geometry.attributes.color.array }
+  try {
+    const geometry = parseAsBufferGeometry(event.data.buffer);
+    const indices = new ArrayBuffer(geometry.attributes.position.count * 4);
+    const iIndices = new Uint32Array(indices);
+    for (let i = 0; i < geometry.attributes.position.count; i++) {
+      iIndices[i] = i;
     }
-  });
+    postMessage({
+      indices: iIndices,
+      attributeBuffers: {
+        position: { buffer: geometry.attributes.position.array },
+        color: { buffer: geometry.attributes.color.array }
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    postMessage({ failed: true });
+  }
 }

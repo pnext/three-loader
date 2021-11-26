@@ -26,6 +26,7 @@ interface WorkerResponse {
     indices: ArrayBuffer;
     tightBoundingBox: { min: number[]; max: number[] };
     mean: number[];
+    failed: boolean;
   };
 }
 
@@ -101,6 +102,14 @@ export class YBFLoader {
       }
 
       const data = e.data;
+
+      if (data.failed) {
+        node.failed = true;
+        this.releaseWorker(worker);
+        this.callbacks.forEach(callback => callback(node));
+        resolve();
+        return
+      }
 
       const geometry = (node.geometry = node.geometry || new BufferGeometry());
       geometry.boundingBox = node.boundingBox;

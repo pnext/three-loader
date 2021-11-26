@@ -193,12 +193,13 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   }
 
   private canLoad(): boolean {
+    // return true
     return (
       !this.loading &&
       !this.loaded &&
       !this.pcoGeometry.disposed &&
-      !this.pcoGeometry.loader.disposed &&
-      this.pcoGeometry.numNodesLoading < this.pcoGeometry.maxNumNodesLoading
+      !this.pcoGeometry.loader.disposed
+      // this.pcoGeometry.numNodesLoading < this.pcoGeometry.maxNumNodesLoading
     );
   }
 
@@ -314,14 +315,16 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const decoded: NodeData[] = [];
 
     let idx = 0;
-    while (stack.length > 0) {
+    // while (stack.length > 0) {
+    for (let j = 0; j < 800; j++) {
       const stackNodeData = stack.shift()!;
 
       // From the last bit, all the way to the 8th one from the right.
       let mask = 1;
       for (let i = 0; i < 8; i++) {
         // N & 2^^i !== 0
-        if ((stackNodeData.children & mask) !== 0) {
+        if (true || (stackNodeData.children & mask) !== 0) {
+          // const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + (7 - i), idx, hierarchyData);
           const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
           idx += 1
 
@@ -350,12 +353,15 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   // }
 
   private getResonaiNodeData(name: string, offset: number, hierarchyData: any): NodeData {
+    console.log('name:', name);
     const code = hierarchyData.nodes[offset];
     const children = code >> 24;
+    console.log('# children:', children);
     const mask = (1 << 24) - 1;
     const numPoints = code & mask;
+    console.log('# numPoints:', numPoints);
     const indexInList = offset;
-    return { children: children, numPoints: numPoints, name , indexInList};
+    return { children, numPoints, name, indexInList };
   }
 
   addNode(

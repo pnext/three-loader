@@ -43,7 +43,8 @@ viewer.initialize(targetEl);
 
 const clippingPlane = new Plane()
 const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
-viewer.scene.add(planeHelper);
+console.log(planeHelper);
+// viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
 
