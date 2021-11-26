@@ -315,6 +315,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const decoded: NodeData[] = [];
 
     let idx = 0;
+    // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
     // while (stack.length > 0) {
     for (let j = 0; j < 800; j++) {
       const stackNodeData = stack.shift()!;
@@ -323,6 +324,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       let mask = 1;
       for (let i = 0; i < 8; i++) {
         // N & 2^^i !== 0
+        // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
         if (true || (stackNodeData.children & mask) !== 0) {
           // const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + (7 - i), idx, hierarchyData);
           const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
