@@ -83,7 +83,7 @@ export class BinaryLoader {
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
+    return Promise.resolve(this.getUrl(this.getNodeUrl(node), 0))
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
       .then(buffer => {

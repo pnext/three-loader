@@ -69,7 +69,7 @@ export class YBFLoader {
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.getUrl(node.name))
+    return Promise.resolve(this.getUrl(node.name, node.index))
       .then(url => {
         console.log('fetching:', url);
         return fetch(url, { mode: 'cors' });

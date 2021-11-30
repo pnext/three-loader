@@ -299,7 +299,7 @@ function parseSingle(
 // }
 
 function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
-  getUrl(url);
+  console.log('@@@@@@@@@@@@@@@@@@@@@', url, getUrl(url, 0));
   return (data: any): Promise<PointCloudOctreeGeometry> => {
     console.log('parseResonai', data);
     const boundingBox = getResonaiBoundingBoxes(data);
