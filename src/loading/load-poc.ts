@@ -380,7 +380,7 @@ function loadRoot(
 ): Promise<void> {
   const name = 'r';
 
-  const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox);
+  const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox, 0);
   root.hasChildren = true;
   root.spacing = pco.spacing || 0.1;
 
@@ -427,7 +427,7 @@ function loadResonaiRoot(
 ): Promise<void> {
   const name = 'r';
 
-  const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox);
+  const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox, 0);
   root.hasChildren = true;
   // root.spacing = pco.spacing;
   const mask = (1 << 24) - 1;

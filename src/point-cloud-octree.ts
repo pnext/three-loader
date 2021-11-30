@@ -100,7 +100,6 @@ export class PointCloudOctree extends PointCloudTree {
     const points = new Points(geometryNode.geometry, this.material);
     const node = new PointCloudOctreeNode(geometryNode, points);
     points.name = geometryNode.name;
-    points.position.copy(geometryNode.boundingBox.min);
     points.frustumCulled = false;
     points.onBeforeRender = PointCloudMaterial.makeOnBeforeRender(this, node);
 

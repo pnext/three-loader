@@ -23,7 +23,7 @@ enum DemoPotree {
 }
 
 const parameters = {
-  budget: 1e8,
+  budget: 1e6,
   'points size': 1,
   'clipping plane': 0,
   shape: PointShape.SQUARE,

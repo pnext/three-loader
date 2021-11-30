@@ -121,6 +121,7 @@ export class Viewer {
         // Given index of the node should return the full path to the node's ybf.
         // 5 => "gs://snapshot3/010.ybf"
         (name, index) => {
+          // TODO Shai - handle null (locJSON.node_locations[index] = 0)
           return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
           // return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
         }

@@ -57,11 +57,12 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
   private static idCount = 0;
 
-  constructor(name: string, pcoGeometry: PointCloudOctreeGeometry, boundingBox: Box3) {
+  constructor(name: string, pcoGeometry: PointCloudOctreeGeometry, boundingBox: Box3, index: number) {
     super();
 
     this.name = name;
     this.index = getIndexFromName(name);
+    this.indexInList = index;
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = boundingBox;
     this.tightBoundingBox = boundingBox.clone();
@@ -318,26 +319,26 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       console.log(binary.slice(0, 8), binary.slice(8));
     })
 
-    let idx = 0;
+    let idx = 1;
     // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
     while (stack.length > 0) {
     // for (let j = 0; j < 800; j++) {
       const stackNodeData = stack.shift()!;
 
       // From the last bit, all the way to the 8th one from the right.
-      let mask = 1;
+      let mask = 1 << 7;
       for (let i = 0; i < 8; i++) {
         // N & 2^^i !== 0
         // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
         if ((stackNodeData.children & mask) !== 0) {
-          const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + (7 - i), idx, hierarchyData);
-          // const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
+          // const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + (7 - i), idx, hierarchyData);
+          const nodeData = this.getResonaiNodeData(stackNodeData.name + '_' + i, idx, hierarchyData);
           idx += 1
 
           decoded.push(nodeData); // Node is decoded.
           stack.push(nodeData); // Need to check its children.
         }
-        mask = mask * 2;
+        mask = mask >> 1;
       }
     }
 
@@ -383,7 +384,8 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const level = (name.length + 1) / 2;
     const boundingBox = createChildAABB(parentNode.boundingBox, index);
 
-    const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox);
+    const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox, indexInList);
+    console.log('!!!!!!!! parent bb', parentNode.boundingBox, ' name: ', name, ' index: ', index, ' bb: ', boundingBox);
     node.level = level;
     node.numPoints = numPoints;
     node.hasChildren = children > 0;
