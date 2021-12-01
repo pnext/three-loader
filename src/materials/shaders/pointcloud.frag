@@ -21,6 +21,8 @@ uniform float screenHeight;
 
 uniform sampler2D depthMap;
 
+uniform vec4 clipRange;
+
 #ifdef highlight_point
 	uniform vec4 highlightedPointColor;
 #endif
@@ -60,6 +62,22 @@ float specularStrength = 1.0;
 void main() {
 	vec3 color = vColor;
 	float depth = gl_FragCoord.z;
+
+	// TODO: clean this up
+	// get normalized coordinates for current fragment
+	vec2 ndc = vec2((gl_FragCoord.x / screenWidth), (gl_FragCoord.y / screenHeight));
+
+	// clip horizontally
+	if(!(ndc.x > clipRange.x && ndc.x < clipRange.y))
+	{
+		discard;	
+	}
+
+	// clip vertically
+	if(!(ndc.y > clipRange.z && ndc.y < clipRange.w))
+	{
+		discard;
+	}
 
 	#if defined(circle_point_shape) || defined(paraboloid_point_shape) || defined (weighted_splats)
 		float u = 2.0 * gl_PointCoord.x - 1.0;

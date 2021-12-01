@@ -93,6 +93,8 @@ export interface IPointCloudMaterialUniforms {
   highlightedPointColor: IUniform<Vector4>;
   enablePointHighlighting: IUniform<boolean>;
   highlightedPointScale: IUniform<number>;
+
+  clipRange: IUniform<[number, number, number, number]>;
 }
 
 const TREE_TYPE_DEFS = {
@@ -208,6 +210,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     highlightedPointColor: makeUniform('fv', DEFAULT_HIGHLIGHT_COLOR.clone()),
     enablePointHighlighting: makeUniform('b', true),
     highlightedPointScale: makeUniform('f', 2.0),
+
+    clipRange: makeUniform('fv', [0.0, 0.0, 0.0, 0.0] as [number, number, number, number]),
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -244,6 +248,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('highlightedPointColor') highlightedPointColor!: Vector4;
   @uniform('enablePointHighlighting') enablePointHighlighting!: boolean;
   @uniform('highlightedPointScale') highlightedPointScale!: number;
+
+  @uniform('clipRange') clipRange!: [number, number, number, number];
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;
