@@ -122,6 +122,8 @@ export class Potree implements IPotree {
     let nodeLoadFailed = false;
     let queueItem: QueueItem | undefined;
 
+    // start priority queue loop
+    // 
     while ((queueItem = priorityQueue.pop()) !== undefined) {
       let node = queueItem.node;
 
@@ -135,6 +137,9 @@ export class Potree implements IPotree {
 
       const maxLevel = pointCloud.maxLevel !== undefined ? pointCloud.maxLevel : Infinity;
 
+      // keep hidden if level too deep
+      // intersection
+      // clipping
       if (
         node.level > maxLevel ||
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
