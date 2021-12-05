@@ -12,7 +12,7 @@ export class PointCloudOctreeGeometry {
   nodes: Record<string, PointCloudOctreeGeometryNode> = {};
   numNodesLoading: number = 0;
   maxNumNodesLoading: number = 3;
-  spacing: number = 0.1;
+  spacing: number = 0.01;
   pointAttributes: PointAttributes = new PointAttributes([]);
   projection: any = null;
   url: string | null = null;

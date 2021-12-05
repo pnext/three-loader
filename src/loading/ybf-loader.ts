@@ -71,7 +71,7 @@ export class YBFLoader {
 
     return Promise.resolve(this.getUrl(node.name, node.indexInList))
       .then(url => {
-        console.log('fetching:', url);
+        // console.log('fetching:', url);
         return fetch(url, { mode: 'cors' });
       })
       .then(res => res.arrayBuffer())
@@ -120,7 +120,7 @@ export class YBFLoader {
 
       node.mean = new Vector3().fromArray([0, 0, 0]);
       geometry.computeBoundingBox();
-      console.log(geometry.boundingBox);
+      // console.log(geometry.boundingBox);
       node.tightBoundingBox = geometry.boundingBox;
       node.loaded = true;
       node.loading = false;

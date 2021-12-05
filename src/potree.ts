@@ -202,7 +202,7 @@ export class Potree implements IPotree {
 
     const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
     const nodeLoadPromises: Promise<void>[] = [];
-    console.log(`Should load ${unloadedGeometry.length} but loading ${numNodesToLoad}`);
+    // console.log(`Should load ${unloadedGeometry.length} but loading ${numNodesToLoad}`);
     for (let i = 0; i < numNodesToLoad; i++) {
       nodeLoadPromises.push(unloadedGeometry[i].load());
     }

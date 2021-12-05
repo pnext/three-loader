@@ -27,7 +27,7 @@ const parameters = {
   'points size': 1,
   'clipping plane': 0,
   shape: PointShape.SQUARE,
-  pointSizeType: PointSizeType.FIXED,
+  pointSizeType: PointSizeType.ADAPTIVE,
   pointColorType: PointColorType.RGB,
   pointOpacityType: PointOpacityType.FIXED,
   demoPotree: DemoPotree.RESONAI_POTREE
@@ -82,9 +82,9 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   viewer.add(pco);
 }
 
-const jsonFile = 'gs://resonai-irocket-public/snap-rotem-colin-1638174850140576549-20211129123331/potree_structure_files/S5P/r.json'
+const jsonFile = 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
 
-const locJSON = 'gs://resonai-irocket-public/snap-rotem-colin-1638174850140576549-20211129123331/potree_ybf/S5P/loc.json'
+const locJSON = 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json'
 /*
 {
   "paths_map": ["null", "gs://resonai-irocket-public/snap-rotem-colin-1636635879596169843-20211111145032/potree_ybf/S0P"],
