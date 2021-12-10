@@ -96,7 +96,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
    * Gets the url of the hierarchy file for this node.
    */
   // getHierarchyUrl(): string {
-  //   console.log('here');
   //   return `${this.pcoGeometry.octreeDir}/${this.getHierarchyBaseUrl()}/${this.name}.hrc`;
   // }
 
@@ -178,10 +177,8 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
       this.hasChildren
     ) {
-      console.log('here1');
       promise = this.loadResonaiHierachyThenPoints();
     } else {
-      console.log('here2');
       promise = this.loadResonaiPoints();
     }
 
@@ -228,7 +225,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   //   return this.pcoGeometry.xhrRequest(this.pcoGeometry.url || '', { mode: 'cors' })
   //     .then(res => res.arrayBuffer())
   //     .then(data => {
-  //       console.log(data);
   //       this.loadHierarchy(this, data)
   //     });
   // }
@@ -240,7 +236,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
     return Promise.resolve(fetch(this.hierarchyUrl).then(res => {
       res.text().then(text => {
-        console.log(text);
         this.loadResonaiHierarchy(this, JSON5.parse(text));
       })
   }))
@@ -316,7 +311,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const decoded: NodeData[] = [];
     hierarchyData.nodes.forEach((number: any) => {
       const binary: string = Number(number).toString(2).padStart(32, '0')
-      console.log(binary.slice(0, 8), binary.slice(8));
     })
 
     let idx = 1;
@@ -360,15 +354,12 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   // }
 
   private getResonaiNodeData(name: string, offset: number, hierarchyData: any): NodeData {
-    console.log('name:', name);
     const code = hierarchyData.nodes[offset];
     // https://stackoverflow.com/questions/22335853/hack-to-convert-javascript-number-to-uint32
     // Force the number to be a UInt32 and not overflow
     const children = code >>> 24;
-    console.log('# children:', children);
     const mask = (1 << 24) - 1;
     const numPoints = code & mask;
-    console.log('# numPoints:', numPoints);
     const indexInList = offset;
     return { children, numPoints, name, indexInList };
   }
@@ -385,13 +376,11 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const boundingBox = createChildAABB(parentNode.boundingBox, index);
 
     const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox, indexInList);
-    // console.log('!!!!!!!! parent bb', parentNode.boundingBox, ' name: ', name, ' index: ', index, ' bb: ', boundingBox);
     node.level = level;
 
     node.numPoints = numPoints;
     node.hasChildren = children > 0;
     node.spacing = pco.spacing / Math.pow(2, level);
-    console.log(pco.spacing, level, node.spacing);
     node.indexInList = indexInList;
 
     parentNode.addChild(node);

@@ -5,7 +5,6 @@ import { Viewer } from './viewer';
 import { gsToPath } from '../src/utils/utils';
 // import { Potree } from '../src/potree'
 // @ts-ignore
-import YBFLoader from '../workers/ybf-loader.worker.js';
 
 const JSON5 = require('json5');
 
@@ -43,7 +42,6 @@ viewer.initialize(targetEl);
 
 const clippingPlane = new Plane()
 const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
-console.log(planeHelper);
 // viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;

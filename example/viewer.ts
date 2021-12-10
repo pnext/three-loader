@@ -114,7 +114,6 @@ export class Viewer {
    *    The JSON object of loc.json which maps where to find each node's ybf.
    */
     loadResonaiPotree(jsonFile: string, locJSON: any): Promise<PointCloudOctree> {
-      console.log('loadResonaiPotree', jsonFile, locJSON);
       return this.potree.loadResonaiPointCloud(
         // The file name of the point cloud which is to be loaded.
         jsonFile,

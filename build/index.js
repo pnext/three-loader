@@ -1,14 +1,4 @@
-(function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("three"));
-	else if(typeof define === 'function' && define.amd)
-		define("potree", ["three"], factory);
-	else if(typeof exports === 'object')
-		exports["potree"] = factory(require("three"));
-	else
-		root["potree"] = factory(root["three"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE_three__) {
-return /******/ (() => { // webpackBootstrap
+define("potree", ["three"], (__WEBPACK_EXTERNAL_MODULE_three__) => { return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ "./src/utils/binary-heap.js":
@@ -2459,9 +2449,7 @@ function parseSingle(url, xhrRequest) {
 //   return { offset, boundingBox, tightBoundingBox };
 // }
 function parseResonai(url, getUrl, xhrRequest) {
-    console.log('@@@@@@@@@@@@@@@@@@@@@', url, getUrl(url, 0));
     return (data) => {
-        console.log('parseResonai', data);
         const boundingBox = getResonaiBoundingBoxes(data);
         const loader = new _ybf_loader__WEBPACK_IMPORTED_MODULE_3__.YBFLoader({
             url, getUrl
@@ -4063,7 +4051,6 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
      * Gets the url of the hierarchy file for this node.
      */
     // getHierarchyUrl(): string {
-    //   console.log('here');
     //   return `${this.pcoGeometry.octreeDir}/${this.getHierarchyBaseUrl()}/${this.name}.hrc`;
     // }
     /**
@@ -4129,11 +4116,9 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
         let promise;
         if (this.level % this.pcoGeometry.hierarchyStepSize === 0 &&
             this.hasChildren) {
-            console.log('here1');
             promise = this.loadResonaiHierachyThenPoints();
         }
         else {
-            console.log('here2');
             promise = this.loadResonaiPoints();
         }
         return promise.catch(reason => {
@@ -4173,7 +4158,6 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
     //   return this.pcoGeometry.xhrRequest(this.pcoGeometry.url || '', { mode: 'cors' })
     //     .then(res => res.arrayBuffer())
     //     .then(data => {
-    //       console.log(data);
     //       this.loadHierarchy(this, data)
     //     });
     // }
@@ -4183,7 +4167,6 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
         }
         return Promise.resolve(fetch(this.hierarchyUrl).then(res => {
             res.text().then(text => {
-                console.log(text);
                 this.loadResonaiHierarchy(this, JSON5.parse(text));
             });
         }));
@@ -4242,7 +4225,6 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
         const decoded = [];
         hierarchyData.nodes.forEach((number) => {
             const binary = Number(number).toString(2).padStart(32, '0');
-            console.log(binary.slice(0, 8), binary.slice(8));
         });
         let idx = 1;
         // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
@@ -4278,15 +4260,12 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
     //   return { children: children, numPoints: numPoints, name };
     // }
     getResonaiNodeData(name, offset, hierarchyData) {
-        console.log('name:', name);
         const code = hierarchyData.nodes[offset];
         // https://stackoverflow.com/questions/22335853/hack-to-convert-javascript-number-to-uint32
         // Force the number to be a UInt32 and not overflow
         const children = code >>> 24;
-        console.log('# children:', children);
         const mask = (1 << 24) - 1;
         const numPoints = code & mask;
-        console.log('# numPoints:', numPoints);
         const indexInList = offset;
         return { children, numPoints, name, indexInList };
     }
@@ -4297,12 +4276,10 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_0__.Ev
         const level = (name.length + 1) / 2;
         const boundingBox = (0,_utils_bounds__WEBPACK_IMPORTED_MODULE_1__.createChildAABB)(parentNode.boundingBox, index);
         const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox, indexInList);
-        // console.log('!!!!!!!! parent bb', parentNode.boundingBox, ' name: ', name, ' index: ', index, ' bb: ', boundingBox);
         node.level = level;
         node.numPoints = numPoints;
         node.hasChildren = children > 0;
         node.spacing = pco.spacing / Math.pow(2, level);
-        console.log(pco.spacing, level, node.spacing);
         node.indexInList = indexInList;
         parentNode.addChild(node);
         nodes.set(name, node);
@@ -5033,7 +5010,6 @@ class Potree {
     }
     loadResonaiPointCloud(potreeName, // gs://bla/bla/r.json
     getUrl, xhrRequest = (input, init) => fetch(input, init)) {
-        console.log('loadResonaiPointCloud', potreeName, getUrl);
         return (0,_loading__WEBPACK_IMPORTED_MODULE_3__.loadResonaiPOC)(potreeName, getUrl, xhrRequest).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_5__.PointCloudOctree(this, geometry));
     }
     updatePointClouds(pointClouds, camera, renderer) {
@@ -5117,7 +5093,6 @@ class Potree {
         } // end priority queue loop
         const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
         const nodeLoadPromises = [];
-        // console.log(`Should load ${unloadedGeometry.length} but loading ${numNodesToLoad}`);
         for (let i = 0; i < numNodesToLoad; i++) {
             nodeLoadPromises.push(unloadedGeometry[i].load());
         }
@@ -5868,5 +5843,5 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	return __webpack_exports__;
 /******/ })()
 ;
-});
+});;
 //# sourceMappingURL=index.js.map

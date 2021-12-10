@@ -5,7 +5,6 @@
 import { Box3, Vector3 } from 'three';
 import { PointCloudOctreeGeometry } from '../point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
-// import { YBFLoader } from './ybf-loader';
 import { XhrRequest, GetUrlFn } from './types';
 import { YBFLoader } from './ybf-loader';
 //import { createChildAABB } from '../utils/bounds';
@@ -299,9 +298,7 @@ function parseSingle(
 // }
 
 function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
-  console.log('@@@@@@@@@@@@@@@@@@@@@', url, getUrl(url, 0));
   return (data: any): Promise<PointCloudOctreeGeometry> => {
-    console.log('parseResonai', data);
     const boundingBox = getResonaiBoundingBoxes(data);
     const loader = new YBFLoader({
       url, getUrl

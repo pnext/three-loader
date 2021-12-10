@@ -68,7 +68,6 @@ export class Potree implements IPotree {
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
   ): Promise<PointCloudOctree> {
-    console.log('loadResonaiPointCloud', potreeName, getUrl)
     return loadResonaiPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
@@ -202,7 +201,6 @@ export class Potree implements IPotree {
 
     const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
     const nodeLoadPromises: Promise<void>[] = [];
-    // console.log(`Should load ${unloadedGeometry.length} but loading ${numNodesToLoad}`);
     for (let i = 0; i < numNodesToLoad; i++) {
       nodeLoadPromises.push(unloadedGeometry[i].load());
     }
