@@ -21,7 +21,7 @@
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
     "start:example": "webpack-dev-server --config webpack.config.example.js --mode development --progress",
-    "build": "npm run clean && npm run lint && webpack --mode development --progress --config webpack.config.js",
+    "build": "npm run clean && npm run lint && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
     "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\"",
     "prepare-release": "standard-version"
