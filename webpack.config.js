@@ -14,7 +14,7 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },
-  globals: ['three'],
+  dependencies: ['three'],
   module: {
     rules: [
       {
