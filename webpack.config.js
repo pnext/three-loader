@@ -19,8 +19,8 @@ module.exports = {
     rules: [
       {
         test: /\.worker\.js$/,
-        loader: 'worker-loader'
-        // options: { inline: 'no-fallback' },
+        loader: 'worker-loader',
+        options: { inline: 'no-fallback', esModule: false },
       },
       {
         test: /\.js$/,
