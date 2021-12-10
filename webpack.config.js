@@ -6,7 +6,7 @@ module.exports = {
     path: path.resolve(__dirname, 'build'),
     filename: 'index.js',
     library: 'potree',
-    libraryTarget: 'amd',
+    libraryTarget: 'umd',
     umdNamedDefine: true,
   },
   devtool: 'source-map',
@@ -14,13 +14,13 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },
-  externals: ['three'],
+  globals: ['three'],
   module: {
     rules: [
       {
         test: /\.worker\.js$/,
         loader: 'worker-loader',
-        options: { inline: 'no-fallback', esModule: false },
+        options: { inline: 'no-fallback' },
       },
       {
         test: /\.js$/,
