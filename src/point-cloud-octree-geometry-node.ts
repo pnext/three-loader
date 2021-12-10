@@ -309,9 +309,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const stack: NodeData[] = [firstNodeData];
     // Nodes which have already been decoded. We will take nodes from the stack and place them here.
     const decoded: NodeData[] = [];
-    hierarchyData.nodes.forEach((number: any) => {
-      const binary: string = Number(number).toString(2).padStart(32, '0')
-    })
+    // hierarchyData.nodes.forEach((number: any) => {
+    //   const binary: string = Number(number).toString(2).padStart(32, '0')
+    // })
 
     let idx = 1;
     // TODO(Shai) something in the hierarchy parsing is wrong so we never actually load all the existing nodes
