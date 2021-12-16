@@ -22,7 +22,7 @@ enum DemoPotree {
 }
 
 const parameters = {
-  budget: 1e6,
+  budget: 1e8,
   'points size': 1,
   'clipping plane': 0,
   shape: PointShape.SQUARE,
@@ -42,7 +42,7 @@ viewer.initialize(targetEl);
 
 const clippingPlane = new Plane()
 const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
-// viewer.scene.add(planeHelper);
+viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
 
@@ -157,7 +157,7 @@ function initGui() {
     }
   });
 
-  gui.add(parameters, 'clipping plane', -1, 2.5, 0.1).onChange(function (val: number) {
+  gui.add(parameters, 'clipping plane', -30, 100, 0.1).onChange(function (val: number) {
     clippingPlane.constant = -val;
   });
 
