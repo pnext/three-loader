@@ -203,7 +203,10 @@ export class Viewer {
       this.camera,
       ray.ray,
       { pickOutsideClipRegion: true })
-    console.log(pick);
+    console.log(pick?.position?.toArray());
+    if (pick) {
+      this.cameraControls.target.copy(pick.position);
+    }
   }
 
   /**
