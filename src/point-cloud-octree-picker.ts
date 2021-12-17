@@ -16,7 +16,7 @@ import {
   WebGLRenderTarget,
 } from 'three';
 import { COLOR_BLACK, DEFAULT_PICK_WINDOW_SIZE } from './constants';
-import { ClipMode, PointCloudMaterial, PointColorType } from './materials';
+import { PointCloudMaterial, PointColorType } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickPoint, PointCloudHit } from './types';
@@ -225,7 +225,7 @@ export class PointCloudOctreePicker {
       pixels,
     );
     renderer.setScissorTest(false);
-    renderer.setRenderTarget(null!);
+    // renderer.setRenderTarget(null!);
     return pixels;
   }
 
@@ -260,6 +260,8 @@ export class PointCloudOctreePicker {
     nodeMaterial: PointCloudMaterial,
     params: Partial<PickParams>,
   ): void {
+    // pickMaterial.copy(nodeMaterial);
+    console.log(params);
     pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
     pickMaterial.shape = nodeMaterial.shape;
     pickMaterial.size = nodeMaterial.size;
@@ -269,14 +271,14 @@ export class PointCloudOctreePicker {
     pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
     pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
 
-    if (params.pickOutsideClipRegion) {
-      pickMaterial.clipMode = ClipMode.DISABLED;
-    } else {
-      pickMaterial.clipMode = nodeMaterial.clipMode;
-      pickMaterial.setClipBoxes(
-        nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
-      );
-    }
+    // if (params.pickOutsideClipRegion) {
+    //   pickMaterial.clipMode = ClipMode.DISABLED;
+    // } else {
+    //   pickMaterial.clipMode = nodeMaterial.clipMode;
+    //   pickMaterial.setClipBoxes(
+    //     nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
+    //   );
+    // }
   }
 
   private static updatePickRenderTarget(

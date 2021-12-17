@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { PerspectiveCamera, Scene, WebGLRenderer, Vector3, Raycaster } from 'three';
 import { PointCloudOctree, Potree } from '../src';
 import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { gsToPath } from '../src/utils/utils';
@@ -60,6 +60,7 @@ export class Viewer {
 
     this.resize();
     window.addEventListener('resize', this.resize);
+    window.addEventListener('dblclick', this.ondblclick, false);
 
     requestAnimationFrame(this.loop);
   }
@@ -188,6 +189,22 @@ export class Viewer {
     this.update(time - prevTime);
     this.render();
   };
+
+  ondblclick = (event: MouseEvent) => {
+    const x = (event.clientX / window.innerWidth) * 2 - 1;
+    const y = -(event.clientY / window.innerHeight) * 2 + 1;
+    const dir = new Vector3(x, y, -1);
+    dir.unproject(this.camera);
+
+    const ray = new Raycaster(this.camera.position, dir.sub(this.camera.position).normalize());
+    const pick = Potree.pick(
+      this.pointClouds,
+      this.renderer,
+      this.camera,
+      ray.ray,
+      { pickOutsideClipRegion: true })
+    console.log(pick);
+  }
 
   /**
    * Triggered anytime the window gets resized.

@@ -629,7 +629,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
         }
         materialUniforms.clippingPlanes.value = flattenedPlanes;
       }
-      pointCloudMaterial.defines.NUM_CLIP_PLANES = material.clippingPlanes.length;
+      pointCloudMaterial.defines.NUM_CLIP_PLANES = material.clippingPlanes?.length || 0;
       materialUniforms.level.value = node.level;
       materialUniforms.isLeafNode.value = node.isLeafNode;
 

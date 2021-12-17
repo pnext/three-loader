@@ -494,6 +494,7 @@ void main() {
 	float w = getLOD() / 10.0;
 	vColor = texture(gradient, vec2(w, 1.0 - w)).rgb;
 	#elif defined color_type_point_index
+	  vColor = vec3(.0, .2, .4);
 		vColor = indices.rgb;
 	#elif defined color_type_classification
 	  vec4 cl = getClassification();

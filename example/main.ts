@@ -105,9 +105,11 @@ const loadYBF = () => {
 }
 
 const loadResonaiPotree = () => {
-  const onLoad = (node: PointCloudOctreeGeometryNode) => {
-    console.log('Loaded node!', node);
-  }
+  // const onLoad = (node: PointCloudOctreeGeometryNode) => {
+  //   // console.log('Loaded node!', node);
+  // }
+  console.log(PointCloudOctreeGeometryNode);
+  const onLoad = () => {};
   fetch(gsToPath(locJSON)).then(res => {
     res.text().then(text => {
       viewer.loadResonaiPotree(gsToPath(jsonFile), JSON5.parse(text), [onLoad])

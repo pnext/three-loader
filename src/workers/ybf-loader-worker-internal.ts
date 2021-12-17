@@ -119,7 +119,7 @@ export async function handleMessage(event) {
       iIndices[i] = i;
     }
     postMessage({
-      indices: iIndices,
+      indices,
       attributeBuffers: {
         position: { buffer: geometry.attributes.position.array },
         color: { buffer: geometry.attributes.color.array }

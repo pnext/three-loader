@@ -28,7 +28,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "three": "^0.131.3"
+    "three": "^0.133.1"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
