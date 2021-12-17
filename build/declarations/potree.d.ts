@@ -1,6 +1,7 @@
 import { Camera, Ray, WebGLRenderer } from 'three';
 import { GetUrlFn } from './loading';
 import { PointCloudOctree } from './point-cloud-octree';
+import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PickParams } from './point-cloud-octree-picker';
 import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PickPoint } from './types';
 import { LRU } from './utils/lru';
@@ -25,7 +26,7 @@ export declare class Potree implements IPotree {
     lru: LRU;
     loadSingle(url: string, xhrRequest?: (input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>): Promise<PointCloudOctree>;
     loadResonaiPointCloud(potreeName: string, // gs://bla/bla/r.json
-    getUrl: GetUrlFn, xhrRequest?: (input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>): Promise<PointCloudOctree>;
+    getUrl: GetUrlFn, xhrRequest: ((input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>) | undefined, callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree>;
     updatePointClouds(pointClouds: PointCloudOctree[], camera: Camera, renderer: WebGLRenderer): IVisibilityUpdateResult;
     static pick(pointClouds: PointCloudOctree[], renderer: WebGLRenderer, camera: Camera, ray: Ray, params?: Partial<PickParams>): PickPoint | null;
     get pointBudget(): number;
