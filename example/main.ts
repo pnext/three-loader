@@ -1,5 +1,6 @@
 import { Plane, PlaneHelper, Vector3 } from 'three';
 import { PointCloudOctree } from '../src';
+import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { PointOpacityType, PointShape, PointSizeType, PointColorType } from '../src/materials/enums';
 import { Viewer } from './viewer';
 import { gsToPath } from '../src/utils/utils';
@@ -104,9 +105,12 @@ const loadYBF = () => {
 }
 
 const loadResonaiPotree = () => {
+  const onLoad = (node: PointCloudOctreeGeometryNode) => {
+    console.log('Loaded node!', node);
+  }
   fetch(gsToPath(locJSON)).then(res => {
     res.text().then(text => {
-      viewer.loadResonaiPotree(gsToPath(jsonFile), JSON5.parse(text))
+      viewer.loadResonaiPotree(gsToPath(jsonFile), JSON5.parse(text), [onLoad])
         .then(onPCOLoad)
         .catch(err => console.error(err));
     })

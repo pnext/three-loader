@@ -84,10 +84,11 @@ export function loadResonaiPOC(
   url: string, // gs://bla/bla/r.json
   getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
+  callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
 ): Promise<PointCloudOctreeGeometry> {
   return xhrRequest(gsToPath(url), { mode: 'cors' })
   .then(res => res.json())
-  .then(parseResonai(gsToPath(url), getUrl, xhrRequest));
+  .then(parseResonai(gsToPath(url), getUrl, xhrRequest, callbacks));
 }
 
 // export function loadResonaiPOC(
@@ -297,11 +298,16 @@ function parseSingle(
 //   return { offset, boundingBox, tightBoundingBox };
 // }
 
-function parseResonai(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
+function parseResonai(
+  url: string,
+  getUrl: GetUrlFn,
+  xhrRequest: XhrRequest,
+  callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
+){
   return (data: any): Promise<PointCloudOctreeGeometry> => {
     const boundingBox = getResonaiBoundingBoxes(data);
     const loader = new YBFLoader({
-      url, getUrl
+      url, getUrl, callbacks
     });
 
     const pco = new PointCloudOctreeGeometry(

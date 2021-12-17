@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { PointCloudOctree, Potree } from '../src';
+import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { gsToPath } from '../src/utils/utils';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -113,7 +114,10 @@ export class Viewer {
    * @param locJSON
    *    The JSON object of loc.json which maps where to find each node's ybf.
    */
-    loadResonaiPotree(jsonFile: string, locJSON: any): Promise<PointCloudOctree> {
+    loadResonaiPotree(
+      jsonFile: string,
+      locJSON: any,
+      callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree> {
       return this.potree.loadResonaiPointCloud(
         // The file name of the point cloud which is to be loaded.
         jsonFile,
@@ -123,7 +127,9 @@ export class Viewer {
           // TODO Shai - handle null (locJSON.node_locations[index] = 0)
           return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
           // return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
-        }
+        },
+        undefined,
+        callbacks
       );
     }
 

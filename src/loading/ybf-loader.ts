@@ -33,6 +33,7 @@ interface WorkerResponse {
 interface YBFLoaderOptions {
   url: string;
   getUrl?: GetUrlFn;
+  callbacks?: Callback[];
   //xhrRequest?: XhrRequest;
 }
 
@@ -50,11 +51,12 @@ export class YBFLoader {
   constructor({
     url,
     getUrl = s => Promise.resolve(s),
+    callbacks = []
   }: YBFLoaderOptions) {
     this.getUrl = getUrl;
     console.log('ybf-loader constructor:', url);
     this.url = url;
-    this.callbacks = [];
+    this.callbacks = callbacks || [];
   }
 
   dispose(): void {
