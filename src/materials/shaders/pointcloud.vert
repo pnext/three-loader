@@ -1,8 +1,6 @@
 precision highp float;
 precision highp int;
 
-#define max_clip_boxes 30
-
 in vec3 position;
 in vec3 color;
 in vec3 normal;
@@ -25,6 +23,25 @@ uniform float screenWidth;
 uniform float screenHeight;
 uniform float fov;
 uniform float spacing;
+
+#if defined HIGHLIGHT_POLYHEDRA_COUNT
+	uniform bool highlightPolyhedronOutside[HIGHLIGHT_POLYHEDRA_COUNT];
+	uniform vec4 highlightPolyhedronColors[HIGHLIGHT_POLYHEDRA_COUNT];
+	uniform int highlightConToPoly[HIGHLIGHT_CONVEXES_COUNT];
+	uniform int highlightPlaneToCon[HIGHLIGHT_PLANES_COUNT];
+	uniform int highlightPlaneToPoly[HIGHLIGHT_PLANES_COUNT];
+	uniform vec4 highlightPlanes[HIGHLIGHT_PLANES_COUNT];
+#endif
+
+#if defined CLIP_POLYHEDRA_COUNT
+	uniform bool clipPolyhedronOutside[CLIP_POLYHEDRA_COUNT];
+	uniform int clipConToPoly[CLIP_CONVEXES_COUNT];
+	uniform int clipPlaneToCon[CLIP_PLANES_COUNT];
+	uniform int clipPlaneToPoly[CLIP_PLANES_COUNT];
+	uniform vec4 clipPlanes[CLIP_PLANES_COUNT];
+#endif
+
+uniform bool highlightIgnoreDepth;
 
 #if defined use_clip_box
 	uniform mat4 clipBoxes[max_clip_boxes];
@@ -102,9 +119,9 @@ out vec3 vColor;
 	out vec3 vNormal;
 #endif
 
-#ifdef highlight_point
-	out float vHighlight;
-#endif
+out float vHighlight;
+
+out vec4 highlightColor;
 
 // ---------------------
 // OCTREE
@@ -521,32 +538,119 @@ void main() {
 	// CLIPPING
 	// ---------------------
 
-	#if defined use_clip_box
-		bool insideAny = false;
-		for (int i = 0; i < max_clip_boxes; i++) {
-			if (i == int(clipBoxCount)) {
-				break;
-			}
+	// #if defined use_clip_box
+	// 	bool insideAny = false;
+	// 	for (int i = 0; i < max_clip_boxes; i++) {
+	// 		if (i == int(clipBoxCount)) {
+	// 			break;
+	// 		}
 
-			vec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);
-			bool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;
-			inside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;
-			inside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;
-			insideAny = insideAny || inside;
-		}
+	// 		vec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);
+	// 		bool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;
+	// 		inside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;
+	// 		inside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;
+	// 		insideAny = insideAny || inside;
+	// 	}
 
-		if (!insideAny) {
-			#if defined clip_outside
-				gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
-			#elif defined clip_highlight_inside && !defined(color_type_depth)
-				float c = (vColor.r + vColor.g + vColor.b) / 6.0;
-			#endif
+	// 	if (!insideAny) {
+	// 		#if defined clip_outside
+	// 			gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
+	// 		#elif defined clip_highlight_inside && !defined(color_type_depth)
+	// 			float c = (vColor.r + vColor.g + vColor.b) / 6.0;
+	// 		#endif
+	// 	} else {
+	// 		#if defined clip_highlight_inside
+	// 			vColor.r += 0.5;
+	// 		#endif
+	// 	}
+	// #endif
+
+	bool[CLIP_PLANES_COUNT] clipDots;
+
+	bool[CLIP_POLYHEDRA_COUNT] clipPolyhedronResult;
+	bool[CLIP_CONVEXES_COUNT] clipConvexResult;
+	for (int poly = 0; poly < CLIP_POLYHEDRA_COUNT; poly++) {
+		clipPolyhedronResult[poly] = clipPolyhedronOutside[poly];
+	}
+
+	for (int convex = 0; convex < CLIP_CONVEXES_COUNT; convex++) {
+		clipConvexResult[convex] = !clipPolyhedronOutside[clipConToPoly[convex]];
+	}
+
+	for (int plane = 0; plane < CLIP_PLANES_COUNT; plane++) {
+		clipDots[plane] = (dot(mPosition.xyz, clipPlanes[plane].xyz) - clipPlanes[plane].w) < 0.;
+		if (clipPolyhedronOutside[clipPlaneToPoly[plane]]) {
+			clipConvexResult[clipPlaneToCon[plane]] = clipConvexResult[clipPlaneToCon[plane]] || clipDots[plane];
 		} else {
-			#if defined clip_highlight_inside
-				vColor.r += 0.5;
-			#endif
+			clipConvexResult[clipPlaneToCon[plane]] = clipConvexResult[clipPlaneToCon[plane]] && !clipDots[plane];
 		}
-	#endif
+	}
+
+	for (int convex = 0; convex < CLIP_CONVEXES_COUNT; convex++) {
+		if (clipPolyhedronOutside[clipConToPoly[convex]]) {
+			clipPolyhedronResult[clipConToPoly[convex]] = clipPolyhedronResult[clipConToPoly[convex]] && clipConvexResult[convex];
+		} else {
+			clipPolyhedronResult[clipConToPoly[convex]] = clipPolyhedronResult[clipConToPoly[convex]] || clipConvexResult[convex];
+		}
+	}
+
+	bool result = false;
+	for (int poly = 0; poly < CLIP_POLYHEDRA_COUNT; poly++) {
+		result = result || clipPolyhedronResult[poly];
+	}
+	if (result) {
+		gl_Position = vec4(171717.0, 171717.0, 171717.0, 1.0);
+		return;
+	}
+
+	// ====================== STARTING HIGHLIGHTING CALCULATIONS ======================
+	bool[HIGHLIGHT_PLANES_COUNT] highlightDots;
+
+	bool[HIGHLIGHT_POLYHEDRA_COUNT] highlightPolyhedronResult;
+	bool[HIGHLIGHT_CONVEXES_COUNT] highlightConvexResult;
+	for (int poly = 0; poly < HIGHLIGHT_POLYHEDRA_COUNT; poly++) {
+		highlightPolyhedronResult[poly] = highlightPolyhedronOutside[poly];
+	}
+
+	for (int convex = 0; convex < HIGHLIGHT_CONVEXES_COUNT; convex++) {
+		highlightConvexResult[convex] = !highlightPolyhedronOutside[highlightConToPoly[convex]];
+	}
+
+	for (int plane = 0; plane < HIGHLIGHT_PLANES_COUNT; plane++) {
+		highlightDots[plane] = (dot(mPosition.xyz, highlightPlanes[plane].xyz) - highlightPlanes[plane].w) < 0.;
+		if (highlightPolyhedronOutside[highlightPlaneToPoly[plane]]) {
+			highlightConvexResult[highlightPlaneToCon[plane]] = highlightConvexResult[highlightPlaneToCon[plane]] || highlightDots[plane];
+		} else {
+			highlightConvexResult[highlightPlaneToCon[plane]] = highlightConvexResult[highlightPlaneToCon[plane]] && !highlightDots[plane];
+		}
+	}
+
+	for (int convex = 0; convex < HIGHLIGHT_CONVEXES_COUNT; convex++) {
+		if (highlightPolyhedronOutside[highlightConToPoly[convex]]) {
+			highlightPolyhedronResult[highlightConToPoly[convex]] = highlightPolyhedronResult[highlightConToPoly[convex]] && highlightConvexResult[convex];
+		} else {
+			highlightPolyhedronResult[highlightConToPoly[convex]] = highlightPolyhedronResult[highlightConToPoly[convex]] || highlightConvexResult[convex];
+		}
+	}
+
+	result = false;
+	for (int poly = 0; poly < HIGHLIGHT_POLYHEDRA_COUNT; poly++) {
+		result = result || highlightPolyhedronResult[poly];
+		if (highlightPolyhedronResult[poly]) {
+			highlightColor += highlightPolyhedronColors[poly];
+		}
+	}
+
+	if (result) {
+		vHighlight = 1.;
+		// TODO(Shai) figure out blending...
+		// highlightColor /= highlightColor[3];
+		gl_PointSize = gl_PointSize * 1.3 + 0.5;
+	}
+
+	if (highlightIgnoreDepth && vHighlight > 0.5) {
+		vHighlight += 10.;
+	}
 
 	#if NUM_CLIP_PLANES > 0
 		vec4 plane;

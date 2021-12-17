@@ -1913,7 +1913,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("precision highp float;\nprecision highp int;\n\n#define max_clip_boxes 30\n\nin vec3 position;\nin vec3 color;\nin vec3 normal;\nin float intensity;\nin float classification;\nin float returnNumber;\nin float numberOfReturns;\nin float pointSourceID;\nin vec4 indices;\n\nuniform mat4 modelMatrix;\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\n\nuniform float pcIndex;\n\nuniform float screenWidth;\nuniform float screenHeight;\nuniform float fov;\nuniform float spacing;\n\n#if defined use_clip_box\n\tuniform mat4 clipBoxes[max_clip_boxes];\n#endif\n\n#if NUM_CLIP_PLANES > 0\n\tuniform vec4 clippingPlanes[NUM_CLIP_PLANES];\n#endif\n\nuniform float heightMin;\nuniform float heightMax;\nuniform float size; // pixel size factor\nuniform float minSize; // minimum pixel size\nuniform float maxSize; // maximum pixel size\nuniform float octreeSize;\nuniform vec3 bbSize;\nuniform vec3 uColor;\nuniform float opacity;\nuniform float clipBoxCount;\nuniform float level;\nuniform float vnStart;\nuniform bool isLeafNode;\n\nuniform float filterByNormalThreshold;\nuniform vec2 intensityRange;\nuniform float opacityAttenuation;\nuniform float intensityGamma;\nuniform float intensityContrast;\nuniform float intensityBrightness;\nuniform float rgbGamma;\nuniform float rgbContrast;\nuniform float rgbBrightness;\nuniform float transition;\nuniform float wRGB;\nuniform float wIntensity;\nuniform float wElevation;\nuniform float wClassification;\nuniform float wReturnNumber;\nuniform float wSourceID;\n\nuniform sampler2D visibleNodes;\nuniform sampler2D gradient;\nuniform sampler2D classificationLUT;\nuniform sampler2D depthMap;\n\n#ifdef highlight_point\n\tuniform vec3 highlightedPointCoordinate;\n\tuniform bool enablePointHighlighting;\n\tuniform float highlightedPointScale;\n#endif\n\nout vec3 vColor;\n\n#if !defined(color_type_point_index)\n\tout float vOpacity;\n#endif\n\n#if defined(weighted_splats)\n\tout float vLinearDepth;\n#endif\n\n#if !defined(paraboloid_point_shape) && defined(use_edl)\n\tout float vLogDepth;\n#endif\n\n#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)\n\tout vec3 vViewPosition;\n#endif\n\n#if defined(weighted_splats) || defined(paraboloid_point_shape)\n\tout float vRadius;\n#endif\n\n#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)\n\tout vec3 vNormal;\n#endif\n\n#ifdef highlight_point\n\tout float vHighlight;\n#endif\n\n// ---------------------\n// OCTREE\n// ---------------------\n\n#if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_octree)\n\n/**\n * Rounds the specified number to the closest integer.\n */\nfloat round(float number){\n\treturn floor(number + 0.5);\n}\n\n/**\n * Gets the number of 1-bits up to inclusive index position.\n *\n * number is treated as if it were an integer in the range 0-255\n */\nint numberOfOnes(int number, int index) {\n\tint numOnes = 0;\n\tint tmp = 128;\n\tfor (int i = 7; i >= 0; i--) {\n\n\t\tif (number >= tmp) {\n\t\t\tnumber = number - tmp;\n\n\t\t\tif (i <= index) {\n\t\t\t\tnumOnes++;\n\t\t\t}\n\t\t}\n\n\t\ttmp = tmp / 2;\n\t}\n\n\treturn numOnes;\n}\n\n/**\n * Checks whether the bit at index is 1.0\n *\n * number is treated as if it were an integer in the range 0-255\n */\nbool isBitSet(int number, int index){\n\n\t// weird multi else if due to lack of proper array, int and bitwise support in WebGL 1.0\n\tint powi = 1;\n\tif (index == 0) {\n\t\tpowi = 1;\n\t} else if (index == 1) {\n\t\tpowi = 2;\n\t} else if (index == 2) {\n\t\tpowi = 4;\n\t} else if (index == 3) {\n\t\tpowi = 8;\n\t} else if (index == 4) {\n\t\tpowi = 16;\n\t} else if (index == 5) {\n\t\tpowi = 32;\n\t} else if (index == 6) {\n\t\tpowi = 64;\n\t} else if (index == 7) {\n\t\tpowi = 128;\n\t}\n\n\tint ndp = number / powi;\n\n\treturn mod(float(ndp), 2.0) != 0.0;\n}\n\n/**\n * Gets the the LOD at the point position.\n */\nfloat getLOD() {\n\tvec3 offset = vec3(0.0, 0.0, 0.0);\n\tint iOffset = int(vnStart);\n\tfloat depth = level;\n\n\tfor (float i = 0.0; i <= 30.0; i++) {\n\t\tfloat nodeSizeAtLevel = octreeSize  / pow(2.0, i + level + 0.0);\n\n\t\tvec3 index3d = (position-offset) / nodeSizeAtLevel;\n\t\tindex3d = floor(index3d + 0.5);\n\t\tint index = int(round(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));\n\n\t\tvec4 value = texture(visibleNodes, vec2(float(iOffset) / 2048.0, 0.0));\n\t\tint mask = int(round(value.r * 255.0));\n\n\t\tif (isBitSet(mask, index)) {\n\t\t\t// there are more visible child nodes at this position\n\t\t\tint advanceG = int(round(value.g * 255.0)) * 256;\n\t\t\tint advanceB = int(round(value.b * 255.0));\n\t\t\tint advanceChild = numberOfOnes(mask, index - 1);\n\t\t\tint advance = advanceG + advanceB + advanceChild;\n\n\t\t\tiOffset = iOffset + advance;\n\n\t\t\tdepth++;\n\t\t} else {\n\t\t\treturn value.a * 255.0; // no more visible child nodes at this position\n\t\t}\n\n\t\toffset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;\n\t}\n\n\treturn depth;\n}\n\nfloat getPointSizeAttenuation() {\n\treturn 0.5 * pow(2.0, getLOD());\n}\n\n#endif\n\n// ---------------------\n// KD-TREE\n// ---------------------\n\n#if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_kdtree)\n\nfloat getLOD() {\n\tvec3 offset = vec3(0.0, 0.0, 0.0);\n\tfloat intOffset = 0.0;\n\tfloat depth = 0.0;\n\n\tvec3 size = bbSize;\n\tvec3 pos = position;\n\n\tfor (float i = 0.0; i <= 1000.0; i++) {\n\n\t\tvec4 value = texture(visibleNodes, vec2(intOffset / 2048.0, 0.0));\n\n\t\tint children = int(value.r * 255.0);\n\t\tfloat next = value.g * 255.0;\n\t\tint split = int(value.b * 255.0);\n\n\t\tif (next == 0.0) {\n\t\t \treturn depth;\n\t\t}\n\n\t\tvec3 splitv = vec3(0.0, 0.0, 0.0);\n\t\tif (split == 1) {\n\t\t\tsplitv.x = 1.0;\n\t\t} else if (split == 2) {\n\t\t \tsplitv.y = 1.0;\n\t\t} else if (split == 4) {\n\t\t \tsplitv.z = 1.0;\n\t\t}\n\n\t\tintOffset = intOffset + next;\n\n\t\tfloat factor = length(pos * splitv / size);\n\t\tif (factor < 0.5) {\n\t\t \t// left\n\t\t\tif (children == 0 || children == 2) {\n\t\t\t\treturn depth;\n\t\t\t}\n\t\t} else {\n\t\t\t// right\n\t\t\tpos = pos - size * splitv * 0.5;\n\t\t\tif (children == 0 || children == 1) {\n\t\t\t\treturn depth;\n\t\t\t}\n\t\t\tif (children == 3) {\n\t\t\t\tintOffset = intOffset + 1.0;\n\t\t\t}\n\t\t}\n\t\tsize = size * ((1.0 - (splitv + 1.0) / 2.0) + 0.5);\n\n\t\tdepth++;\n\t}\n\n\n\treturn depth;\n}\n\nfloat getPointSizeAttenuation() {\n\treturn 0.5 * pow(1.3, getLOD());\n}\n\n#endif\n\n// formula adapted from: http://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/\nfloat getContrastFactor(float contrast) {\n\treturn (1.0158730158730156 * (contrast + 1.0)) / (1.0158730158730156 - contrast);\n}\n\nvec3 getRGB() {\n\t#if defined(use_rgb_gamma_contrast_brightness)\n\t  vec3 rgb = color;\n\t\trgb = pow(rgb, vec3(rgbGamma));\n\t\trgb = rgb + rgbBrightness;\n\t\trgb = (rgb - 0.5) * getContrastFactor(rgbContrast) + 0.5;\n\t\trgb = clamp(rgb, 0.0, 1.0);\n\t\treturn rgb;\n\t#else\n\t\treturn color;\n\t#endif\n}\n\nfloat getIntensity() {\n\tfloat w = (intensity - intensityRange.x) / (intensityRange.y - intensityRange.x);\n\tw = pow(w, intensityGamma);\n\tw = w + intensityBrightness;\n\tw = (w - 0.5) * getContrastFactor(intensityContrast) + 0.5;\n\tw = clamp(w, 0.0, 1.0);\n\n\treturn w;\n}\n\nvec3 getElevation() {\n\tvec4 world = modelMatrix * vec4( position, 1.0 );\n\tfloat w = (world.z - heightMin) / (heightMax-heightMin);\n\tvec3 cElevation = texture(gradient, vec2(w,1.0-w)).rgb;\n\n\treturn cElevation;\n}\n\nvec4 getClassification() {\n\tvec2 uv = vec2(classification / 255.0, 0.5);\n\tvec4 classColor = texture(classificationLUT, uv);\n\n\treturn classColor;\n}\n\nvec3 getReturnNumber() {\n\tif (numberOfReturns == 1.0) {\n\t\treturn vec3(1.0, 1.0, 0.0);\n\t} else {\n\t\tif (returnNumber == 1.0) {\n\t\t\treturn vec3(1.0, 0.0, 0.0);\n\t\t} else if (returnNumber == numberOfReturns) {\n\t\t\treturn vec3(0.0, 0.0, 1.0);\n\t\t} else {\n\t\t\treturn vec3(0.0, 1.0, 0.0);\n\t\t}\n\t}\n}\n\nvec3 getSourceID() {\n\tfloat w = mod(pointSourceID, 10.0) / 10.0;\n\treturn texture(gradient, vec2(w, 1.0 - w)).rgb;\n}\n\nvec3 getCompositeColor() {\n\tvec3 c;\n\tfloat w;\n\n\tc += wRGB * getRGB();\n\tw += wRGB;\n\n\tc += wIntensity * getIntensity() * vec3(1.0, 1.0, 1.0);\n\tw += wIntensity;\n\n\tc += wElevation * getElevation();\n\tw += wElevation;\n\n\tc += wReturnNumber * getReturnNumber();\n\tw += wReturnNumber;\n\n\tc += wSourceID * getSourceID();\n\tw += wSourceID;\n\n\tvec4 cl = wClassification * getClassification();\n\tc += cl.a * cl.rgb;\n\tw += wClassification * cl.a;\n\n\tc = c / w;\n\n\t// if (w == 0.0) {\n\t// \tgl_Position = vec4(100.0, 100.0, 100.0, 0.0);\n\t// }\n\n\treturn c;\n}\n\nvoid main() {\n\tvec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\n\tvec4 mPosition = modelMatrix * vec4(position, 1.0);\n\n\tgl_Position = projectionMatrix * mvPosition;\n\n\t#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)\n\t\tvViewPosition = mvPosition.xyz;\n\t#endif\n\n\t#if defined weighted_splats\n\t\tvLinearDepth = gl_Position.w;\n\t#endif\n\n\t#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)\n\t\tvNormal = normalize(normalMatrix * normal);\n\t#endif\n\n\t#if !defined(paraboloid_point_shape) && defined(use_edl)\n\t\tvLogDepth = log2(-mvPosition.z);\n\t#endif\n\n\t// ---------------------\n\t// POINT SIZE\n\t// ---------------------\n\n\tfloat pointSize = 1.0;\n\tfloat slope = tan(fov / 2.0);\n\tfloat projFactor =  -0.5 * screenHeight / (slope * mvPosition.z);\n\n\t#if defined fixed_point_size\n\t\tpointSize = size;\n\t#elif defined attenuated_point_size\n\t\tpointSize = size * spacing * projFactor;\n\t#elif defined adaptive_point_size\n\t\tfloat worldSpaceSize = 2.0 * size * spacing / getPointSizeAttenuation();\n\t\tpointSize = worldSpaceSize * projFactor;\n\t#endif\n\n\tpointSize = max(minSize, pointSize);\n\tpointSize = min(maxSize, pointSize);\n\n\t#if defined(weighted_splats) || defined(paraboloid_point_shape)\n\t\tvRadius = pointSize / projFactor;\n\t#endif\n\n\tgl_PointSize = pointSize;\n\n\t// ---------------------\n\t// HIGHLIGHTING\n\t// ---------------------\n\n\t#ifdef highlight_point\n\t\tif (enablePointHighlighting && abs(mPosition.x - highlightedPointCoordinate.x) < 0.0001 &&\n\t\t\tabs(mPosition.y - highlightedPointCoordinate.y) < 0.0001 &&\n\t\t\tabs(mPosition.z - highlightedPointCoordinate.z) < 0.0001) {\n\t\t\tvHighlight = 1.0;\n\t\t\tgl_PointSize = pointSize * highlightedPointScale;\n\t\t} else {\n\t\t\tvHighlight = 0.0;\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// OPACITY\n\t// ---------------------\n\n\t#ifndef color_type_point_index\n\t\t#ifdef attenuated_opacity\n\t\t\tvOpacity = opacity * exp(-length(-mvPosition.xyz) / opacityAttenuation);\n\t\t#else\n\t\t\tvOpacity = opacity;\n\t\t#endif\n\t#endif\n\n\t// ---------------------\n\t// FILTERING\n\t// ---------------------\n\n\t#ifdef use_filter_by_normal\n\t\tif(abs((modelViewMatrix * vec4(normal, 0.0)).z) > filterByNormalThreshold) {\n\t\t\t// Move point outside clip space space to discard it.\n\t\t\tgl_Position = vec4(0.0, 0.0, 2.0, 1.0);\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// POINT COLOR\n\t// ---------------------\n\n\t#ifdef color_type_rgb\n\t\tvColor = getRGB();\n\t#elif defined color_type_height\n\t\tvColor = getElevation();\n\t#elif defined color_type_rgb_height\n\t\tvec3 cHeight = getElevation();\n\t\tvColor = (1.0 - transition) * getRGB() + transition * cHeight;\n\t#elif defined color_type_depth\n\t\tfloat linearDepth = -mvPosition.z ;\n\t\tfloat expDepth = (gl_Position.z / gl_Position.w) * 0.5 + 0.5;\n\t\tvColor = vec3(linearDepth, expDepth, 0.0);\n\t#elif defined color_type_intensity\n\t\tfloat w = getIntensity();\n\t\tvColor = vec3(w, w, w);\n\t#elif defined color_type_intensity_gradient\n\t\tfloat w = getIntensity();\n\t\tvColor = texture(gradient, vec2(w, 1.0 - w)).rgb;\n\t#elif defined color_type_color\n\t\tvColor = uColor;\n\t#elif defined color_type_lod\n\tfloat w = getLOD() / 10.0;\n\tvColor = texture(gradient, vec2(w, 1.0 - w)).rgb;\n\t#elif defined color_type_point_index\n\t\tvColor = indices.rgb;\n\t#elif defined color_type_classification\n\t  vec4 cl = getClassification();\n\t\tvColor = cl.rgb;\n\t#elif defined color_type_return_number\n\t\tvColor = getReturnNumber();\n\t#elif defined color_type_source\n\t\tvColor = getSourceID();\n\t#elif defined color_type_normal\n\t\tvColor = (modelMatrix * vec4(normal, 0.0)).xyz;\n\t#elif defined color_type_phong\n\t\tvColor = color;\n\t#elif defined color_type_composite\n\t\tvColor = getCompositeColor();\n\t#endif\n\n\t#if !defined color_type_composite && defined color_type_classification\n\t\tif (cl.a == 0.0) {\n\t\t\tgl_Position = vec4(100.0, 100.0, 100.0, 0.0);\n\t\t\treturn;\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// CLIPPING\n\t// ---------------------\n\n\t#if defined use_clip_box\n\t\tbool insideAny = false;\n\t\tfor (int i = 0; i < max_clip_boxes; i++) {\n\t\t\tif (i == int(clipBoxCount)) {\n\t\t\t\tbreak;\n\t\t\t}\n\n\t\t\tvec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);\n\t\t\tbool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;\n\t\t\tinside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;\n\t\t\tinside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;\n\t\t\tinsideAny = insideAny || inside;\n\t\t}\n\n\t\tif (!insideAny) {\n\t\t\t#if defined clip_outside\n\t\t\t\tgl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);\n\t\t\t#elif defined clip_highlight_inside && !defined(color_type_depth)\n\t\t\t\tfloat c = (vColor.r + vColor.g + vColor.b) / 6.0;\n\t\t\t#endif\n\t\t} else {\n\t\t\t#if defined clip_highlight_inside\n\t\t\t\tvColor.r += 0.5;\n\t\t\t#endif\n\t\t}\n\t#endif\n\n\t#if NUM_CLIP_PLANES > 0\n\t\tvec4 plane;\n\t\tvec3 vClipPosition = -(modelMatrix * vec4(position, 1.0)).xyz;\n\t\tfor (int i = 0; i < NUM_CLIP_PLANES; i++) {\n\t\t\tplane = clippingPlanes[i];\n\t\t\tif (dot(vClipPosition, plane.xyz) > plane.w) {\n\t\t\t\tgl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);\n\t\t\t};\n\t\t}\n\t#endif\n}\n");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("precision highp float;\nprecision highp int;\n\nin vec3 position;\nin vec3 color;\nin vec3 normal;\nin float intensity;\nin float classification;\nin float returnNumber;\nin float numberOfReturns;\nin float pointSourceID;\nin vec4 indices;\n\nuniform mat4 modelMatrix;\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\n\nuniform float pcIndex;\n\nuniform float screenWidth;\nuniform float screenHeight;\nuniform float fov;\nuniform float spacing;\n\n#if defined use_clip_box\n\tuniform mat4 clipBoxes[max_clip_boxes];\n#endif\n\n#if NUM_CLIP_PLANES > 0\n\tuniform vec4 clippingPlanes[NUM_CLIP_PLANES];\n#endif\n\nuniform float heightMin;\nuniform float heightMax;\nuniform float size; // pixel size factor\nuniform float minSize; // minimum pixel size\nuniform float maxSize; // maximum pixel size\nuniform float octreeSize;\nuniform vec3 bbSize;\nuniform vec3 uColor;\nuniform float opacity;\nuniform float clipBoxCount;\nuniform float level;\nuniform float vnStart;\nuniform bool isLeafNode;\n\nuniform float filterByNormalThreshold;\nuniform vec2 intensityRange;\nuniform float opacityAttenuation;\nuniform float intensityGamma;\nuniform float intensityContrast;\nuniform float intensityBrightness;\nuniform float rgbGamma;\nuniform float rgbContrast;\nuniform float rgbBrightness;\nuniform float transition;\nuniform float wRGB;\nuniform float wIntensity;\nuniform float wElevation;\nuniform float wClassification;\nuniform float wReturnNumber;\nuniform float wSourceID;\n\nuniform sampler2D visibleNodes;\nuniform sampler2D gradient;\nuniform sampler2D classificationLUT;\nuniform sampler2D depthMap;\n\n#ifdef highlight_point\n\tuniform vec3 highlightedPointCoordinate;\n\tuniform bool enablePointHighlighting;\n\tuniform float highlightedPointScale;\n#endif\n\nout vec3 vColor;\n\n#if !defined(color_type_point_index)\n\tout float vOpacity;\n#endif\n\n#if defined(weighted_splats)\n\tout float vLinearDepth;\n#endif\n\n#if !defined(paraboloid_point_shape) && defined(use_edl)\n\tout float vLogDepth;\n#endif\n\n#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)\n\tout vec3 vViewPosition;\n#endif\n\n#if defined(weighted_splats) || defined(paraboloid_point_shape)\n\tout float vRadius;\n#endif\n\n#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)\n\tout vec3 vNormal;\n#endif\n\n#ifdef highlight_point\n\tout float vHighlight;\n#endif\n\n// ---------------------\n// OCTREE\n// ---------------------\n\n#if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_octree)\n\n/**\n * Rounds the specified number to the closest integer.\n */\nfloat round(float number){\n\treturn floor(number + 0.5);\n}\n\n/**\n * Gets the number of 1-bits up to inclusive index position.\n *\n * number is treated as if it were an integer in the range 0-255\n */\nint numberOfOnes(int number, int index) {\n\tint numOnes = 0;\n\tint tmp = 128;\n\tfor (int i = 7; i >= 0; i--) {\n\n\t\tif (number >= tmp) {\n\t\t\tnumber = number - tmp;\n\n\t\t\tif (i <= index) {\n\t\t\t\tnumOnes++;\n\t\t\t}\n\t\t}\n\n\t\ttmp = tmp / 2;\n\t}\n\n\treturn numOnes;\n}\n\n/**\n * Checks whether the bit at index is 1.0\n *\n * number is treated as if it were an integer in the range 0-255\n */\nbool isBitSet(int number, int index){\n\n\t// weird multi else if due to lack of proper array, int and bitwise support in WebGL 1.0\n\tint powi = 1;\n\tif (index == 0) {\n\t\tpowi = 1;\n\t} else if (index == 1) {\n\t\tpowi = 2;\n\t} else if (index == 2) {\n\t\tpowi = 4;\n\t} else if (index == 3) {\n\t\tpowi = 8;\n\t} else if (index == 4) {\n\t\tpowi = 16;\n\t} else if (index == 5) {\n\t\tpowi = 32;\n\t} else if (index == 6) {\n\t\tpowi = 64;\n\t} else if (index == 7) {\n\t\tpowi = 128;\n\t}\n\n\tint ndp = number / powi;\n\n\treturn mod(float(ndp), 2.0) != 0.0;\n}\n\n/**\n * Gets the the LOD at the point position.\n */\nfloat getLOD() {\n\tvec3 offset = vec3(0.0, 0.0, 0.0);\n\tint iOffset = int(vnStart);\n\tfloat depth = level;\n\n\tfor (float i = 0.0; i <= 30.0; i++) {\n\t\tfloat nodeSizeAtLevel = octreeSize  / pow(2.0, i + level + 0.0);\n\n\t\tvec3 index3d = (position-offset) / nodeSizeAtLevel;\n\t\tindex3d = floor(index3d + 0.5);\n\t\tint index = int(round(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));\n\n\t\tvec4 value = texture(visibleNodes, vec2(float(iOffset) / 2048.0, 0.0));\n\t\tint mask = int(round(value.r * 255.0));\n\n\t\tif (isBitSet(mask, index)) {\n\t\t\t// there are more visible child nodes at this position\n\t\t\tint advanceG = int(round(value.g * 255.0)) * 256;\n\t\t\tint advanceB = int(round(value.b * 255.0));\n\t\t\tint advanceChild = numberOfOnes(mask, index - 1);\n\t\t\tint advance = advanceG + advanceB + advanceChild;\n\n\t\t\tiOffset = iOffset + advance;\n\n\t\t\tdepth++;\n\t\t} else {\n\t\t\treturn value.a * 255.0; // no more visible child nodes at this position\n\t\t}\n\n\t\toffset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;\n\t}\n\n\treturn depth;\n}\n\nfloat getPointSizeAttenuation() {\n\treturn 0.5 * pow(2.0, getLOD());\n}\n\n#endif\n\n// ---------------------\n// KD-TREE\n// ---------------------\n\n#if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_kdtree)\n\nfloat getLOD() {\n\tvec3 offset = vec3(0.0, 0.0, 0.0);\n\tfloat intOffset = 0.0;\n\tfloat depth = 0.0;\n\n\tvec3 size = bbSize;\n\tvec3 pos = position;\n\n\tfor (float i = 0.0; i <= 1000.0; i++) {\n\n\t\tvec4 value = texture(visibleNodes, vec2(intOffset / 2048.0, 0.0));\n\n\t\tint children = int(value.r * 255.0);\n\t\tfloat next = value.g * 255.0;\n\t\tint split = int(value.b * 255.0);\n\n\t\tif (next == 0.0) {\n\t\t \treturn depth;\n\t\t}\n\n\t\tvec3 splitv = vec3(0.0, 0.0, 0.0);\n\t\tif (split == 1) {\n\t\t\tsplitv.x = 1.0;\n\t\t} else if (split == 2) {\n\t\t \tsplitv.y = 1.0;\n\t\t} else if (split == 4) {\n\t\t \tsplitv.z = 1.0;\n\t\t}\n\n\t\tintOffset = intOffset + next;\n\n\t\tfloat factor = length(pos * splitv / size);\n\t\tif (factor < 0.5) {\n\t\t \t// left\n\t\t\tif (children == 0 || children == 2) {\n\t\t\t\treturn depth;\n\t\t\t}\n\t\t} else {\n\t\t\t// right\n\t\t\tpos = pos - size * splitv * 0.5;\n\t\t\tif (children == 0 || children == 1) {\n\t\t\t\treturn depth;\n\t\t\t}\n\t\t\tif (children == 3) {\n\t\t\t\tintOffset = intOffset + 1.0;\n\t\t\t}\n\t\t}\n\t\tsize = size * ((1.0 - (splitv + 1.0) / 2.0) + 0.5);\n\n\t\tdepth++;\n\t}\n\n\n\treturn depth;\n}\n\nfloat getPointSizeAttenuation() {\n\treturn 0.5 * pow(1.3, getLOD());\n}\n\n#endif\n\n// formula adapted from: http://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/\nfloat getContrastFactor(float contrast) {\n\treturn (1.0158730158730156 * (contrast + 1.0)) / (1.0158730158730156 - contrast);\n}\n\nvec3 getRGB() {\n\t#if defined(use_rgb_gamma_contrast_brightness)\n\t  vec3 rgb = color;\n\t\trgb = pow(rgb, vec3(rgbGamma));\n\t\trgb = rgb + rgbBrightness;\n\t\trgb = (rgb - 0.5) * getContrastFactor(rgbContrast) + 0.5;\n\t\trgb = clamp(rgb, 0.0, 1.0);\n\t\treturn rgb;\n\t#else\n\t\treturn color;\n\t#endif\n}\n\nfloat getIntensity() {\n\tfloat w = (intensity - intensityRange.x) / (intensityRange.y - intensityRange.x);\n\tw = pow(w, intensityGamma);\n\tw = w + intensityBrightness;\n\tw = (w - 0.5) * getContrastFactor(intensityContrast) + 0.5;\n\tw = clamp(w, 0.0, 1.0);\n\n\treturn w;\n}\n\nvec3 getElevation() {\n\tvec4 world = modelMatrix * vec4( position, 1.0 );\n\tfloat w = (world.z - heightMin) / (heightMax-heightMin);\n\tvec3 cElevation = texture(gradient, vec2(w,1.0-w)).rgb;\n\n\treturn cElevation;\n}\n\nvec4 getClassification() {\n\tvec2 uv = vec2(classification / 255.0, 0.5);\n\tvec4 classColor = texture(classificationLUT, uv);\n\n\treturn classColor;\n}\n\nvec3 getReturnNumber() {\n\tif (numberOfReturns == 1.0) {\n\t\treturn vec3(1.0, 1.0, 0.0);\n\t} else {\n\t\tif (returnNumber == 1.0) {\n\t\t\treturn vec3(1.0, 0.0, 0.0);\n\t\t} else if (returnNumber == numberOfReturns) {\n\t\t\treturn vec3(0.0, 0.0, 1.0);\n\t\t} else {\n\t\t\treturn vec3(0.0, 1.0, 0.0);\n\t\t}\n\t}\n}\n\nvec3 getSourceID() {\n\tfloat w = mod(pointSourceID, 10.0) / 10.0;\n\treturn texture(gradient, vec2(w, 1.0 - w)).rgb;\n}\n\nvec3 getCompositeColor() {\n\tvec3 c;\n\tfloat w;\n\n\tc += wRGB * getRGB();\n\tw += wRGB;\n\n\tc += wIntensity * getIntensity() * vec3(1.0, 1.0, 1.0);\n\tw += wIntensity;\n\n\tc += wElevation * getElevation();\n\tw += wElevation;\n\n\tc += wReturnNumber * getReturnNumber();\n\tw += wReturnNumber;\n\n\tc += wSourceID * getSourceID();\n\tw += wSourceID;\n\n\tvec4 cl = wClassification * getClassification();\n\tc += cl.a * cl.rgb;\n\tw += wClassification * cl.a;\n\n\tc = c / w;\n\n\t// if (w == 0.0) {\n\t// \tgl_Position = vec4(100.0, 100.0, 100.0, 0.0);\n\t// }\n\n\treturn c;\n}\n\nvoid main() {\n\tvec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\n\tvec4 mPosition = modelMatrix * vec4(position, 1.0);\n\n\tgl_Position = projectionMatrix * mvPosition;\n\n\t#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)\n\t\tvViewPosition = mvPosition.xyz;\n\t#endif\n\n\t#if defined weighted_splats\n\t\tvLinearDepth = gl_Position.w;\n\t#endif\n\n\t#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)\n\t\tvNormal = normalize(normalMatrix * normal);\n\t#endif\n\n\t#if !defined(paraboloid_point_shape) && defined(use_edl)\n\t\tvLogDepth = log2(-mvPosition.z);\n\t#endif\n\n\t// ---------------------\n\t// POINT SIZE\n\t// ---------------------\n\n\tfloat pointSize = 1.0;\n\tfloat slope = tan(fov / 2.0);\n\tfloat projFactor =  -0.5 * screenHeight / (slope * mvPosition.z);\n\n\t#if defined fixed_point_size\n\t\tpointSize = size;\n\t#elif defined attenuated_point_size\n\t\tpointSize = size * spacing * projFactor;\n\t#elif defined adaptive_point_size\n\t\tfloat worldSpaceSize = 2.0 * size * spacing / getPointSizeAttenuation();\n\t\tpointSize = worldSpaceSize * projFactor;\n\t#endif\n\n\tpointSize = max(minSize, pointSize);\n\tpointSize = min(maxSize, pointSize);\n\n\t#if defined(weighted_splats) || defined(paraboloid_point_shape)\n\t\tvRadius = pointSize / projFactor;\n\t#endif\n\n\tgl_PointSize = pointSize;\n\n\t// ---------------------\n\t// HIGHLIGHTING\n\t// ---------------------\n\n\t#ifdef highlight_point\n\t\tif (enablePointHighlighting && abs(mPosition.x - highlightedPointCoordinate.x) < 0.0001 &&\n\t\t\tabs(mPosition.y - highlightedPointCoordinate.y) < 0.0001 &&\n\t\t\tabs(mPosition.z - highlightedPointCoordinate.z) < 0.0001) {\n\t\t\tvHighlight = 1.0;\n\t\t\tgl_PointSize = pointSize * highlightedPointScale;\n\t\t} else {\n\t\t\tvHighlight = 0.0;\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// OPACITY\n\t// ---------------------\n\n\t#ifndef color_type_point_index\n\t\t#ifdef attenuated_opacity\n\t\t\tvOpacity = opacity * exp(-length(-mvPosition.xyz) / opacityAttenuation);\n\t\t#else\n\t\t\tvOpacity = opacity;\n\t\t#endif\n\t#endif\n\n\t// ---------------------\n\t// FILTERING\n\t// ---------------------\n\n\t#ifdef use_filter_by_normal\n\t\tif(abs((modelViewMatrix * vec4(normal, 0.0)).z) > filterByNormalThreshold) {\n\t\t\t// Move point outside clip space space to discard it.\n\t\t\tgl_Position = vec4(0.0, 0.0, 2.0, 1.0);\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// POINT COLOR\n\t// ---------------------\n\n\t#ifdef color_type_rgb\n\t\tvColor = getRGB();\n\t#elif defined color_type_height\n\t\tvColor = getElevation();\n\t#elif defined color_type_rgb_height\n\t\tvec3 cHeight = getElevation();\n\t\tvColor = (1.0 - transition) * getRGB() + transition * cHeight;\n\t#elif defined color_type_depth\n\t\tfloat linearDepth = -mvPosition.z ;\n\t\tfloat expDepth = (gl_Position.z / gl_Position.w) * 0.5 + 0.5;\n\t\tvColor = vec3(linearDepth, expDepth, 0.0);\n\t#elif defined color_type_intensity\n\t\tfloat w = getIntensity();\n\t\tvColor = vec3(w, w, w);\n\t#elif defined color_type_intensity_gradient\n\t\tfloat w = getIntensity();\n\t\tvColor = texture(gradient, vec2(w, 1.0 - w)).rgb;\n\t#elif defined color_type_color\n\t\tvColor = uColor;\n\t#elif defined color_type_lod\n\tfloat w = getLOD() / 10.0;\n\tvColor = texture(gradient, vec2(w, 1.0 - w)).rgb;\n\t#elif defined color_type_point_index\n\t\tvColor = indices.rgb;\n\t#elif defined color_type_classification\n\t  vec4 cl = getClassification();\n\t\tvColor = cl.rgb;\n\t#elif defined color_type_return_number\n\t\tvColor = getReturnNumber();\n\t#elif defined color_type_source\n\t\tvColor = getSourceID();\n\t#elif defined color_type_normal\n\t\tvColor = (modelMatrix * vec4(normal, 0.0)).xyz;\n\t#elif defined color_type_phong\n\t\tvColor = color;\n\t#elif defined color_type_composite\n\t\tvColor = getCompositeColor();\n\t#endif\n\n\t#if !defined color_type_composite && defined color_type_classification\n\t\tif (cl.a == 0.0) {\n\t\t\tgl_Position = vec4(100.0, 100.0, 100.0, 0.0);\n\t\t\treturn;\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// CLIPPING\n\t// ---------------------\n\n\t// #if defined use_clip_box\n\t// \tbool insideAny = false;\n\t// \tfor (int i = 0; i < max_clip_boxes; i++) {\n\t// \t\tif (i == int(clipBoxCount)) {\n\t// \t\t\tbreak;\n\t// \t\t}\n\n\t// \t\tvec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);\n\t// \t\tbool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;\n\t// \t\tinside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;\n\t// \t\tinside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;\n\t// \t\tinsideAny = insideAny || inside;\n\t// \t}\n\n\t// \tif (!insideAny) {\n\t// \t\t#if defined clip_outside\n\t// \t\t\tgl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);\n\t// \t\t#elif defined clip_highlight_inside && !defined(color_type_depth)\n\t// \t\t\tfloat c = (vColor.r + vColor.g + vColor.b) / 6.0;\n\t// \t\t#endif\n\t// \t} else {\n\t// \t\t#if defined clip_highlight_inside\n\t// \t\t\tvColor.r += 0.5;\n\t// \t\t#endif\n\t// \t}\n\t// #endif\n\n\tbool[CLIP_PLANES_COUNT] clipDots;\n\n\tbool[CLIP_POLYHEDRA_COUNT] clipPolyhedronResult;\n\tbool[CLIP_CONVEXES_COUNT] clipConvexResult;\n\tfor (int poly = 0; poly < CLIP_POLYHEDRA_COUNT; poly++) {\n\t\tclipPolyhedronResult[poly] = clipPolyhedronOutside[poly];\n\t}\n\n\tfor (int convex = 0; convex < CLIP_CONVEXES_COUNT; convex++) {\n\t\tclipConvexResult[convex] = !clipPolyhedronOutside[clipConToPoly[convex]];\n\t}\n\n\tfor (int plane = 0; plane < CLIP_PLANES_COUNT; plane++) {\n\t\tclipDots[plane] = (dot(modelPosition.xyz, clipPlanes[plane].xyz) - clipPlanes[plane].w) < 0.;\n\t\tif (clipPolyhedronOutside[clipPlaneToPoly[plane]]) {\n\t\t\tclipConvexResult[clipPlaneToCon[plane]] = clipConvexResult[clipPlaneToCon[plane]] || clipDots[plane];\n\t\t} else {\n\t\t\tclipConvexResult[clipPlaneToCon[plane]] = clipConvexResult[clipPlaneToCon[plane]] && !clipDots[plane];\n\t\t}\n\t}\n\n\tfor (int convex = 0; convex < CLIP_CONVEXES_COUNT; convex++) {\n\t\tif (clipPolyhedronOutside[clipConToPoly[convex]]) {\n\t\t\tclipPolyhedronResult[clipConToPoly[convex]] = clipPolyhedronResult[clipConToPoly[convex]] && clipConvexResult[convex];\n\t\t} else {\n\t\t\tclipPolyhedronResult[clipConToPoly[convex]] = clipPolyhedronResult[clipConToPoly[convex]] || clipConvexResult[convex];\n\t\t}\n\t}\n\n\tbool result = false;\n\tfor (int poly = 0; poly < CLIP_POLYHEDRA_COUNT; poly++) {\n\t\tresult = result || clipPolyhedronResult[poly];\n\t}\n\tif (result) {\n\t\tgl_Position = vec4(171717.0, 171717.0, 171717.0, 1.0);\n\t\treturn;\n\t}\n\n\t// ====================== STARTING HIGHLIGHTING CALCULATIONS ======================\n\tbool[HIGHLIGHT_PLANES_COUNT] highlightDots;\n\n\tbool[HIGHLIGHT_POLYHEDRA_COUNT] highlightPolyhedronResult;\n\tbool[HIGHLIGHT_CONVEXES_COUNT] highlightConvexResult;\n\tfor (int poly = 0; poly < HIGHLIGHT_POLYHEDRA_COUNT; poly++) {\n\t\thighlightPolyhedronResult[poly] = highlightPolyhedronOutside[poly];\n\t}\n\n\tfor (int convex = 0; convex < HIGHLIGHT_CONVEXES_COUNT; convex++) {\n\t\thighlightConvexResult[convex] = !highlightPolyhedronOutside[highlightConToPoly[convex]];\n\t}\n\n\tfor (int plane = 0; plane < HIGHLIGHT_PLANES_COUNT; plane++) {\n\t\thighlightDots[plane] = (dot(modelPosition.xyz, highlightPlanes[plane].xyz) - highlightPlanes[plane].w) < 0.;\n\t\tif (highlightPolyhedronOutside[highlightPlaneToPoly[plane]]) {\n\t\t\thighlightConvexResult[highlightPlaneToCon[plane]] = highlightConvexResult[highlightPlaneToCon[plane]] || highlightDots[plane];\n\t\t} else {\n\t\t\thighlightConvexResult[highlightPlaneToCon[plane]] = highlightConvexResult[highlightPlaneToCon[plane]] && !highlightDots[plane];\n\t\t}\n\t}\n\n\tfor (int convex = 0; convex < HIGHLIGHT_CONVEXES_COUNT; convex++) {\n\t\tif (highlightPolyhedronOutside[highlightConToPoly[convex]]) {\n\t\t\thighlightPolyhedronResult[highlightConToPoly[convex]] = highlightPolyhedronResult[highlightConToPoly[convex]] && highlightConvexResult[convex];\n\t\t} else {\n\t\t\thighlightPolyhedronResult[highlightConToPoly[convex]] = highlightPolyhedronResult[highlightConToPoly[convex]] || highlightConvexResult[convex];\n\t\t}\n\t}\n\n\tresult = false;\n\tfor (int poly = 0; poly < HIGHLIGHT_POLYHEDRA_COUNT; poly++) {\n\t\tresult = result || highlightPolyhedronResult[poly];\n\t\tif (highlightPolyhedronResult[poly]) {\n\t\t\thighlightColor += highlightPolyhedronColors[poly];\n\t\t}\n\t}\n\n\tif (result) {\n\t\thighlight = 1.;\n\t\t// TODO(Shai) figure out blending...\n\t\t// highlightColor /= highlightColor[3];\n\t\tgl_PointSize = gl_PointSize * 1.3 + 0.5;\n\t}\n\n\tif (highlightIgnoreDepth && highlight > 0.5) {\n\t\thighlight += 10.;\n\t}\n\n\t#if NUM_CLIP_PLANES > 0\n\t\tvec4 plane;\n\t\tvec3 vClipPosition = -(modelMatrix * vec4(position, 1.0)).xyz;\n\t\tfor (int i = 0; i < NUM_CLIP_PLANES; i++) {\n\t\t\tplane = clippingPlanes[i];\n\t\t\tif (dot(vClipPosition, plane.xyz) > plane.w) {\n\t\t\t\tgl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);\n\t\t\t};\n\t\t}\n\t#endif\n}\n");
 
 /***/ }),
 
@@ -53427,8 +53427,19 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         super();
         this.lights = false;
         this.fog = false;
-        this.numClipBoxes = 0;
-        this.clipBoxes = [];
+        this.clipPolyhedraNum = 0;
+        this.clipPlanes = [0, 0, 0, 1];
+        this.clipConToPoly = [0];
+        this.clipPlaneToCon = [0];
+        this.clipPlaneToPoly = [0];
+        this.clipPolyhedronOutside = [false];
+        this.highlightPolyhedraNum = 0;
+        this.highlightPlanes = [0, 0, 0, 1];
+        this.highlightConToPoly = [0];
+        this.highlightPlaneToCon = [0];
+        this.highlightPlaneToPoly = [0];
+        this.highlightPolyhedronOutside = [false];
+        this.highlightPolyhedronColors = [new three__WEBPACK_IMPORTED_MODULE_7__.Color(0xff3cff)];
         this.visibleNodeTextureOffsets = new Map();
         this._gradient = _gradients__WEBPACK_IMPORTED_MODULE_5__.SPECTRAL;
         this.gradientTexture = (0,_texture_generation__WEBPACK_IMPORTED_MODULE_6__.generateGradientTexture)(this._gradient);
@@ -53442,6 +53453,30 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
             blendDepthSupplement: makeUniform('f', 0.0),
             blendHardness: makeUniform('f', 2.0),
             classificationLUT: makeUniform('t', this.classificationTexture || new three__WEBPACK_IMPORTED_MODULE_7__.Texture()),
+            clipPolyhedraNum: makeUniform('f', 0),
+            // @ts-ignore
+            clipPlanes: makeUniform('fv', [0, 0, 0, 1]),
+            // @ts-ignore
+            clipConToPoly: makeUniform('fv', [0]),
+            // @ts-ignore
+            clipPlaneToCon: makeUniform('fv', [0]),
+            // @ts-ignore
+            clipPlaneToPoly: makeUniform('fv', [0]),
+            // @ts-ignore
+            clipPolyhedronOutside: makeUniform('bv', [false]),
+            highlightPolyhedraNum: makeUniform('f', 0),
+            // @ts-ignore
+            highlightPlanes: makeUniform('fv', [0, 0, 0, 1]),
+            // @ts-ignore
+            highlightConToPoly: makeUniform('fv', [0]),
+            // @ts-ignore
+            highlightPlaneToCon: makeUniform('fv', [0]),
+            // @ts-ignore
+            highlightPlaneToPoly: makeUniform('fv', [0]),
+            // @ts-ignore
+            highlightPolyhedronOutside: makeUniform('bv', [false]),
+            // @ts-ignore
+            highlightPolyhedronColors: makeUniform('fv', [0, 0, 0, 1]),
             clipBoxCount: makeUniform('f', 0),
             clipBoxes: makeUniform('Matrix4fv', []),
             clipping: makeUniform('b', true),
@@ -53607,8 +53642,11 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         if (this.weighted) {
             define('weighted_splats');
         }
-        if (this.numClipBoxes > 0) {
-            define('use_clip_box');
+        if (this.clipPolyhedraNum > 0) {
+            define('use_clip_polyhedra');
+        }
+        if (this.highlightPolyhedraNum > 0) {
+            define('use_highlight_polyhedra');
         }
         if (this.highlightPoint) {
             define('highlight_point');
@@ -53618,28 +53656,71 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         parts.push(shaderSrc);
         return parts.join('\n');
     }
-    setClipBoxes(clipBoxes) {
-        if (!clipBoxes) {
+    setTypePolyhedra(type, polyhedra) {
+        // @ts-ignore
+        this[type + 'PolyhedraNum'] = polyhedra.length;
+        // @ts-ignore
+        this.setUniform(type + 'PolyhedraCount', this[type + 'PolyhedraNum']);
+        this.updateShaderSource();
+        if (!polyhedra || polyhedra.length === 0) {
+            // @ts-ignore
+            this.setUniform(type + 'Planes', [0, 0, 0, 1]);
+            // @ts-ignore
+            this.setUniform(type + 'ConToPoly', [0]);
+            // @ts-ignore
+            this.setUniform(type + 'PlaneToCon', [0]);
+            // @ts-ignore
+            this.setUniform(type + 'PlaneToPoly', [0]);
+            // @ts-ignore
+            this.setUniform(type + 'PolyhedronOutside', [false]);
+            this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = 1;
+            this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = 1;
+            this.defines[type.toUpperCase() + '_PLANES_COUNT'] = 1;
+            if (type === 'highlight') {
+                // @ts-ignore
+                this.setUniform(type + 'PolyhedronColors', [new three__WEBPACK_IMPORTED_MODULE_7__.Color(0xff3cff)]);
+            }
             return;
         }
-        this.clipBoxes = clipBoxes;
-        const doUpdate = this.numClipBoxes !== clipBoxes.length && (clipBoxes.length === 0 || this.numClipBoxes === 0);
-        this.numClipBoxes = clipBoxes.length;
-        this.setUniform('clipBoxCount', this.numClipBoxes);
-        if (doUpdate) {
-            this.updateShaderSource();
+        const conToPoly = [];
+        const planeToCon = [];
+        const planeToPoly = [];
+        const flatPlanes = [];
+        let currentConvex = 0;
+        polyhedra.forEach((polyhedron, polyhedronIndex) => {
+            polyhedron.convexes.forEach((convex) => {
+                conToPoly.push(polyhedronIndex);
+                convex.planes.forEach((plane) => {
+                    planeToCon.push(currentConvex);
+                    planeToPoly.push(polyhedronIndex);
+                    flatPlanes.push(...plane.normal.toArray(), -plane.constant);
+                });
+                currentConvex++;
+            });
+        });
+        // @ts-ignore
+        this.setUniform(type + 'Planes', flatPlanes);
+        // @ts-ignore
+        this.setUniform(type + 'ConToPoly', conToPoly);
+        // @ts-ignore
+        this.setUniform(type + 'PlaneToCon', planeToCon);
+        // @ts-ignore
+        this.setUniform(type + 'PlaneToPoly', planeToPoly);
+        // @ts-ignore
+        this.setUniform(type + 'PolyhedronOutside', polyhedra.map(polyhedron => polyhedron.outside));
+        if (type === 'highlight') {
+            // @ts-ignore
+            this.setUniform(type + 'PolyhedronColors', polyhedra.map(polyhedron => polyhedron.color || new three__WEBPACK_IMPORTED_MODULE_7__.Color(0xff3cff)));
         }
-        const clipBoxesLength = this.numClipBoxes * 16;
-        const clipBoxesArray = new Float32Array(clipBoxesLength);
-        for (let i = 0; i < this.numClipBoxes; i++) {
-            clipBoxesArray.set(clipBoxes[i].inverse.elements, 16 * i);
-        }
-        for (let i = 0; i < clipBoxesLength; i++) {
-            if (isNaN(clipBoxesArray[i])) {
-                clipBoxesArray[i] = Infinity;
-            }
-        }
-        this.setUniform('clipBoxes', clipBoxesArray);
+        this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = polyhedra.length;
+        this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = this.uniforms[type + 'ConToPoly'].value.length;
+        this.defines[type.toUpperCase() + '_PLANES_COUNT'] = flatPlanes.length / 4;
+    }
+    setClipPolyhedra(clipPolyhedra) {
+        this.setTypePolyhedra('clip', clipPolyhedra);
+    }
+    setHighlightPolyhedra(clipPolyhedra) {
+        this.setTypePolyhedra('highlight', clipPolyhedra);
     }
     get gradient() {
         return this._gradient;
@@ -54750,9 +54831,7 @@ class PointCloudOctreePicker {
         }
         return tempNodes;
     }
-    static updatePickMaterial(pickMaterial, nodeMaterial, params) {
-        // pickMaterial.copy(nodeMaterial);
-        console.log(params);
+    static updatePickMaterial(pickMaterial, nodeMaterial, _params) {
         pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
         pickMaterial.shape = nodeMaterial.shape;
         pickMaterial.size = nodeMaterial.size;
@@ -55108,23 +55187,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "QueueItem": () => (/* binding */ QueueItem),
 /* harmony export */   "Potree": () => (/* binding */ Potree)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants */ "./src/constants.ts");
 /* harmony import */ var _features__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./features */ "./src/features.ts");
 /* harmony import */ var _loading__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./loading */ "./src/loading/index.ts");
-/* harmony import */ var _materials__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./materials */ "./src/materials/index.ts");
-/* harmony import */ var _point_cloud_octree__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./point-cloud-octree */ "./src/point-cloud-octree.ts");
-/* harmony import */ var _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./point-cloud-octree-picker */ "./src/point-cloud-octree-picker.ts");
-/* harmony import */ var _type_predicates__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./type-predicates */ "./src/type-predicates.ts");
-/* harmony import */ var _utils_binary_heap__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/binary-heap */ "./src/utils/binary-heap.js");
-/* harmony import */ var _utils_box3_helper__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/box3-helper */ "./src/utils/box3-helper.ts");
-/* harmony import */ var _utils_lru__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils/lru */ "./src/utils/lru.ts");
+/* harmony import */ var _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./point-cloud-octree */ "./src/point-cloud-octree.ts");
+/* harmony import */ var _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./point-cloud-octree-picker */ "./src/point-cloud-octree-picker.ts");
+/* harmony import */ var _type_predicates__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./type-predicates */ "./src/type-predicates.ts");
+/* harmony import */ var _utils_binary_heap__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./utils/binary-heap */ "./src/utils/binary-heap.js");
+/* harmony import */ var _utils_box3_helper__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/box3-helper */ "./src/utils/box3-helper.ts");
+/* harmony import */ var _utils_lru__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/lru */ "./src/utils/lru.ts");
 
 
 
 
 
-
+// import { ClipMode } from './materials';
 
 
 
@@ -55142,18 +55220,18 @@ class QueueItem {
 class Potree {
     constructor() {
         this._pointBudget = _constants__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_POINT_BUDGET;
-        this._rendererSize = new three__WEBPACK_IMPORTED_MODULE_10__.Vector2();
+        this._rendererSize = new three__WEBPACK_IMPORTED_MODULE_9__.Vector2();
         this.maxNumNodesLoading = _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
         this.features = _features__WEBPACK_IMPORTED_MODULE_1__.FEATURES;
-        this.lru = new _utils_lru__WEBPACK_IMPORTED_MODULE_9__.LRU(this._pointBudget);
+        this.lru = new _utils_lru__WEBPACK_IMPORTED_MODULE_8__.LRU(this._pointBudget);
         this.updateVisibilityStructures = (() => {
-            const frustumMatrix = new three__WEBPACK_IMPORTED_MODULE_10__.Matrix4();
-            const inverseWorldMatrix = new three__WEBPACK_IMPORTED_MODULE_10__.Matrix4();
-            const cameraMatrix = new three__WEBPACK_IMPORTED_MODULE_10__.Matrix4();
+            const frustumMatrix = new three__WEBPACK_IMPORTED_MODULE_9__.Matrix4();
+            const inverseWorldMatrix = new three__WEBPACK_IMPORTED_MODULE_9__.Matrix4();
+            const cameraMatrix = new three__WEBPACK_IMPORTED_MODULE_9__.Matrix4();
             return (pointClouds, camera) => {
                 const frustums = [];
                 const cameraPositions = [];
-                const priorityQueue = new _utils_binary_heap__WEBPACK_IMPORTED_MODULE_7__.BinaryHeap(x => 1 / x.weight);
+                const priorityQueue = new _utils_binary_heap__WEBPACK_IMPORTED_MODULE_6__.BinaryHeap(x => 1 / x.weight);
                 for (let i = 0; i < pointClouds.length; i++) {
                     const pointCloud = pointClouds[i];
                     if (!pointCloud.initialized()) {
@@ -55171,20 +55249,20 @@ class Potree {
                         .multiply(camera.projectionMatrix)
                         .multiply(inverseViewMatrix)
                         .multiply(worldMatrix);
-                    frustums.push(new three__WEBPACK_IMPORTED_MODULE_10__.Frustum().setFromProjectionMatrix(frustumMatrix));
+                    frustums.push(new three__WEBPACK_IMPORTED_MODULE_9__.Frustum().setFromProjectionMatrix(frustumMatrix));
                     // Camera position in object space
                     inverseWorldMatrix.copy(worldMatrix).invert();
                     cameraMatrix
                         .identity()
                         .multiply(inverseWorldMatrix)
                         .multiply(camera.matrixWorld);
-                    cameraPositions.push(new three__WEBPACK_IMPORTED_MODULE_10__.Vector3().setFromMatrixPosition(cameraMatrix));
+                    cameraPositions.push(new three__WEBPACK_IMPORTED_MODULE_9__.Vector3().setFromMatrixPosition(cameraMatrix));
                     if (pointCloud.visible && pointCloud.root !== null) {
                         const weight = Number.MAX_VALUE;
                         priorityQueue.push(new QueueItem(i, weight, pointCloud.root));
                     }
                     // Hide any previously visible nodes. We will later show only the needed ones.
-                    if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isTreeNode)(pointCloud.root)) {
+                    if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isTreeNode)(pointCloud.root)) {
                         pointCloud.hideDescendants(pointCloud.root.sceneNode);
                     }
                     for (const boundingBoxNode of pointCloud.boundingBoxNodes) {
@@ -55203,11 +55281,11 @@ class Potree {
     //   return loadPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
     // }
     loadSingle(url, xhrRequest = (input, init) => fetch(input, init)) {
-        return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadSingle)(url, xhrRequest).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_4__.PointCloudOctree(this, geometry));
+        return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadSingle)(url, xhrRequest).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
     loadResonaiPointCloud(potreeName, // gs://bla/bla/r.json
     getUrl, xhrRequest = (input, init) => fetch(input, init), callbacks) {
-        return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_4__.PointCloudOctree(this, geometry));
+        return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
     updatePointClouds(pointClouds, camera, renderer) {
         const result = this.updateVisibility(pointClouds, camera, renderer);
@@ -55224,7 +55302,7 @@ class Potree {
         return result;
     }
     static pick(pointClouds, renderer, camera, ray, params = {}) {
-        Potree.picker = Potree.picker || new _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_5__.PointCloudOctreePicker();
+        Potree.picker = Potree.picker || new _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_4__.PointCloudOctreePicker();
         return Potree.picker.pick(renderer, camera, ray, pointClouds, params);
     }
     get pointBudget() {
@@ -55264,7 +55342,7 @@ class Potree {
             numVisiblePoints += node.numPoints;
             pointCloud.numVisiblePoints += node.numPoints;
             const parentNode = queueItem.parent;
-            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isGeometryNode)(node) && (!parentNode || (0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isTreeNode)(parentNode))) {
+            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isGeometryNode)(node) && (!parentNode || (0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isTreeNode)(parentNode))) {
                 if (node.loaded && loadedToGPUThisFrame < _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_LOADS_TO_GPU) {
                     node = pointCloud.toTreeNode(node, parentNode);
                     loadedToGPUThisFrame++;
@@ -55281,7 +55359,7 @@ class Potree {
                     continue;
                 }
             }
-            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isTreeNode)(node)) {
+            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isTreeNode)(node)) {
                 this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
                 pointCloud.visibleGeometry.push(node.geometryNode);
             }
@@ -55345,7 +55423,7 @@ class Potree {
     }
     updateBoundingBoxVisibility(pointCloud, node) {
         if (pointCloud.showBoundingBox && !node.boundingBoxNode) {
-            const boxHelper = new _utils_box3_helper__WEBPACK_IMPORTED_MODULE_8__.Box3Helper(node.boundingBox);
+            const boxHelper = new _utils_box3_helper__WEBPACK_IMPORTED_MODULE_7__.Box3Helper(node.boundingBox);
             boxHelper.matrixAutoUpdate = false;
             pointCloud.boundingBoxNodes.push(boxHelper);
             node.boundingBoxNode = boxHelper;
@@ -55359,22 +55437,25 @@ class Potree {
             node.boundingBoxNode.visible = false;
         }
     }
-    shouldClip(pointCloud, boundingBox) {
-        const material = pointCloud.material;
-        if (material.numClipBoxes === 0 || material.clipMode !== _materials__WEBPACK_IMPORTED_MODULE_3__.ClipMode.CLIP_OUTSIDE) {
-            return false;
-        }
-        const box2 = boundingBox.clone();
-        pointCloud.updateMatrixWorld(true);
-        box2.applyMatrix4(pointCloud.matrixWorld);
-        const clipBoxes = material.clipBoxes;
-        for (let i = 0; i < clipBoxes.length; i++) {
-            const clipMatrixWorld = clipBoxes[i].matrix;
-            const clipBoxWorld = new three__WEBPACK_IMPORTED_MODULE_10__.Box3(new three__WEBPACK_IMPORTED_MODULE_10__.Vector3(-0.5, -0.5, -0.5), new three__WEBPACK_IMPORTED_MODULE_10__.Vector3(0.5, 0.5, 0.5)).applyMatrix4(clipMatrixWorld);
-            if (box2.intersectsBox(clipBoxWorld)) {
-                return false;
-            }
-        }
+    shouldClip(_pointCloud, _boundingBox) {
+        // const material = pointCloud.material;
+        // if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
+        //   return false;
+        // }
+        // const box2 = boundingBox.clone();
+        // pointCloud.updateMatrixWorld(true);
+        // box2.applyMatrix4(pointCloud.matrixWorld);
+        // const clipBoxes = material.clipBoxes;
+        // for (let i = 0; i < clipBoxes.length; i++) {
+        //   const clipMatrixWorld = clipBoxes[i].matrix;
+        //   const clipBoxWorld = new Box3(
+        //     new Vector3(-0.5, -0.5, -0.5),
+        //     new Vector3(0.5, 0.5, 0.5),
+        //   ).applyMatrix4(clipMatrixWorld);
+        //   if (box2.intersectsBox(clipBoxWorld)) {
+        //     return false;
+        //   }
+        // }
         return true;
     }
 }

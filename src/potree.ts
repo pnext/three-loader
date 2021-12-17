@@ -19,7 +19,7 @@ import {
 import { FEATURES } from './features';
 import { GetUrlFn, loadResonaiPOC } from './loading';
 import { loadSingle } from './loading'
-import { ClipMode } from './materials';
+// import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -298,30 +298,30 @@ export class Potree implements IPotree {
     }
   }
 
-  private shouldClip(pointCloud: PointCloudOctree, boundingBox: Box3): boolean {
-    const material = pointCloud.material;
+  private shouldClip(_pointCloud: PointCloudOctree, _boundingBox: Box3): boolean {
+    // const material = pointCloud.material;
 
-    if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
-      return false;
-    }
+    // if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
+    //   return false;
+    // }
 
-    const box2 = boundingBox.clone();
-    pointCloud.updateMatrixWorld(true);
-    box2.applyMatrix4(pointCloud.matrixWorld);
+    // const box2 = boundingBox.clone();
+    // pointCloud.updateMatrixWorld(true);
+    // box2.applyMatrix4(pointCloud.matrixWorld);
 
-    const clipBoxes = material.clipBoxes;
-    for (let i = 0; i < clipBoxes.length; i++) {
-      const clipMatrixWorld = clipBoxes[i].matrix;
-      const clipBoxWorld = new Box3(
-        new Vector3(-0.5, -0.5, -0.5),
-        new Vector3(0.5, 0.5, 0.5),
-      ).applyMatrix4(clipMatrixWorld);
-      if (box2.intersectsBox(clipBoxWorld)) {
-        return false;
-      }
-    }
+    // const clipBoxes = material.clipBoxes;
+    // for (let i = 0; i < clipBoxes.length; i++) {
+    //   const clipMatrixWorld = clipBoxes[i].matrix;
+    //   const clipBoxWorld = new Box3(
+    //     new Vector3(-0.5, -0.5, -0.5),
+    //     new Vector3(0.5, 0.5, 0.5),
+    //   ).applyMatrix4(clipMatrixWorld);
+    //   if (box2.intersectsBox(clipBoxWorld)) {
+    //     return false;
+    //   }
+    // }
 
-    return true;
+    return false;
   }
 
   private updateVisibilityStructures = (() => {

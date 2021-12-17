@@ -258,10 +258,8 @@ export class PointCloudOctreePicker {
   private static updatePickMaterial(
     pickMaterial: PointCloudMaterial,
     nodeMaterial: PointCloudMaterial,
-    params: Partial<PickParams>,
+    _params: Partial<PickParams>,
   ): void {
-    // pickMaterial.copy(nodeMaterial);
-    console.log(params);
     pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
     pickMaterial.shape = nodeMaterial.shape;
     pickMaterial.size = nodeMaterial.size;

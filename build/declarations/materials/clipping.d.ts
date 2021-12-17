@@ -1,4 +1,4 @@
-import { Box3, Matrix4, Vector3 } from 'three';
+import { Box3, Color, Matrix4, Plane, Vector3 } from 'three';
 export declare enum ClipMode {
     DISABLED = 0,
     CLIP_OUTSIDE = 1,
@@ -9,4 +9,12 @@ export interface IClipBox {
     inverse: Matrix4;
     matrix: Matrix4;
     position: Vector3;
+}
+export interface IClipConvex {
+    planes: Plane[];
+}
+export interface IClipPolyhedron {
+    color: Color;
+    outside: boolean;
+    convexes: IClipConvex[];
 }

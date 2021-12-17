@@ -191,8 +191,9 @@ export class Viewer {
   };
 
   ondblclick = (event: MouseEvent) => {
-    const x = (event.clientX / window.innerWidth) * 2 - 1;
-    const y = -(event.clientY / window.innerHeight) * 2 + 1;
+    const rect = (event.target as HTMLCanvasElement).getBoundingClientRect()
+    const x = (event.clientX - rect.left) / rect.width * 2 - 1;
+    const y = (event.clientY - rect.top) / rect.height * -2 + 1;
     const dir = new Vector3(x, y, -1);
     dir.unproject(this.camera);
 

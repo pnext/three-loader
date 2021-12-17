@@ -22,9 +22,7 @@ uniform float screenHeight;
 
 uniform sampler2D depthMap;
 
-#ifdef highlight_point
-	uniform vec4 highlightedPointColor;
-#endif
+in vec4 highlightColor;
 
 in vec3 vColor;
 
@@ -52,9 +50,7 @@ in vec3 vColor;
 	in vec3 vNormal;
 #endif
 
-#ifdef highlight_point
-	in float vHighlight;
-#endif
+in float vHighlight;
 
 layout(location=0) out vec4 out_FragColor;
 
@@ -254,9 +250,7 @@ void main() {
 		#endif
 	#endif
 
-	#ifdef highlight_point
-		if (vHighlight > 0.0) {
-			out_FragColor = highlightedPointColor;
-		}
-	#endif
+	if (vHighlight > 0.0) {
+		out_FragColor = (out_FragColor + highlightColor) * 0.5;
+	}
 }
