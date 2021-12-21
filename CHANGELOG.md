@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.6](https://github.com/pnext/three-loader/compare/v0.2.4...v0.2.6) (2021-12-21)
+
+### [0.2.1](https://github.com/pnext/three-loader/compare/v0.2.1-beta.1...v0.2.1) (2020-06-04)
+
 ### [0.2.2](https://github.com/pnext/three-loader/compare/v0.2.1...v0.2.2) (2020-09-28)
 
 ### [0.1.9](https://github.com/pnext/three-loader/compare/v0.1.8...v0.1.9) (2020-03-16)
