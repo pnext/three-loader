@@ -65,6 +65,9 @@ void main() {
 
 	// TODO: clean this up
 	// get normalized coordinates for current fragment
+	
+
+	// put this behind an appropriate define
 	vec2 ndc = vec2((gl_FragCoord.x / screenWidth), (gl_FragCoord.y / screenHeight));
 
 	// clip horizontally

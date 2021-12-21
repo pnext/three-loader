@@ -47,48 +47,70 @@ loadBtn.addEventListener('click', () => {
   //   .then(onPcoLoaded)
   //   .catch(err => console.error(err));
 
+
   viewer
     .load(
       'cloud.js',
-      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+      'http://localhost:1234/data/crane-459685/',
     )
     .then(onPcoLoaded)
     .catch(err => console.error(err));
 
-  viewer
+    viewer
     .load(
       'cloud.js',
-      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+      // 'http://localhost:1234/data/crane-495893/',
+      'http://localhost:1234/data/crane-459685/',
     )
-    .then(pco => { onPcoLoaded(pco, [0.5, 1.0, 0.0, 0.5], PointColorType.NORMAL) })
+    .then(pco => { onPcoLoaded(pco, [0.5, 1.0, 0.0, 1.0], PointColorType.RGB) })
     .catch(err => console.error(err));
 
-  viewer
-    .load(
-      'cloud.js',
-      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    )
-    .then(pco => { onPcoLoaded(pco, [0.5, 1.0, 0.5, 1.0], PointColorType.HEIGHT) })
-    .catch(err => console.error(err));
+  // viewer
+  //   .load(
+  //     'cloud.js',
+  //     'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+  //   )
+  //   .then(onPcoLoaded)
+  //   .catch(err => console.error(err));
 
-  viewer
-    .load(
-      'cloud.js',
-      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    )
-    .then(pco => { onPcoLoaded(pco, [0.0, 0.5, 0.5, 1.0], PointColorType.DEPTH) })
-    .catch(err => console.error(err));
+  // viewer
+  //   .load(
+  //     'cloud.js',
+  //     'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+  //   )
+  //   .then(pco => { onPcoLoaded(pco, [0.5, 1.0, 0.0, 0.5], PointColorType.NORMAL) })
+  //   .catch(err => console.error(err));
+
+  // viewer
+  //   .load(
+  //     'cloud.js',
+  //     'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+  //   )
+  //   .then(pco => { onPcoLoaded(pco, [0.5, 1.0, 0.5, 1.0], PointColorType.HEIGHT) })
+  //   .catch(err => console.error(err));
+
+  // viewer
+  //   .load(
+  //     'cloud.js',
+  //     'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+  //   )
+  //   .then(pco => { onPcoLoaded(pco, [0.0, 0.5, 0.5, 1.0], PointColorType.DEPTH) })
+  //   .catch(err => console.error(err));
 });
 
-function onPcoLoaded(pco: PointCloudOctree, clipRange: [number, number, number, number] = [0.0, 0.5, 0.0, 0.5], pointColorType: PointColorType = PointColorType.RGB) {
+function onPcoLoaded(pco: PointCloudOctree, clipRange: [number, number, number, number] = [0.0, 0.5, 0.0, 1.0], pointColorType: PointColorType = PointColorType.RGB) {
   pointCloud = pco;
+  // pco.position.set(0, 0, 0);
+  pco.translateX(-313806);
+  pco.translateY(-5158092);
+  pco.translateZ(-408);
   pointCloud.rotateX(-Math.PI / 2);
   pointCloud.material.size = 1.0;
 
   const camera = viewer.camera;
-  camera.far = 1000;
+  camera.far = 5000;
   camera.updateProjectionMatrix();
-  camera.position.set(0, 0, 10);
+  camera.position.set(400, 50, -250);
   camera.lookAt(new Vector3());
 
   viewer.add(pco);
@@ -97,11 +119,12 @@ function onPcoLoaded(pco: PointCloudOctree, clipRange: [number, number, number, 
 
   materials.push(pco.material);
 
-  console.log(pco.material);
+  console.log(pco);
+  // console.log(pco.material);
 
   // attach former root to tree node
   // pco.toTreeNode();
-  pco.maxLevel = 3;
+  // pco.maxLevel = 3;
 }
 
 const slider = document.createElement('input');
