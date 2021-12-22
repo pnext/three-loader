@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { PointCloudOctree } from '../src';
+import { ClipMode, PointCloudOctree } from '../src';
 import { Viewer } from './viewer';
 
 require('./main.css');
@@ -44,6 +44,9 @@ loadBtn.addEventListener('click', () => {
       pointCloud = pco;
       pointCloud.rotateX(-Math.PI / 2);
       pointCloud.material.size = 1.0;
+
+      pointCloud.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
+      pointCloud.material.clipExtent = [0.0, 0.5, 0.0, 1.0];
 
       const camera = viewer.camera;
       camera.far = 1000;
