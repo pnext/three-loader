@@ -28,6 +28,7 @@ const parameters = {
   'points size': 1,
   'clipping plane': 0,
   shape: PointShape.SQUARE,
+  highlightIgnoreDepth: false,
   pointSizeType: PointSizeType.ADAPTIVE,
   pointColorType: PointColorType.RGB,
   pointOpacityType: PointOpacityType.FIXED,
@@ -74,6 +75,7 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   pointCloud.material.size = parameters['points size'];
   pointCloud.material.pointOpacityType = parameters.pointOpacityType;
   pointCloud.material.shape = parameters.shape;
+  pointCloud.material.setHighlightIgnoreDepth(parameters.highlightIgnoreDepth);
   pointCloud.material.pointSizeType = parameters.pointSizeType;
   pointCloud.material.pointColorType = parameters.pointColorType;
   pointCloud.material.clippingPlanes = [clippingPlane];
@@ -203,6 +205,11 @@ function initGui() {
   gui.add(parameters, 'shape', shapeDict).onChange(function (val: PointShape) {
     if (pointCloud) {
       pointCloud.material.shape = val;
+    }
+  });
+  gui.add(parameters, 'highlightIgnoreDepth', false).onChange(function (val: boolean) {
+    if (pointCloud) {
+      pointCloud.material.setHighlightIgnoreDepth(val);
     }
   });
   const pointSizeTypeDict = Object.fromEntries(Object.entries(PointSizeType).filter(([_, v]) => typeof v !== 'string'))

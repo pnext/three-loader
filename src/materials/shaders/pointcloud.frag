@@ -85,12 +85,11 @@ void main() {
 		out_FragColor = vec4(color, pcIndex / 255.0);
 	#else
 		out_FragColor = vec4(color, vOpacity);
-
+		gl_FragDepth = depth;
 		if (vHighlight > 0.0) {
 			out_FragColor = (out_FragColor + highlightColor) * 0.5;
-			if (highlight > 10.) {
+			if (vHighlight > 10.) {
 				gl_FragDepth = 0.;
-				return;
 			}
 		}
 	#endif
