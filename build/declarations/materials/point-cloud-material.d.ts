@@ -21,6 +21,7 @@ export interface IPointCloudMaterialUniforms {
     clipPlaneToCon: IUniform<Uint32Array>;
     clipPlaneToPoly: IUniform<Uint32Array>;
     clipPolyhedronOutside: boolean[];
+    highlightIgnoreDepth: boolean;
     highlightPolyhedraCount: IUniform<number>;
     highlightPlanes: IUniform<Float32Array>;
     highlightConToPoly: IUniform<Uint32Array>;
@@ -83,6 +84,7 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     clipPlaneToCon: number[];
     clipPlaneToPoly: number[];
     clipPolyhedronOutside: boolean[];
+    highlightIgnoreDepth: boolean;
     highlightPolyhedraCount: number;
     highlightPlanes: number[];
     highlightConToPoly: number[];
@@ -186,6 +188,7 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     clearVisibleNodeTextureOffsets(): void;
     updateShaderSource(): void;
     applyDefines(shaderSrc: string): string;
+    setHighlightIgnoreDepth(value: any): void;
     copyPolyhedra(other: PointCloudMaterial): void;
     setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void;
     setClipPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;

@@ -59,6 +59,7 @@ export interface IPointCloudMaterialUniforms {
   clipPlaneToCon: IUniform<Uint32Array>;
   clipPlaneToPoly: IUniform<Uint32Array>;
   clipPolyhedronOutside: boolean[];
+  highlightIgnoreDepth: boolean;
   highlightPolyhedraCount: IUniform<number>;
   highlightPlanes: IUniform<Float32Array>;
   highlightConToPoly: IUniform<Uint32Array>;
@@ -169,6 +170,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   clipPlaneToCon: number[] = [0];
   clipPlaneToPoly: number[] = [0];
   clipPolyhedronOutside: boolean[] = [false];
+  highlightIgnoreDepth: boolean = false;
   highlightPolyhedraCount: number = 0;
   highlightPlanes: number[] = [0, 0, 0, 1];
   highlightConToPoly: number[] = [0];
@@ -213,6 +215,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     clipPlaneToPoly: makeUniform('fv', [0]),
     // @ts-ignore
     clipPolyhedronOutside: makeUniform('bv', [false]),
+    highlightIgnoreDepth: makeUniform('b', false),
     highlightPolyhedraCount: makeUniform('f', 0),
     // @ts-ignore
     highlightPlanes: makeUniform('fv', [0, 0, 0, 1]),
@@ -476,7 +479,9 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     return parts.join('\n');
   }
-
+  setHighlightIgnoreDepth(value) {
+    this.setUniform('highlightIgnoreDepth', value);
+  }
   copyPolyhedra(other: PointCloudMaterial): void {
     ['highlight', 'clip'].forEach((type: string) => {
        // @ts-ignore
