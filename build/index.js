@@ -54842,15 +54842,8 @@ class PointCloudOctreePicker {
         return tempNodes;
     }
     static updatePickMaterial(pickMaterial, nodeMaterial, _params) {
-        pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
-        pickMaterial.shape = nodeMaterial.shape;
-        pickMaterial.size = nodeMaterial.size;
-        pickMaterial.minSize = nodeMaterial.minSize;
-        pickMaterial.maxSize = nodeMaterial.maxSize;
-        pickMaterial.classification = nodeMaterial.classification;
-        pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
-        pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
-        pickMaterial.clipMode = nodeMaterial.clipMode;
+        pickMaterial.copy(nodeMaterial);
+        pickMaterial.pointColorType = _materials__WEBPACK_IMPORTED_MODULE_1__.PointColorType.POINT_INDEX;
     }
     static updatePickRenderTarget(pickState, width, height) {
         if (pickState.renderTarget.width === width && pickState.renderTarget.height === height) {
@@ -54946,7 +54939,6 @@ class PointCloudOctreePicker {
         const scene = new three__WEBPACK_IMPORTED_MODULE_3__.Scene();
         scene.autoUpdate = false;
         const material = new _materials__WEBPACK_IMPORTED_MODULE_1__.PointCloudMaterial();
-        material.pointColorType = _materials__WEBPACK_IMPORTED_MODULE_1__.PointColorType.POINT_INDEX;
         return {
             renderTarget: PointCloudOctreePicker.makePickRenderTarget(),
             material: material,
