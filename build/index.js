@@ -52840,6 +52840,9 @@ class YBFLoader {
         }
         return Promise.resolve(this.getUrl(node.name, node.indexInList))
             .then(url => {
+            if (!url || url === 'null') {
+                return Promise.reject();
+            }
             // console.log('fetching:', url);
             return fetch(url, { mode: 'cors' });
         })
