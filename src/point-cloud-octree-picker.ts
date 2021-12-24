@@ -260,8 +260,17 @@ export class PointCloudOctreePicker {
     nodeMaterial: PointCloudMaterial,
     _params: Partial<PickParams>,
   ): void {
-    pickMaterial.copy(nodeMaterial)
-    pickMaterial.pointColorType = PointColorType.POINT_INDEX;
+    pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
+    pickMaterial.shape = nodeMaterial.shape;
+    pickMaterial.size = nodeMaterial.size;
+    pickMaterial.minSize = nodeMaterial.minSize;
+    pickMaterial.maxSize = nodeMaterial.maxSize;
+    pickMaterial.classification = nodeMaterial.classification;
+    pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
+    pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
+    pickMaterial.clipMode = nodeMaterial.clipMode;
+    pickMaterial.clippingPlanes = nodeMaterial.clippingPlanes;
+    pickMaterial.copyPolyhedra(nodeMaterial);
   }
 
   private static updatePickRenderTarget(
@@ -389,6 +398,7 @@ export class PointCloudOctreePicker {
     scene.autoUpdate = false;
 
     const material = new PointCloudMaterial();
+    material.pointColorType = PointColorType.POINT_INDEX;
 
     return {
       renderTarget: PointCloudOctreePicker.makePickRenderTarget(),

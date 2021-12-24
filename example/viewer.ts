@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, WebGLRenderer, Vector3, Raycaster } from 'three';
+import { PerspectiveCamera, Scene, WebGLRenderer, Vector3, Raycaster, Matrix4, Quaternion } from 'three';
 import { PointCloudOctree, Potree } from '../src';
 import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { gsToPath } from '../src/utils/utils';
@@ -202,11 +202,18 @@ export class Viewer {
       this.pointClouds,
       this.renderer,
       this.camera,
-      ray.ray,
-      { pickOutsideClipRegion: true })
+      ray.ray)
     console.log(pick?.position?.toArray());
-    if (pick) {
+    if (pick?.position) {
+      const dir = this.camera.position.clone().sub(this.cameraControls.target.clone());
+      const pos = pick.position.clone().add(dir);
+      const m = new Matrix4();
+      m.lookAt(pos, pick.position, this.camera.up);
+      const quat = new Quaternion().setFromRotationMatrix(m);
+      this.camera.quaternion.copy(quat);
+      this.camera.position.copy(pos);
       this.cameraControls.target.copy(pick.position);
+      this.camera.updateMatrix();
     }
   }
 

@@ -477,6 +477,27 @@ export class PointCloudMaterial extends RawShaderMaterial {
     return parts.join('\n');
   }
 
+  copyPolyhedra(other: PointCloudMaterial): void {
+    ['highlight', 'clip'].forEach((type: string) => {
+       // @ts-ignore
+      this.setUniform(type + 'Planes', other.uniforms[type + 'Planes'].value);
+      // @ts-ignore
+      this.setUniform(type + 'ConToPoly', other.uniforms[type + 'ConToPoly'].value);
+      // @ts-ignore
+      this.setUniform(type + 'PlaneToCon', other.uniforms[type + 'PlaneToCon'].value);
+      // @ts-ignore
+      this.setUniform(type + 'PlaneToPoly', other.uniforms[type + 'PlaneToPoly'].value);
+      // @ts-ignore
+      this.setUniform(type + 'PolyhedronOutside', other.uniforms[type + 'PolyhedronOutside'].value);
+      if (type === 'highlight') {
+        // @ts-ignore
+        this.setUniform(type + 'PolyhedronColors', other.uniforms[type + 'PolyhedronColors'].value);
+      }
+      this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = other.defines[type.toUpperCase() + '_POLYHEDRA_COUNT']
+      this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = other.defines[type.toUpperCase() + '_CONVEXES_COUNT']
+      this.defines[type.toUpperCase() + '_PLANES_COUNT'] = other.defines[type.toUpperCase() + '_PLANES_COUNT']
+    })
+  }
   setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void {
     // @ts-ignore
     this[type + 'PolyhedraCount'] = polyhedra.length;

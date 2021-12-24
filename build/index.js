@@ -53666,6 +53666,27 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         parts.push(shaderSrc);
         return parts.join('\n');
     }
+    copyPolyhedra(other) {
+        ['highlight', 'clip'].forEach((type) => {
+            // @ts-ignore
+            this.setUniform(type + 'Planes', other.uniforms[type + 'Planes'].value);
+            // @ts-ignore
+            this.setUniform(type + 'ConToPoly', other.uniforms[type + 'ConToPoly'].value);
+            // @ts-ignore
+            this.setUniform(type + 'PlaneToCon', other.uniforms[type + 'PlaneToCon'].value);
+            // @ts-ignore
+            this.setUniform(type + 'PlaneToPoly', other.uniforms[type + 'PlaneToPoly'].value);
+            // @ts-ignore
+            this.setUniform(type + 'PolyhedronOutside', other.uniforms[type + 'PolyhedronOutside'].value);
+            if (type === 'highlight') {
+                // @ts-ignore
+                this.setUniform(type + 'PolyhedronColors', other.uniforms[type + 'PolyhedronColors'].value);
+            }
+            this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = other.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'];
+            this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = other.defines[type.toUpperCase() + '_CONVEXES_COUNT'];
+            this.defines[type.toUpperCase() + '_PLANES_COUNT'] = other.defines[type.toUpperCase() + '_PLANES_COUNT'];
+        });
+    }
     setTypePolyhedra(type, polyhedra) {
         // @ts-ignore
         this[type + 'PolyhedraCount'] = polyhedra.length;
@@ -54842,8 +54863,17 @@ class PointCloudOctreePicker {
         return tempNodes;
     }
     static updatePickMaterial(pickMaterial, nodeMaterial, _params) {
-        pickMaterial.copy(nodeMaterial);
-        pickMaterial.pointColorType = _materials__WEBPACK_IMPORTED_MODULE_1__.PointColorType.POINT_INDEX;
+        pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
+        pickMaterial.shape = nodeMaterial.shape;
+        pickMaterial.size = nodeMaterial.size;
+        pickMaterial.minSize = nodeMaterial.minSize;
+        pickMaterial.maxSize = nodeMaterial.maxSize;
+        pickMaterial.classification = nodeMaterial.classification;
+        pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
+        pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
+        pickMaterial.clipMode = nodeMaterial.clipMode;
+        pickMaterial.clippingPlanes = nodeMaterial.clippingPlanes;
+        pickMaterial.copyPolyhedra(nodeMaterial);
     }
     static updatePickRenderTarget(pickState, width, height) {
         if (pickState.renderTarget.width === width && pickState.renderTarget.height === height) {
@@ -54939,6 +54969,7 @@ class PointCloudOctreePicker {
         const scene = new three__WEBPACK_IMPORTED_MODULE_3__.Scene();
         scene.autoUpdate = false;
         const material = new _materials__WEBPACK_IMPORTED_MODULE_1__.PointCloudMaterial();
+        material.pointColorType = _materials__WEBPACK_IMPORTED_MODULE_1__.PointColorType.POINT_INDEX;
         return {
             renderTarget: PointCloudOctreePicker.makePickRenderTarget(),
             material: material,

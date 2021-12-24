@@ -186,6 +186,7 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     clearVisibleNodeTextureOffsets(): void;
     updateShaderSource(): void;
     applyDefines(shaderSrc: string): string;
+    copyPolyhedra(other: PointCloudMaterial): void;
     setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void;
     setClipPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;
     setHighlightPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;
