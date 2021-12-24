@@ -89,7 +89,7 @@ void main() {
 		if (vHighlight > 0.0) {
 			out_FragColor = (out_FragColor + highlightColor) * 0.5;
 			if (vHighlight > 10.) {
-				gl_FragDepth = 0.;
+				gl_FragDepth *= 1e-4;
 			}
 		}
 	#endif
