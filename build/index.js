@@ -54850,14 +54850,7 @@ class PointCloudOctreePicker {
         pickMaterial.classification = nodeMaterial.classification;
         pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
         pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
-        // if (params.pickOutsideClipRegion) {
-        //   pickMaterial.clipMode = ClipMode.DISABLED;
-        // } else {
-        //   pickMaterial.clipMode = nodeMaterial.clipMode;
-        //   pickMaterial.setClipBoxes(
-        //     nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
-        //   );
-        // }
+        pickMaterial.clipMode = nodeMaterial.clipMode;
     }
     static updatePickRenderTarget(pickState, width, height) {
         if (pickState.renderTarget.width === width && pickState.renderTarget.height === height) {
