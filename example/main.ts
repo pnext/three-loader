@@ -78,8 +78,8 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   pointCloud.material.pointColorType = parameters.pointColorType;
   pointCloud.material.clippingPlanes = [clippingPlane];
 
-  pointCloud.material.setClipPolyhedra([{
-  // pointCloud.material.setHighlightPolyhedra([{
+  // pointCloud.material.setClipPolyhedra([{
+  pointCloud.material.setHighlightPolyhedra([{
     outside: false,
     color: new Color(0xffff00),
     convexes: [{

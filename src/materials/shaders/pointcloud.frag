@@ -85,6 +85,10 @@ void main() {
 		out_FragColor = vec4(color, pcIndex / 255.0);
 	#else
 		out_FragColor = vec4(color, vOpacity);
+
+		if (vHighlight > 0.0) {
+			out_FragColor = (out_FragColor + highlightColor) * 0.5;
+		}
 	#endif
 
 	#if defined(color_type_phong)
@@ -249,8 +253,4 @@ void main() {
 			out_FragColor.a = vLogDepth;
 		#endif
 	#endif
-
-	if (vHighlight > 0.0) {
-		out_FragColor = (out_FragColor + highlightColor) * 0.5;
-	}
 }
