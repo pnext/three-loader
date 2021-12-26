@@ -25,6 +25,7 @@ enum DemoPotree {
 
 const parameters = {
   budget: 1e8,
+  maxLevel: 20,
   'points size': 1,
   'clipping plane': 0,
   shape: PointShape.SQUARE,
@@ -70,6 +71,7 @@ let pointCloud: PointCloudOctree | undefined;
 
 const onPCOLoad = (pco: PointCloudOctree) => {
   pointCloud = pco;
+  pointCloud.maxLevel = parameters.maxLevel;
   pointCloud.potree.pointBudget = parameters.budget;
   // pointCloud.rotateX(-Math.PI / 2);
   pointCloud.material.size = parameters['points size'];
@@ -182,6 +184,12 @@ function initGui() {
   gui.add(parameters, 'budget', 1e3, 1e8).onChange(function (val: number) {
     if (pointCloud) {
       pointCloud.potree.pointBudget = val;
+    }
+  });
+
+  gui.add(parameters, 'maxLevel', 1, 20).onChange(function (val: number) {
+    if (pointCloud) {
+      pointCloud.maxLevel = val;
     }
   });
 
