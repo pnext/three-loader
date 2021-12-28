@@ -19,7 +19,6 @@ import {
 import { FEATURES } from './features';
 import { GetUrlFn, loadResonaiPOC } from './loading';
 import { loadSingle } from './loading'
-// import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -48,14 +47,6 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  // loadPointCloud(
-  //   potreeName: string, // "cloud.js"
-  //   getUrl: GetUrlFn,
-  //   xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-  // ): Promise<PointCloudOctree> {
-  //   return loadPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
-  // }
-
   loadSingle(
     url: string,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
@@ -64,7 +55,7 @@ export class Potree implements IPotree {
   }
 
   loadResonaiPointCloud(
-    potreeName: string, // gs://bla/bla/r.json
+    potreeName: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
     callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
@@ -142,8 +133,8 @@ export class Potree implements IPotree {
     while ((queueItem = priorityQueue.pop()) !== undefined) {
       let node = queueItem.node;
 
-      // If we will end up with too many points, we stop right away.
-      if (numVisiblePoints + node.numPoints > this.pointBudget) {
+      // If we will end up with too many points, we stop right away. Allow root.
+      if (numVisiblePoints + node.numPoints > this.pointBudget && node.level !== 0) {
         break;
       }
 
@@ -268,8 +259,8 @@ export class Potree implements IPotree {
 
       const screenPixelRadius = radius * projectionFactor;
 
-      // Don't add the node if it'll be too small on the screen.
-      if (screenPixelRadius < pointCloud.minNodePixelSize) {
+      // Don't add the node if it'll be too small on the screen, except root.
+      if (screenPixelRadius < pointCloud.minNodePixelSize && pointCloud.level) {
         continue;
       }
 
@@ -354,7 +345,7 @@ export class Potree implements IPotree {
 
         camera.updateMatrixWorld(false);
 
-        // Furstum in object space.
+        // Frustum in object space.
         const inverseViewMatrix = camera.matrixWorldInverse;
         const worldMatrix = pointCloud.matrixWorld;
         frustumMatrix

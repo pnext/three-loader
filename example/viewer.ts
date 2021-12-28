@@ -126,6 +126,9 @@ export class Viewer {
         // 5 => "gs://snapshot3/010.ybf"
         (name, index) => {
           // TODO Shai - handle null (locJSON.node_locations[index] = 0)
+          if (locJSON.paths_map[locJSON.node_locations[index]] === 'null') {
+            return ''
+          }
           return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
           // return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
         },
@@ -160,7 +163,7 @@ export class Viewer {
     this.cameraControls.update();
 
     // This is where most of the potree magic happens. It updates the
-    // visiblily of the octree nodes based on the camera frustum and it
+    // visibility of the octree nodes based on the camera frustum and it
     // triggers any loads/unloads which are necessary to keep the number
     // of visible points in check.
     this.potree.updatePointClouds(this.pointClouds, this.camera, this.renderer);

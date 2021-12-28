@@ -73,8 +73,8 @@ export class YBFLoader {
 
     return Promise.resolve(this.getUrl(node.name, node.indexInList))
       .then(url => {
-        if (!url || url === 'null') {
-          return Promise.reject();
+        if (!url) {
+          return Promise.reject('Empty node');
         }
         // console.log('fetching:', url);
         return fetch(url, { mode: 'cors' });

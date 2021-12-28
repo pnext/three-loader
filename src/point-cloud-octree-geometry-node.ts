@@ -158,7 +158,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       this.loading = false;
       this.failed = true;
       this.pcoGeometry.numNodesLoading--;
-      throw reason;
+      if (reason !== 'Empty node') {
+        throw reason;
+      }
     });
   }
 
@@ -186,7 +188,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       this.loading = false;
       this.failed = true;
       this.pcoGeometry.numNodesLoading--;
-      throw reason;
+      if (reason !== 'Empty node') {
+        throw reason;
+      }
     });
   }
 
