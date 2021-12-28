@@ -52822,16 +52822,14 @@ __webpack_require__.r(__webpack_exports__);
 class YBFLoader {
     constructor({ url, getUrl = s => Promise.resolve(s), callbacks = [] }) {
         this.disposed = false;
-        //xhrRequest: XhrRequest;
-        this.workers = [];
         this.getUrl = getUrl;
         console.log('ybf-loader constructor:', url);
         this.url = url;
         this.callbacks = callbacks || [];
     }
     dispose() {
-        this.workers.forEach(worker => worker.terminate());
-        this.workers = [];
+        YBFLoader.workers.forEach(worker => worker.terminate());
+        YBFLoader.workers = [];
         this.disposed = true;
     }
     load(node) {
@@ -52901,14 +52899,14 @@ class YBFLoader {
         worker.postMessage(message, [message.buffer]);
     }
     getWorker() {
-        const worker = this.workers.pop();
+        const worker = YBFLoader.workers.pop();
         if (worker) {
             return worker;
         }
         return new _workers_ybf_loader_worker_js__WEBPACK_IMPORTED_MODULE_0__["default"]();
     }
     releaseWorker(worker) {
-        this.workers.push(worker);
+        YBFLoader.workers.push(worker);
     }
     addBufferAttributes(geometry, buffers) {
         Object.keys(buffers).forEach(property => {
@@ -52927,6 +52925,8 @@ class YBFLoader {
         geometry.setAttribute('indices', indicesAttribute);
     }
 }
+//xhrRequest: XhrRequest;
+YBFLoader.workers = [];
 
 
 /***/ }),

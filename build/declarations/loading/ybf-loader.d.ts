@@ -11,7 +11,7 @@ export declare class YBFLoader {
     disposed: boolean;
     callbacks: Callback[];
     getUrl: GetUrlFn;
-    private workers;
+    static workers: Worker[];
     constructor({ url, getUrl, callbacks }: YBFLoaderOptions);
     dispose(): void;
     load(node: PointCloudOctreeGeometryNode): Promise<void>;
