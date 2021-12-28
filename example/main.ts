@@ -1,6 +1,5 @@
 import { Color, Plane, PlaneHelper, Vector3 } from 'three';
 import { PointCloudOctree } from '../src';
-import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { IClipPolyhedron } from '../src/materials/clipping';
 import { PointOpacityType, PointShape, PointSizeType, PointColorType } from '../src/materials/enums';
 import { Viewer } from './viewer';
@@ -24,7 +23,7 @@ enum DemoPotree {
 }
 
 const parameters = {
-  budget: 1e8,
+  budget: 1e7,
   maxLevel: 20,
   'points size': 1,
   'clipping plane': 0,
@@ -54,20 +53,6 @@ const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
 viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
-
-// {
-//   "scanUuid": "S0P",
-//   "pose": {
-//       "x": [
-//           0.9997667104163336, -0.013713407219035877, -0.016687336660558143, 0.013652923572695687,
-//           0.9998998259139193, -0.0037330704298906663, 0.016736858136939665, 0.003504368610932413,
-//           0.9998537878008779, 7.816186276445997, 1.3532286550652184, 3.6232562903889876
-//       ]
-//   },
-//   "potreeStructureJsonPath": "gs://resonai-irocket-public/snap-rotem-colin-1636635879596169843-20211111145032/potree_structure_files/S0P/r.json",
-//   "maxSubTreeDepth": 0,
-//   "potreeLocationsJsonPath": "gs://resonai-irocket-public/snap-rotem-colin-1636635879596169843-20211111145032/potree_ybf/S0P/loc.json"
-// }
 
 const onPCOLoad = (pco: PointCloudOctree) => {
   pointCloud = pco;
@@ -111,17 +96,6 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   viewer.add(pco);
 }
 
-const jsonFile = 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
-
-const locJSON = 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json'
-/*
-{
-  "paths_map": ["null", "gs://resonai-irocket-public/snap-rotem-colin-1636635879596169843-20211111145032/potree_ybf/S0P"],
-  "node_locations": [2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 2, 2, 2, 2, 1, 2, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-}
-*/
-// (3221225552 & 2**31) // get MSB
-
 const loadLion = () => {
   // viewer.load('cloud.js',
   //             'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/')
@@ -130,19 +104,29 @@ const loadLion = () => {
 }
 
 const loadYBF = () => {
-  const url = 'https://storage.googleapis.com/resonai-irocket-public/snap-master-colin-1605620427366522352-20201117134028/downsampled_ybf/H__Hamsa_015_2584c47f2cdf5b8a_50000.ybf'
-  viewer.loadSingle(url).then(onPCOLoad)
+  // const url = 'https://storage.googleapis.com/resonai-irocket-public/snap-master-colin-1605620427366522352-20201117134028/downsampled_ybf/H__Hamsa_015_2584c47f2cdf5b8a_50000.ybf'
+  // viewer.loadSingle(url).then(onPCOLoad)
 }
 
 const loadResonaiPotree = () => {
   // const onLoad = (node: PointCloudOctreeGeometryNode) => {
   //   // console.log('Loaded node!', node);
   // }
-  console.log(PointCloudOctreeGeometryNode);
   const onLoad = () => {};
-  fetch(gsToPath(locJSON)).then(res => {
+  const jsonFile1 = 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
+  const locJSON1 = 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json'
+  fetch(gsToPath(locJSON1)).then(res => {
     res.text().then(text => {
-      viewer.loadResonaiPotree(gsToPath(jsonFile), JSON5.parse(text), [onLoad])
+      viewer.loadResonaiPotree(gsToPath(jsonFile1), JSON5.parse(text), [onLoad])
+        .then(onPCOLoad)
+        .catch(err => console.error(err));
+    })
+  })
+  const jsonFile2 = 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_structure_files/S1P/r.json'
+  const locJSON2 = 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_ybf/S1P/loc.json'
+  fetch(gsToPath(locJSON2)).then(res => {
+    res.text().then(text => {
+      viewer.loadResonaiPotree(gsToPath(jsonFile2), JSON5.parse(text), [onLoad])
         .then(onPCOLoad)
         .catch(err => console.error(err));
     })

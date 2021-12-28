@@ -46,7 +46,7 @@ export class YBFLoader {
   getUrl: GetUrlFn;
   //xhrRequest: XhrRequest;
 
-  private workers: Worker[] = [];
+  static workers: Worker[] = [];
 
   constructor({
     url,
@@ -60,8 +60,8 @@ export class YBFLoader {
   }
 
   dispose(): void {
-    this.workers.forEach(worker => worker.terminate());
-    this.workers = [];
+    YBFLoader.workers.forEach(worker => worker.terminate());
+    YBFLoader.workers = [];
 
     this.disposed = true;
   }
@@ -152,7 +152,7 @@ export class YBFLoader {
   }
 
   private getWorker(): Worker {
-    const worker = this.workers.pop();
+    const worker = YBFLoader.workers.pop();
     if (worker) {
       return worker;
     }
@@ -160,7 +160,7 @@ export class YBFLoader {
   }
 
   private releaseWorker(worker: Worker): void {
-    this.workers.push(worker);
+    YBFLoader.workers.push(worker);
   }
 
   private addBufferAttributes(
