@@ -16,7 +16,7 @@ export declare class Potree implements IPotree {
     private static picker;
     private _pointBudget;
     private _rendererSize;
-    maxNumNodesLoading: number;
+    private _maxNumNodesLoading;
     features: {
         SHADER_INTERPOLATION: boolean;
         SHADER_SPLATS: boolean;
@@ -25,12 +25,13 @@ export declare class Potree implements IPotree {
     };
     lru: LRU;
     loadSingle(url: string, xhrRequest?: (input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>): Promise<PointCloudOctree>;
-    loadResonaiPointCloud(potreeName: string, // gs://bla/bla/r.json
-    getUrl: GetUrlFn, xhrRequest: ((input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>) | undefined, callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree>;
+    loadResonaiPointCloud(potreeName: string, getUrl: GetUrlFn, xhrRequest: ((input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>) | undefined, callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree>;
     updatePointClouds(pointClouds: PointCloudOctree[], camera: Camera, renderer: WebGLRenderer): IVisibilityUpdateResult;
     static pick(pointClouds: PointCloudOctree[], renderer: WebGLRenderer, camera: Camera, ray: Ray, params?: Partial<PickParams>): PickPoint | null;
     get pointBudget(): number;
     set pointBudget(value: number);
+    get maxNumNodesLoading(): number;
+    set maxNumNodesLoading(value: number);
     private updateVisibility;
     private updateTreeNodeVisibility;
     private updateChildVisibility;

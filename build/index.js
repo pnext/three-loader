@@ -52155,7 +52155,7 @@ const DEFAULT_MIN_POINT_SIZE = 2;
 const DEFAULT_PICK_WINDOW_SIZE = 15;
 const DEFAULT_POINT_BUDGET = 1000000;
 const MAX_LOADS_TO_GPU = 2;
-const MAX_NUM_NODES_LOADING = 4;
+const MAX_NUM_NODES_LOADING = 16;
 const PERSPECTIVE_CAMERA = 'PerspectiveCamera';
 const COLOR_BLACK = new three__WEBPACK_IMPORTED_MODULE_0__.Color(0, 0, 0);
 const DEFAULT_HIGHLIGHT_COLOR = new three__WEBPACK_IMPORTED_MODULE_0__.Vector4(1, 0, 0, 1);
@@ -52838,8 +52838,8 @@ class YBFLoader {
         }
         return Promise.resolve(this.getUrl(node.name, node.indexInList))
             .then(url => {
-            if (!url || url === 'null') {
-                return Promise.reject();
+            if (!url) {
+                return Promise.reject('Empty node');
             }
             // console.log('fetching:', url);
             return fetch(url, { mode: 'cors' });
@@ -54419,7 +54419,9 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_2__.Ev
             this.loading = false;
             this.failed = true;
             this.pcoGeometry.numNodesLoading--;
-            throw reason;
+            if (reason !== 'Empty node') {
+                throw reason;
+            }
         });
     }
     loadResonai() {
@@ -54441,7 +54443,9 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_2__.Ev
             this.loading = false;
             this.failed = true;
             this.pcoGeometry.numNodesLoading--;
-            throw reason;
+            if (reason !== 'Empty node') {
+                throw reason;
+            }
         });
     }
     canLoad() {
@@ -55233,7 +55237,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-// import { ClipMode } from './materials';
 
 
 
@@ -55252,7 +55255,7 @@ class Potree {
     constructor() {
         this._pointBudget = _constants__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_POINT_BUDGET;
         this._rendererSize = new three__WEBPACK_IMPORTED_MODULE_9__.Vector2();
-        this.maxNumNodesLoading = _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
+        this._maxNumNodesLoading = _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
         this.features = _features__WEBPACK_IMPORTED_MODULE_1__.FEATURES;
         this.lru = new _utils_lru__WEBPACK_IMPORTED_MODULE_8__.LRU(this._pointBudget);
         this.updateVisibilityStructures = (() => {
@@ -55272,7 +55275,7 @@ class Potree {
                     pointCloud.visibleNodes = [];
                     pointCloud.visibleGeometry = [];
                     camera.updateMatrixWorld(false);
-                    // Furstum in object space.
+                    // Frustum in object space.
                     const inverseViewMatrix = camera.matrixWorldInverse;
                     const worldMatrix = pointCloud.matrixWorld;
                     frustumMatrix
@@ -55304,18 +55307,10 @@ class Potree {
             };
         })();
     }
-    // loadPointCloud(
-    //   potreeName: string, // "cloud.js"
-    //   getUrl: GetUrlFn,
-    //   xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-    // ): Promise<PointCloudOctree> {
-    //   return loadPOC(potreeName, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
-    // }
     loadSingle(url, xhrRequest = (input, init) => fetch(input, init)) {
         return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadSingle)(url, xhrRequest).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
-    loadResonaiPointCloud(potreeName, // gs://bla/bla/r.json
-    getUrl, xhrRequest = (input, init) => fetch(input, init), callbacks) {
+    loadResonaiPointCloud(potreeName, getUrl, xhrRequest = (input, init) => fetch(input, init), callbacks) {
         return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
     updatePointClouds(pointClouds, camera, renderer) {
@@ -55346,6 +55341,12 @@ class Potree {
             this.lru.freeMemory();
         }
     }
+    get maxNumNodesLoading() {
+        return this._maxNumNodesLoading;
+    }
+    set maxNumNodesLoading(value) {
+        this._maxNumNodesLoading = value || _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
+    }
     updateVisibility(pointClouds, camera, renderer) {
         let numVisiblePoints = 0;
         const visibleNodes = [];
@@ -55358,8 +55359,8 @@ class Potree {
         let queueItem;
         while ((queueItem = priorityQueue.pop()) !== undefined) {
             let node = queueItem.node;
-            // If we will end up with too many points, we stop right away.
-            if (numVisiblePoints + node.numPoints > this.pointBudget) {
+            // If we will end up with too many points, we stop right away. Allow root.
+            if (numVisiblePoints + node.numPoints > this.pointBudget && node.level !== 0) {
                 break;
             }
             const pointCloudIndex = queueItem.pointCloudIndex;
@@ -55443,8 +55444,8 @@ class Potree {
                 projectionFactor = (2 * halfHeight) / (orthographic.top - orthographic.bottom);
             }
             const screenPixelRadius = radius * projectionFactor;
-            // Don't add the node if it'll be too small on the screen.
-            if (screenPixelRadius < pointCloud.minNodePixelSize) {
+            // Don't add the node if it'll be too small on the screen, except root.
+            if (screenPixelRadius < pointCloud.minNodePixelSize && pointCloud.level) {
                 continue;
             }
             // Nodes which are larger will have priority in loading/displaying.
