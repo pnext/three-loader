@@ -43,7 +43,7 @@ export class Potree implements IPotree {
   private _pointBudget: number = DEFAULT_POINT_BUDGET;
   private _rendererSize: Vector2 = new Vector2();
 
-  maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
+  private _maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
@@ -107,6 +107,14 @@ export class Potree implements IPotree {
       this.lru.pointBudget = value;
       this.lru.freeMemory();
     }
+  }
+
+  get maxNumNodesLoading(): number {
+    return this._maxNumNodesLoading;
+  }
+
+  set maxNumNodesLoading(value: number) {
+    this._maxNumNodesLoading = value || MAX_NUM_NODES_LOADING;
   }
 
   private updateVisibility(

@@ -46,7 +46,7 @@ export class YBFLoader {
   getUrl: GetUrlFn;
   //xhrRequest: XhrRequest;
 
-  static workers: Worker[] = [];
+  private static workers: Worker[] = [];
 
   constructor({
     url,

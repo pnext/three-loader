@@ -58,6 +58,7 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   pointCloud = pco;
   pointCloud.maxLevel = parameters.maxLevel;
   pointCloud.potree.pointBudget = parameters.budget;
+  pointCloud.potree.maxNumNodesLoading = 16;
   // pointCloud.rotateX(-Math.PI / 2);
   pointCloud.material.size = parameters['points size'];
   pointCloud.material.pointOpacityType = parameters.pointOpacityType;
