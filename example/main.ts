@@ -26,7 +26,7 @@ const parameters = {
   budget: 1e7,
   maxLevel: 20,
   'points size': 1,
-  'clipping plane': 0,
+  'clipping plane': -10,
   shape: PointShape.SQUARE,
   highlightIgnoreDepth: false,
   pointSizeType: PointSizeType.ADAPTIVE,
@@ -48,8 +48,9 @@ const viewer = new Viewer();
 viewer.initialize(targetEl);
 
 
-const clippingPlane = new Plane()
+const clippingPlane = new Plane();
 const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
+clippingPlane.constant = -parameters['clipping plane'];
 viewer.scene.add(planeHelper);
 
 let pointCloud: PointCloudOctree | undefined;
@@ -109,27 +110,33 @@ const loadYBF = () => {
   // viewer.loadSingle(url).then(onPCOLoad)
 }
 
+const sps = [
+  { // old
+    loc: 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json',
+    json: 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
+  },
+  // { // with nulls
+  //   loc: 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_ybf/S1P/loc.json',
+  //   json: 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_structure_files/S1P/r.json'
+  // },
+  // { // deep tree
+  //   loc: 'gs://resonai-irocket-public/5449/potree_ybf/S1P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5449/potree_structure_files/S1P/r.json'
+  // },
+]
+
 const loadResonaiPotree = () => {
   // const onLoad = (node: PointCloudOctreeGeometryNode) => {
   //   // console.log('Loaded node!', node);
   // }
   const onLoad = () => {};
-  const jsonFile1 = 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
-  const locJSON1 = 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json'
-  fetch(gsToPath(locJSON1)).then(res => {
-    res.text().then(text => {
-      viewer.loadResonaiPotree(gsToPath(jsonFile1), JSON5.parse(text), [onLoad])
-        .then(onPCOLoad)
-        .catch(err => console.error(err));
-    })
-  })
-  const jsonFile2 = 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_structure_files/S1P/r.json'
-  const locJSON2 = 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_ybf/S1P/loc.json'
-  fetch(gsToPath(locJSON2)).then(res => {
-    res.text().then(text => {
-      viewer.loadResonaiPotree(gsToPath(jsonFile2), JSON5.parse(text), [onLoad])
-        .then(onPCOLoad)
-        .catch(err => console.error(err));
+  sps.forEach(({ loc, json }) => {
+    fetch(gsToPath(loc)).then(res => {
+      res.text().then(text => {
+        viewer.loadResonaiPotree(gsToPath(json), JSON5.parse(text), [onLoad])
+          .then(onPCOLoad)
+          .catch(err => console.error(err));
+      })
     })
   })
 }

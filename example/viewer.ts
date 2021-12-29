@@ -166,7 +166,9 @@ export class Viewer {
     // visibility of the octree nodes based on the camera frustum and it
     // triggers any loads/unloads which are necessary to keep the number
     // of visible points in check.
+    console.time('updatePointClouds');
     this.potree.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    console.timeEnd('updatePointClouds');
   }
 
   /**
