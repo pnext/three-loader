@@ -376,7 +376,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     const index = getIndexFromName(name);
     const parentName = name.substring(0, name.length - 2);
     const parentNode = nodes.get(parentName)!;
-    const level = (name.length + 1) / 2;
+    const level = (name.length - 1) / 2;
     const boundingBox = createChildAABB(parentNode.boundingBox, index);
 
     const node = new PointCloudOctreeGeometryNode(name, pco, boundingBox, indexInList);

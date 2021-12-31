@@ -162,10 +162,6 @@ const sps = [
   {
     loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
     json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S9P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S9P/r.json'
   }
 ]
 
