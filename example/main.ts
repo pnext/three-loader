@@ -26,7 +26,7 @@ const parameters = {
   budget: 1e7,
   maxLevel: 20,
   minNodePixelSize: 50,
-  'points size': 1,
+  'points size': 0.2,
   'clipping plane': -1000,
   shape: PointShape.SQUARE,
   highlightIgnoreDepth: false,
@@ -207,7 +207,7 @@ function initGui() {
     })
   });
 
-  gui.add(parameters, 'points size', 1, 10).onChange(function (val: number) {
+  gui.add(parameters, 'points size', 0.05, 1.5).onChange(function (val: number) {
     pointClouds.forEach(pointCloud => {
       pointCloud.material.size = val;
     })
