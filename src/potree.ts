@@ -18,7 +18,6 @@ import {
 } from './constants';
 import { FEATURES } from './features';
 import { GetUrlFn, loadResonaiPOC } from './loading';
-import { loadSingle } from './loading'
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -46,13 +45,6 @@ export class Potree implements IPotree {
   private _maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
-
-  loadSingle(
-    url: string,
-    xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-  ): Promise<PointCloudOctree> {
-    return loadSingle(url, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
-  }
 
   loadResonaiPointCloud(
     potreeName: string,

@@ -102,18 +102,6 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   viewer.add(pco);
 }
 
-const loadLion = () => {
-  // viewer.load('cloud.js',
-  //             'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/')
-  //   .then(onPCOLoad)
-  //   .catch(err => console.error(err));
-}
-
-const loadYBF = () => {
-  // const url = 'https://storage.googleapis.com/resonai-irocket-public/snap-master-colin-1605620427366522352-20201117134028/downsampled_ybf/H__Hamsa_015_2584c47f2cdf5b8a_50000.ybf'
-  // viewer.loadSingle(url).then(onPCOLoad)
-}
-
 const sps = [
   // { // old
   //   loc: 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json',
@@ -182,12 +170,6 @@ const loadResonaiPotree = () => {
 }
 
 switch (parameters.demoPotree) {
-  case DemoPotree.LION:
-    loadLion();
-    break;
-  case DemoPotree.YBF:
-    loadYBF();
-    break;
   case DemoPotree.RESONAI_POTREE:
       loadResonaiPotree();
       break;
@@ -201,12 +183,6 @@ function initGui() {
   gui.add(parameters, 'demoPotree', loadOptions).onChange(function (val: DemoPotree) {
     viewer.unload();
     switch (DemoPotree[val]) {
-      case DemoPotree[DemoPotree.LION]:
-        loadLion();
-        break;
-      case DemoPotree[DemoPotree.YBF]:
-        loadYBF();
-        break;
       case DemoPotree[DemoPotree.RESONAI_POTREE]:
         loadResonaiPotree();
         break;

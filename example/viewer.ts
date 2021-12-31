@@ -83,30 +83,6 @@ export class Viewer {
     }
   }
 
-  // /**
-  //  * Loads a point cloud into the viewer and returns it.
-  //  *
-  //  * @param fileName
-  //  *    The name of the point cloud which is to be loaded.
-  //  * @param baseUrl
-  //  *    The url where the point cloud is located and from where we should load the octree nodes.
-  //  */
-  // load(fileName: string, baseUrl: string): Promise<PointCloudOctree> {
-  //   return this.potree.loadPointCloud(
-  //     // The file name of the point cloud which is to be loaded.
-  //     fileName,
-  //     // Given the relative URL of a file, should return a full URL.
-  //     // r0.bin => "gs://myfile/r0.bin"
-  //     url => `${baseUrl}${url}`,
-  //   );
-  // }
-
-  loadSingle(url: string): Promise<PointCloudOctree> {
-    return this.potree.loadSingle(
-      url
-    );
-  }
-
   /**
    * Loads a point cloud into the viewer and returns it.
    *

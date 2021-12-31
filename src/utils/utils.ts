@@ -22,5 +22,5 @@ export function byLevelAndIndex(a: IPointCloudTreeNode, b: IPointCloudTreeNode) 
 }
 
 export function gsToPath(gs: string) {
-  return gs.replace('gs://', 'https://storage.googleapis.com/')
+  return gs.replace('gs://', 'https://storage.googleapis.com/');
 }

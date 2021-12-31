@@ -44,9 +44,6 @@ export declare class PointCloudOctreeGeometryNode extends EventDispatcher implem
      */
     getUrl(): string;
     /**
-     * Gets the url of the hierarchy file for this node.
-     */
-    /**
      * Adds the specified node as a child of the current node.
      *
      * @param child
@@ -67,9 +64,6 @@ export declare class PointCloudOctreeGeometryNode extends EventDispatcher implem
     private loadPoints;
     private loadResonaiPoints;
     private loadResonaiHierachyThenPoints;
-    /**
-     * Gets the url of the folder where the hierarchy is, relative to the octreeDir.
-     */
     private loadResonaiHierarchy;
     private getResonaiNodeData;
     addNode({ name, numPoints, children, indexInList }: NodeData, pco: PointCloudOctreeGeometry, nodes: Map<string, PointCloudOctreeGeometryNode>): void;

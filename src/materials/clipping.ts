@@ -22,4 +22,3 @@ export interface IClipPolyhedron {
   outside: boolean;
   convexes: IClipConvex[];
 }
-

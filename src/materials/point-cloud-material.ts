@@ -485,83 +485,83 @@ export class PointCloudMaterial extends RawShaderMaterial {
   copyPolyhedra(other: PointCloudMaterial): void {
     ['highlight', 'clip'].forEach((type: string) => {
        // @ts-ignore
-      this.setUniform(type + 'Planes', other.uniforms[type + 'Planes'].value);
+      this.setUniform(`${type}Planes`, other.uniforms[`${type}Planes`].value);
       // @ts-ignore
-      this.setUniform(type + 'ConToPoly', other.uniforms[type + 'ConToPoly'].value);
+      this.setUniform(`${type}ConToPoly`, other.uniforms[`${type}ConToPoly`].value);
       // @ts-ignore
-      this.setUniform(type + 'PlaneToCon', other.uniforms[type + 'PlaneToCon'].value);
+      this.setUniform(`${type}PlaneToCon`, other.uniforms[`${type}PlaneToCon`].value);
       // @ts-ignore
-      this.setUniform(type + 'PlaneToPoly', other.uniforms[type + 'PlaneToPoly'].value);
+      this.setUniform(`${type}PlaneToPoly`, other.uniforms[`${type}PlaneToPoly`].value);
       // @ts-ignore
-      this.setUniform(type + 'PolyhedronOutside', other.uniforms[type + 'PolyhedronOutside'].value);
+      this.setUniform(`${type}PolyhedronOutside`, other.uniforms[`${type}PolyhedronOutside`].value);
       if (type === 'highlight') {
         // @ts-ignore
-        this.setUniform(type + 'PolyhedronColors', other.uniforms[type + 'PolyhedronColors'].value);
+        this.setUniform(`${type}PolyhedronColors`, other.uniforms[`${type}PolyhedronColors`].value);
       }
-      this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = other.defines[type.toUpperCase() + '_POLYHEDRA_COUNT']
-      this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = other.defines[type.toUpperCase() + '_CONVEXES_COUNT']
-      this.defines[type.toUpperCase() + '_PLANES_COUNT'] = other.defines[type.toUpperCase() + '_PLANES_COUNT']
-    })
+      this.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`] = other.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`];
+      this.defines[`${type.toUpperCase()}_CONVEXES_COUNT`] = other.defines[`${type.toUpperCase()}_CONVEXES_COUNT`];
+      this.defines[`${type.toUpperCase()}_PLANES_COUNT`] = other.defines[`${type.toUpperCase()}_PLANES_COUNT`];
+    });
   }
   setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void {
     // @ts-ignore
-    this[type + 'PolyhedraCount'] = polyhedra.length;
+    this[`${type}PolyhedraCount`] = polyhedra.length;
     // @ts-ignore
-    this.setUniform(type + 'PolyhedraCount', this[type + 'PolyhedraCount']);
+    this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
     this.updateShaderSource();
     if (!polyhedra || polyhedra.length === 0) {
       // @ts-ignore
-      this.setUniform(type + 'Planes', [0, 0, 0, 1]);
+      this.setUniform(`${type}Planes`, [0, 0, 0, 1]);
       // @ts-ignore
-      this.setUniform(type + 'ConToPoly', [0]);
+      this.setUniform(`${type}ConToPoly`, [0]);
       // @ts-ignore
-      this.setUniform(type + 'PlaneToCon', [0]);
+      this.setUniform(`${type}PlaneToCon`, [0]);
       // @ts-ignore
-      this.setUniform(type + 'PlaneToPoly', [0]);
+      this.setUniform(`${type}PlaneToPoly`, [0]);
       // @ts-ignore
-      this.setUniform(type + 'PolyhedronOutside', [false]);
-      this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = 1
-      this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = 1
-      this.defines[type.toUpperCase() + '_PLANES_COUNT'] = 1
+      this.setUniform(`${type}PolyhedronOutside`, [false]);
+      this.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`] = 1;
+      this.defines[`${type.toUpperCase()}_CONVEXES_COUNT`] = 1;
+      this.defines[`${type.toUpperCase()}_PLANES_COUNT`] = 1;
       if (type === 'highlight') {
         // @ts-ignore
-        this.setUniform(type + 'PolyhedronColors', [new Color(0xff3cff)]);
+        this.setUniform(`${type}PolyhedronColors`, [new Color(0xff3cff)]);
       }
-      return
+      return;
     }
     const conToPoly: number[] = [];
     const planeToCon: number[] = [];
     const planeToPoly: number[] = [];
     const flatPlanes: number[] = [];
-    let currentConvex = 0
+    let currentConvex = 0;
     polyhedra.forEach((polyhedron, polyhedronIndex) => {
       polyhedron.convexes.forEach((convex) => {
-        conToPoly.push(polyhedronIndex)
+        conToPoly.push(polyhedronIndex);
         convex.planes.forEach((plane) => {
-          planeToCon.push(currentConvex)
-          planeToPoly.push(polyhedronIndex)
-          flatPlanes.push(...plane.normal.toArray(), -plane.constant)
-        })
-        currentConvex++
-      })
-    })
+          planeToCon.push(currentConvex);
+          planeToPoly.push(polyhedronIndex);
+          flatPlanes.push(...plane.normal.toArray(), -plane.constant);
+        });
+        currentConvex++;
+      });
+    });
     // @ts-ignore
-    this.setUniform(type + 'Planes', flatPlanes);
+    this.setUniform(`${type}Planes`, flatPlanes);
     // @ts-ignore
-    this.setUniform(type + 'ConToPoly', conToPoly);
+    this.setUniform(`${type}ConToPoly`, conToPoly);
     // @ts-ignore
-    this.setUniform(type + 'PlaneToCon', planeToCon);
+    this.setUniform(`${type}PlaneToCon`, planeToCon);
     // @ts-ignore
-    this.setUniform(type + 'PlaneToPoly', planeToPoly);
+    this.setUniform(`${type}PlaneToPoly`, planeToPoly);
     // @ts-ignore
-    this.setUniform(type + 'PolyhedronOutside', polyhedra.map(polyhedron => polyhedron.outside));
+    this.setUniform(`${type}PolyhedronOutside`, polyhedra.map(polyhedron => polyhedron.outside));
     if (type === 'highlight') {
       // @ts-ignore
-      this.setUniform(type + 'PolyhedronColors', polyhedra.map(polyhedron => polyhedron.color || new Color(0xff3cff)));
+      this.setUniform(`${type}PolyhedronColors`, polyhedra.map(polyhedron => polyhedron.color || new Color(0xff3cff)));
     }
-    this.defines[type.toUpperCase() + '_POLYHEDRA_COUNT'] = polyhedra.length
-    this.defines[type.toUpperCase() + '_CONVEXES_COUNT'] = this.uniforms[type + 'ConToPoly'].value.length
-    this.defines[type.toUpperCase() + '_PLANES_COUNT'] = flatPlanes.length / 4
+    this.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`] = polyhedra.length;
+    this.defines[`${type.toUpperCase()}_CONVEXES_COUNT`] = this.uniforms[`${type}ConToPoly`].value.length;
+    this.defines[`${type.toUpperCase()}_PLANES_COUNT`] = flatPlanes.length / 4;
   }
   setClipPolyhedra(clipPolyhedra: IClipPolyhedron[]): void {
     this.setTypePolyhedra('clip', clipPolyhedra);

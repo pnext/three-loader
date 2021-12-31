@@ -1,5 +1,4 @@
 import { Box3, Camera, Sphere, Vector3, WebGLRenderer } from 'three';
-import { XhrRequest } from './loading/types';
 import { PointCloudOctree } from './point-cloud-octree';
 import { LRU } from './utils/lru';
 export interface IPointCloudTreeNode {
@@ -38,7 +37,6 @@ export interface IPotree {
     pointBudget: number;
     maxNumNodesLoading: number;
     lru: LRU;
-    loadSingle(url: string, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
     updatePointClouds(pointClouds: PointCloudOctree[], camera: Camera, renderer: WebGLRenderer): IVisibilityUpdateResult;
 }
 export interface PickPoint {

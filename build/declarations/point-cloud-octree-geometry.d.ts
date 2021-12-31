@@ -1,5 +1,5 @@
 import { Box3, Vector3 } from 'three';
-import { YBFLoader, XhrRequest } from './loading';
+import { XhrRequest, YBFLoader } from './loading';
 import { PointAttributes } from './point-attributes';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 export declare class PointCloudOctreeGeometry {

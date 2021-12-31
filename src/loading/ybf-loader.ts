@@ -34,7 +34,6 @@ interface YBFLoaderOptions {
   url: string;
   getUrl?: GetUrlFn;
   callbacks?: Callback[];
-  //xhrRequest?: XhrRequest;
 }
 
 type Callback = (node: PointCloudOctreeGeometryNode) => void;
@@ -44,7 +43,6 @@ export class YBFLoader {
   disposed: boolean = false;
   callbacks: Callback[];
   getUrl: GetUrlFn;
-  //xhrRequest: XhrRequest;
 
   private static workers: Worker[] = [];
 
@@ -113,7 +111,7 @@ export class YBFLoader {
         this.releaseWorker(worker);
         this.callbacks.forEach(callback => callback(node));
         resolve();
-        return
+        return;
       }
 
       const geometry = (node.geometry = node.geometry || new BufferGeometry());
