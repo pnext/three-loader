@@ -195,7 +195,7 @@ function initGui() {
     })
   });
 
-  gui.add(parameters, 'maxLevel', 1, 20).onChange(function (val: number) {
+  gui.add(parameters, 'maxLevel', 0, 20).onChange(function (val: number) {
     pointClouds.forEach(pointCloud => {
       pointCloud.maxLevel = val;
     })
@@ -221,12 +221,13 @@ function initGui() {
   gui.add(parameters, 'pointOpacityType', pointOpacityTypeDict).onChange(function (val: PointOpacityType) {
     pointClouds.forEach(pointCloud => {
       pointCloud.material.pointOpacityType = val;
+      pointCloud.material.transparent = true;
     })
   });
   const shapeDict = Object.fromEntries(Object.entries(PointShape).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'shape', shapeDict).onChange(function (val: PointShape) {
     pointClouds.forEach(pointCloud => {
-      pointCloud.material.shape = val;
+      pointCloud.material.shape = Number(val);
     })
   });
   gui.add(parameters, 'highlightIgnoreDepth', false).onChange(function (val: boolean) {
@@ -237,13 +238,13 @@ function initGui() {
   const pointSizeTypeDict = Object.fromEntries(Object.entries(PointSizeType).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'pointSizeType', pointSizeTypeDict).onChange(function (val: PointSizeType) {
     pointClouds.forEach(pointCloud => {
-      pointCloud.material.pointSizeType = val;
+      pointCloud.material.pointSizeType = Number(val);
     })
   });
   const pointColorTypeDict = Object.fromEntries(Object.entries(PointColorType).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'pointColorType', pointColorTypeDict).onChange(function (val: PointColorType) {
     pointClouds.forEach(pointCloud => {
-      pointCloud.material.pointColorType = val;
+      pointCloud.material.pointColorType = Number(val);
     })
   });
 }
