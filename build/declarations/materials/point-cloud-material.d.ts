@@ -190,9 +190,6 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     applyDefines(shaderSrc: string): string;
     setHighlightIgnoreDepth(value: any): void;
     copyPolyhedra(other: PointCloudMaterial): void;
-    setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void;
-    setClipPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;
-    setHighlightPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;
     get gradient(): IGradient;
     set gradient(value: IGradient);
     get classification(): IClassification;
@@ -205,4 +202,7 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     updateMaterial(octree: PointCloudOctree, visibleNodes: PointCloudOctreeNode[], camera: Camera, renderer: WebGLRenderer): void;
     private updateVisibilityTextureData;
     static makeOnBeforeRender(octree: PointCloudOctree, node: PointCloudOctreeNode, pcIndex?: number): (_renderer: WebGLRenderer, _scene: Scene, _camera: Camera, _geometry: BufferGeometry, material: Material) => void;
+    setClipPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;
+    setHighlightPolyhedra(clipPolyhedra: IClipPolyhedron[]): void;
+    setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void;
 }
