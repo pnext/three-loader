@@ -25,11 +25,12 @@ enum DemoPotree {
 const parameters = {
   budget: 1e7,
   maxLevel: 20,
+  minNodePixelSize: 50,
   'points size': 1,
-  'clipping plane': -10,
+  'clipping plane': -1000,
   shape: PointShape.SQUARE,
   highlightIgnoreDepth: false,
-  pointSizeType: PointSizeType.ADAPTIVE,
+  pointSizeType: PointSizeType.ATTENUATED,
   pointColorType: PointColorType.RGB,
   pointOpacityType: PointOpacityType.FIXED,
   demoPotree: DemoPotree.RESONAI_POTREE
@@ -53,24 +54,27 @@ const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
 clippingPlane.constant = -parameters['clipping plane'];
 viewer.scene.add(planeHelper);
 
-let pointCloud: PointCloudOctree | undefined;
+let pointClouds: PointCloudOctree[] = [];
 
 const onPCOLoad = (pco: PointCloudOctree) => {
-  pointCloud = pco;
-  pointCloud.maxLevel = parameters.maxLevel;
-  pointCloud.potree.pointBudget = parameters.budget;
-  pointCloud.potree.maxNumNodesLoading = 16;
+  pointClouds.push(pco);
+  pco.maxLevel = parameters.maxLevel;
+  pco.minNodePixelSize = parameters.minNodePixelSize;
+  pco.potree.pointBudget = parameters.budget;
+  pco.potree.maxNumNodesLoading = 16;
   // pointCloud.rotateX(-Math.PI / 2);
-  pointCloud.material.size = parameters['points size'];
-  pointCloud.material.pointOpacityType = parameters.pointOpacityType;
-  pointCloud.material.shape = parameters.shape;
-  pointCloud.material.setHighlightIgnoreDepth(parameters.highlightIgnoreDepth);
-  pointCloud.material.pointSizeType = parameters.pointSizeType;
-  pointCloud.material.pointColorType = parameters.pointColorType;
-  pointCloud.material.clippingPlanes = [clippingPlane];
+  pco.material.size = parameters['points size'];
+  pco.material.pointOpacityType = parameters.pointOpacityType;
+  pco.material.shape = parameters.shape;
+  pco.material.setHighlightIgnoreDepth(parameters.highlightIgnoreDepth);
+  pco.material.pointSizeType = parameters.pointSizeType;
+  pco.material.pointColorType = parameters.pointColorType;
+  pco.material.clippingPlanes = [clippingPlane];
+  // pco.position.set(-4.943994811749849, 19.994607104408757, -18.05086635769811);
+  // pco.quaternion.set(0.0040494408101606535, 0.9865631369397857, -0.0012931641867331405, 0.1633251560141326);
 
   // pointCloud.material.setClipPolyhedra([{
-  pointCloud.material.setHighlightPolyhedra([{
+    pco.material.setHighlightPolyhedra([{
     outside: false,
     color: new Color(0xffff00),
     convexes: [{
@@ -92,7 +96,7 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   const camera = viewer.camera;
   camera.far = 1000;
   camera.updateProjectionMatrix();
-  camera.position.set(25, 0, 15);
+  camera.position.set(-7.994910999999999, 20.095619, -18.737658);
   camera.lookAt(new Vector3());
 
   viewer.add(pco);
@@ -111,10 +115,10 @@ const loadYBF = () => {
 }
 
 const sps = [
-  { // old
-    loc: 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json',
-    json: 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
-  },
+  // { // old
+  //   loc: 'gs://resonai-irocket-public/17555/potree_ybf/S6P/loc.json',
+  //   json: 'gs://resonai-irocket-public/17555/potree_structure_files/S6P/r.json'
+  // },
   // { // with nulls
   //   loc: 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_ybf/S1P/loc.json',
   //   json: 'gs://resonai-irocket-public/snap-rotem-colin-1640527467882721996-20211226140432/potree_structure_files/S1P/r.json'
@@ -123,6 +127,46 @@ const sps = [
   //   loc: 'gs://resonai-irocket-public/5449/potree_ybf/S1P/loc.json',
   //   json: 'gs://resonai-irocket-public/5449/potree_structure_files/S1P/r.json'
   // },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S1P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S1P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S2P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S2P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S3P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S3P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S4P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S4P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S5P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S5P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S6P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S6P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S7P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S7P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S9P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S9P/r.json'
+  }
 ]
 
 const loadResonaiPotree = () => {
@@ -174,21 +218,27 @@ function initGui() {
   });
 
   gui.add(parameters, 'budget', 1e3, 1e8).onChange(function (val: number) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.potree.pointBudget = val;
-    }
+    })
   });
 
   gui.add(parameters, 'maxLevel', 1, 20).onChange(function (val: number) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.maxLevel = val;
-    }
+    })
+  });
+
+  gui.add(parameters, 'minNodePixelSize', 20, 1000).onChange(function (val: number) {
+    pointClouds.forEach(pointCloud => {
+      pointCloud.minNodePixelSize = val;
+    })
   });
 
   gui.add(parameters, 'points size', 1, 10).onChange(function (val: number) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.material.size = val;
-    }
+    })
   });
 
   gui.add(parameters, 'clipping plane', -30, 100, 0.1).onChange(function (val: number) {
@@ -197,31 +247,31 @@ function initGui() {
 
   const pointOpacityTypeDict = Object.fromEntries(Object.entries(PointOpacityType).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'pointOpacityType', pointOpacityTypeDict).onChange(function (val: PointOpacityType) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.material.pointOpacityType = val;
-    }
+    })
   });
   const shapeDict = Object.fromEntries(Object.entries(PointShape).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'shape', shapeDict).onChange(function (val: PointShape) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.material.shape = val;
-    }
+    })
   });
   gui.add(parameters, 'highlightIgnoreDepth', false).onChange(function (val: boolean) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.material.setHighlightIgnoreDepth(val);
-    }
+    })
   });
   const pointSizeTypeDict = Object.fromEntries(Object.entries(PointSizeType).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'pointSizeType', pointSizeTypeDict).onChange(function (val: PointSizeType) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.material.pointSizeType = val;
-    }
+    })
   });
   const pointColorTypeDict = Object.fromEntries(Object.entries(PointColorType).filter(([_, v]) => typeof v !== 'string'))
   gui.add(parameters, 'pointColorType', pointColorTypeDict).onChange(function (val: PointColorType) {
-    if (pointCloud) {
+    pointClouds.forEach(pointCloud => {
       pointCloud.material.pointColorType = val;
-    }
+    })
   });
 }

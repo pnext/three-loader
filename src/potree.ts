@@ -268,7 +268,8 @@ export class Potree implements IPotree {
       const screenPixelRadius = radius * projectionFactor;
 
       // Don't add the node if it'll be too small on the screen, except root.
-      if (screenPixelRadius < pointCloud.minNodePixelSize && pointCloud.level) {
+      // console.log(pointCloud.level);
+      if (screenPixelRadius < pointCloud.minNodePixelSize && child.level) {
         continue;
       }
 
