@@ -60,7 +60,8 @@ const parseHeader = (ybf) => {
 };
 
 const parseAsBufferGeometry = (ybf, { polygon = false } = {}) => {
-  const { positionsType, facesType, colorsType, uvType, textureType, counts, headerLength: offset } = parseHeader(ybf);
+  const { positionsType, facesType, colorsType, uvType, textureType, counts, headerLength } = parseHeader(ybf);
+  let offset = headerLength;
   const hasTextures = (counts.length === 5);
   const geometry = new BufferGeometry();
   let textureLengths = [];

@@ -52,7 +52,6 @@ export class YBFLoader {
     callbacks = []
   }: YBFLoaderOptions) {
     this.getUrl = getUrl;
-    console.log('ybf-loader constructor:', url);
     this.url = url;
     this.callbacks = callbacks || [];
   }
