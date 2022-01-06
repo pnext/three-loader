@@ -25,7 +25,7 @@ export declare class Potree implements IPotree {
     };
     lru: LRU;
     loadResonaiPointCloud(potreeName: string, getUrl: GetUrlFn, xhrRequest: ((input: RequestInfo, init?: RequestInit | undefined) => Promise<Response>) | undefined, callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree>;
-    updatePointClouds(pointClouds: PointCloudOctree[], camera: Camera, renderer: WebGLRenderer): IVisibilityUpdateResult;
+    updatePointClouds(pointClouds: PointCloudOctree[], camera: Camera, renderer: WebGLRenderer, maxNumNodesLoading?: number): IVisibilityUpdateResult;
     static pick(pointClouds: PointCloudOctree[], renderer: WebGLRenderer, camera: Camera, ray: Ray, params?: Partial<PickParams>): PickPoint | null;
     get pointBudget(): number;
     set pointBudget(value: number);

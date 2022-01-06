@@ -53163,8 +53163,8 @@ class Potree {
         // console.log('here2');
         return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
-    updatePointClouds(pointClouds, camera, renderer) {
-        const result = this.updateVisibility(pointClouds, camera, renderer);
+    updatePointClouds(pointClouds, camera, renderer, maxNumNodesLoading = 0) {
+        const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
         for (let i = 0; i < pointClouds.length; i++) {
             const pointCloud = pointClouds[i];
             if (pointCloud.disposed) {
@@ -53197,14 +53197,10 @@ class Potree {
     set maxNumNodesLoading(value) {
         this._maxNumNodesLoading = value || _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
     }
-    updateVisibility(pointClouds, camera, renderer) {
+    updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading = 0) {
         let numVisiblePoints = 0;
         const visibleNodes = [];
         const unloadedGeometry = [];
-        const numNodesLoading = pointClouds.reduce((total, pco) => {
-            var _a;
-            return total + ((_a = pco === null || pco === void 0 ? void 0 : pco.pcoGeometry) === null || _a === void 0 ? void 0 : _a.numNodesLoading);
-        }, 0);
         // calculate object space frustum and cam pos and setup priority queue
         const { frustums, cameraPositions, priorityQueue } = this.updateVisibilityStructures(pointClouds, camera);
         let loadedToGPUThisFrame = 0;
@@ -53253,7 +53249,7 @@ class Potree {
             this.updateChildVisibility(queueItem, priorityQueue, pointCloud, node, cameraPositions[pointCloudIndex], camera, halfHeight);
         } // end priority queue loop
         // console.log(numNodesLoading, unloadedGeometry.length);
-        const numNodesToLoad = Math.max(Math.min(this.maxNumNodesLoading - numNodesLoading, unloadedGeometry.length), 0);
+        const numNodesToLoad = Math.max(Math.min(maxNumNodesLoading || this.maxNumNodesLoading, unloadedGeometry.length), 0);
         const nodeLoadPromises = [];
         for (let i = 0; i < numNodesToLoad; i++) {
             nodeLoadPromises.push(unloadedGeometry[i].load());

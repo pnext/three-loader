@@ -60,8 +60,9 @@ export class Potree implements IPotree {
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
-    const result = this.updateVisibility(pointClouds, camera, renderer);
+    const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
@@ -114,14 +115,12 @@ export class Potree implements IPotree {
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
     let numVisiblePoints = 0;
 
     const visibleNodes: PointCloudOctreeNode[] = [];
     const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
-    const numNodesLoading = pointClouds.reduce((total, pco) => {
-      return total + pco?.pcoGeometry?.numNodesLoading;
-    }, 0);
 
     // calculate object space frustum and cam pos and setup priority queue
     const { frustums, cameraPositions, priorityQueue } = this.updateVisibilityStructures(
@@ -196,7 +195,7 @@ export class Potree implements IPotree {
     } // end priority queue loop
 
     // console.log(numNodesLoading, unloadedGeometry.length);
-    const numNodesToLoad = Math.max(Math.min(this.maxNumNodesLoading - numNodesLoading, unloadedGeometry.length), 0);
+    const numNodesToLoad = Math.max(Math.min(maxNumNodesLoading || this.maxNumNodesLoading, unloadedGeometry.length), 0);
     const nodeLoadPromises: Promise<void>[] = [];
     for (let i = 0; i < numNodesToLoad; i++) {
       nodeLoadPromises.push(unloadedGeometry[i].load());
