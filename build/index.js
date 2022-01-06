@@ -52386,8 +52386,7 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_2__.Ev
         if (this.level % this.pcoGeometry.hierarchyStepSize !== 0) {
             return Promise.resolve();
         }
-        console.log(this.hierarchyData);
-        return Promise.resolve(this.loadResonaiHierarchy(this, this.hierarchyData));
+        return this.loadResonaiHierarchy(this, this.hierarchyData);
     }
     // tslint:disable:no-bitwise
     loadResonaiHierarchy(node, hierarchyData) {
@@ -52425,7 +52424,7 @@ class PointCloudOctreeGeometryNode extends three__WEBPACK_IMPORTED_MODULE_2__.Ev
         const nodes = new Map();
         nodes.set(node.name, node);
         decoded.forEach(nodeData => this.addNode(nodeData, node.pcoGeometry, nodes));
-        node.loadResonaiPoints();
+        return node.loadResonaiPoints();
     }
     // tslint:disable:no-bitwise
     getResonaiNodeData(name, offset, hierarchyData) {

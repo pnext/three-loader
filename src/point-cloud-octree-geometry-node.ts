@@ -203,10 +203,10 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.loadResonaiHierarchy(this, this.hierarchyData));
-}
+    return this.loadResonaiHierarchy(this, this.hierarchyData);
+  }
   // tslint:disable:no-bitwise
-  private loadResonaiHierarchy(node: PointCloudOctreeGeometryNode, hierarchyData: any) {
+  private loadResonaiHierarchy(node: PointCloudOctreeGeometryNode, hierarchyData: any): Promise<any> {
     const firstNodeData = this.getResonaiNodeData(node.name, 0, hierarchyData);
     node.numPoints = firstNodeData.numPoints;
 
@@ -248,7 +248,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     nodes.set(node.name, node);
     decoded.forEach(nodeData => this.addNode(nodeData, node.pcoGeometry, nodes));
 
-    node.loadResonaiPoints();
+    return node.loadResonaiPoints();
   }
 
   // tslint:disable:no-bitwise

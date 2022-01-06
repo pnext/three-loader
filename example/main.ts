@@ -119,62 +119,63 @@ const sps = [
     loc: 'gs://resonai-irocket-public/5511/potree_ybf/S3P/loc.json',
     json: 'gs://resonai-irocket-public/5511/potree_structure_files/S3P/r.json'
   },
-  // { // Hataasia-9-2, sample of 10
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S1P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S1P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S2P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S2P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S3P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S3P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S4P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S4P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S5P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S5P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S6P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S6P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S7P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S7P/r.json'
-  // },
-  // {
-  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
-  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
-  // }
+  { // Hataasia-9-2, sample of 10
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S1P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S1P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S2P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S2P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S3P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S3P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S4P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S4P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S5P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S5P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S6P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S6P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S7P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S7P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
+    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
+  }
 ]
 
-const loadResonaiPotree = () => {
+const loadResonaiPotree = async () => {
   // const onLoad = (node: PointCloudOctreeGeometryNode) => {
   //   // console.log('Loaded node!', node);
   // }
   const onLoad = () => {};
-  sps.forEach(({ loc, json }) => {
-    // console.log(index);
-    fetch(gsToPath(loc)).then(res => {
-      res.text().then(text => {
-        viewer.loadResonaiPotree(gsToPath(json), JSON5.parse(text), [onLoad])
-          .then(pco => {
-            // pco.visible = index % 2 === 0
-            onPCOLoad(pco)
-          })
-          .catch(err => console.error(err));
+  while (sps.length) {
+    await Promise.all(sps.splice(0, 2).map(task => {
+      return fetch(gsToPath(task.loc)).then(res => {
+        res.text().then(text => {
+          return viewer.loadResonaiPotree(gsToPath(task.json), JSON5.parse(text), [onLoad])
+            .then(pco => {
+              // pco.visible = index % 2 === 0
+              onPCOLoad(pco)
+            })
+            .catch(err => console.error(err));
+        })
       })
-    })
-  })
+    }))
+  }
 }
 
 switch (parameters.demoPotree) {
