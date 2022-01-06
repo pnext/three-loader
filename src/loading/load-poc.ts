@@ -10,11 +10,12 @@ import { GetUrlFn, XhrRequest } from './types';
 import { YBFLoader } from './ybf-loader';
 
 export function loadResonaiPOC(
-  url: string, // gs://bla/bla/r.json
+  url: string,
   getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
   callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
 ): Promise<PointCloudOctreeGeometry> {
+  // console.log('here3');
   return xhrRequest(gsToPath(url), { mode: 'cors' })
   .then(res => res.json())
   .then(parseResonai(gsToPath(url), getUrl, xhrRequest, callbacks));
@@ -25,7 +26,8 @@ function parseResonai(
   getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
   callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
-) {
+): (data: any) => Promise<any> {
+  // console.log('here4');
   return (data: any): Promise<PointCloudOctreeGeometry> => {
     const boundingBox = getResonaiBoundingBoxes(data);
     const loader = new YBFLoader({
@@ -66,6 +68,7 @@ function loadResonaiRoot(
   data: any,
   nodes: Record<string, PointCloudOctreeGeometryNode>,
 ): Promise<void> {
+  // console.log('here5');
   const name = 'r';
 
   const root = new PointCloudOctreeGeometryNode(name, pco, pco.boundingBox, 0);

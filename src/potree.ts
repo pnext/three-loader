@@ -52,6 +52,7 @@ export class Potree implements IPotree {
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
     callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
   ): Promise<PointCloudOctree> {
+    // console.log('here2');
     return loadResonaiPOC(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new PointCloudOctree(this, geometry));
   }
 

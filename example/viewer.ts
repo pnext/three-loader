@@ -91,27 +91,28 @@ export class Viewer {
    * @param locJSON
    *    The JSON object of loc.json which maps where to find each node's ybf.
    */
-    loadResonaiPotree(
-      jsonFile: string,
-      locJSON: any,
-      callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree> {
-      return this.potree.loadResonaiPointCloud(
-        // The file name of the point cloud which is to be loaded.
-        jsonFile,
-        // Given index of the node should return the full path to the node's ybf.
-        // 5 => "gs://snapshot3/010.ybf"
-        (name, index) => {
-          // TODO Shai - handle null (locJSON.node_locations[index] = 0)
-          if (locJSON.paths_map[locJSON.node_locations[index]] === 'null') {
-            return ''
-          }
-          return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
-          // return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
-        },
-        undefined,
-        callbacks
-      );
-    }
+  loadResonaiPotree(
+    jsonFile: string,
+    locJSON: any,
+    callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree> {
+    // console.log('here1');
+    return this.potree.loadResonaiPointCloud(
+      // The file name of the point cloud which is to be loaded.
+      jsonFile,
+      // Given index of the node should return the full path to the node's ybf.
+      // 5 => "gs://snapshot3/010.ybf"
+      (name, index) => {
+        // TODO Shai - handle null (locJSON.node_locations[index] = 0)
+        if (locJSON.paths_map[locJSON.node_locations[index]] === 'null') {
+          return ''
+        }
+        return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
+        // return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
+      },
+      undefined,
+      callbacks
+    );
+  }
 
   add(pco: PointCloudOctree): void {
     this.scene.add(pco);

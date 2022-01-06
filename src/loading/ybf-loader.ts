@@ -133,6 +133,7 @@ export class YBFLoader {
       this.releaseWorker(worker);
 
       this.callbacks.forEach(callback => callback(node));
+      // console.log('here');
       resolve();
     };
 

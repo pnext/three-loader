@@ -50695,13 +50695,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function loadResonaiPOC(url, // gs://bla/bla/r.json
-getUrl, xhrRequest, callbacks) {
+function loadResonaiPOC(url, getUrl, xhrRequest, callbacks) {
+    // console.log('here3');
     return xhrRequest((0,_utils_utils__WEBPACK_IMPORTED_MODULE_2__.gsToPath)(url), { mode: 'cors' })
         .then(res => res.json())
         .then(parseResonai((0,_utils_utils__WEBPACK_IMPORTED_MODULE_2__.gsToPath)(url), getUrl, xhrRequest, callbacks));
 }
 function parseResonai(url, getUrl, xhrRequest, callbacks) {
+    // console.log('here4');
     return (data) => {
         const boundingBox = getResonaiBoundingBoxes(data);
         const loader = new _ybf_loader__WEBPACK_IMPORTED_MODULE_3__.YBFLoader({
@@ -50725,6 +50726,7 @@ function getResonaiBoundingBoxes(data) {
 }
 // tslint:disable:no-bitwise
 function loadResonaiRoot(pco, data, nodes) {
+    // console.log('here5');
     const name = 'r';
     const root = new _point_cloud_octree_geometry_node__WEBPACK_IMPORTED_MODULE_1__.PointCloudOctreeGeometryNode(name, pco, pco.boundingBox, 0);
     root.hasChildren = true;
@@ -50836,6 +50838,7 @@ class YBFLoader {
             node.pcoGeometry.needsUpdate = true;
             this.releaseWorker(worker);
             this.callbacks.forEach(callback => callback(node));
+            // console.log('here');
             resolve();
         };
         const message = {
@@ -53157,6 +53160,7 @@ class Potree {
         })();
     }
     loadResonaiPointCloud(potreeName, getUrl, xhrRequest = (input, init) => fetch(input, init), callbacks) {
+        // console.log('here2');
         return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
     updatePointClouds(pointClouds, camera, renderer) {

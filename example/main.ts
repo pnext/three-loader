@@ -271,7 +271,8 @@ const loadResonaiPotree = async () => {
   // }
   const onLoad = () => {};
   while (sps.length) {
-    await Promise.all(sps.splice(0, 20).map(task => {
+    await Promise.all(sps.splice(0, 1).map(task => {
+      // console.log('__________________');
       return fetch(gsToPath(task.loc)).then(res => {
         res.text().then(text => {
           return viewer.loadResonaiPotree(gsToPath(task.json), JSON5.parse(text), [onLoad])
