@@ -203,7 +203,6 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       return Promise.resolve();
     }
 
-    console.log(this.hierarchyData);
     return Promise.resolve(this.loadResonaiHierarchy(this, this.hierarchyData));
 }
   // tslint:disable:no-bitwise
