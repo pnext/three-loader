@@ -118,6 +118,9 @@ export class Potree implements IPotree {
 
     const visibleNodes: PointCloudOctreeNode[] = [];
     const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
+    const numNodesLoading = pointClouds.reduce((total, pco) => {
+      return total + pco?.pcoGeometry?.numNodesLoading
+    }, 0);
 
     // calculate object space frustum and cam pos and setup priority queue
     const { frustums, cameraPositions, priorityQueue } = this.updateVisibilityStructures(
@@ -191,7 +194,8 @@ export class Potree implements IPotree {
       );
     } // end priority queue loop
 
-    const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
+    // console.log(numNodesLoading, unloadedGeometry.length);
+    const numNodesToLoad = Math.max(Math.min(this.maxNumNodesLoading - numNodesLoading, unloadedGeometry.length), 0);
     const nodeLoadPromises: Promise<void>[] = [];
     for (let i = 0; i < numNodesToLoad; i++) {
       nodeLoadPromises.push(unloadedGeometry[i].load());

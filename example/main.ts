@@ -27,7 +27,7 @@ const parameters = {
   maxLevel: 20,
   minNodePixelSize: 50,
   'points size': 0.2,
-  'clipping plane': -1000,
+  'clipping plane': -100,
   shape: PointShape.SQUARE,
   highlightIgnoreDepth: false,
   pointSizeType: PointSizeType.ATTENUATED,
@@ -115,7 +115,11 @@ const sps = [
   //   loc: 'gs://resonai-irocket-public/5449/potree_ybf/S1P/loc.json',
   //   json: 'gs://resonai-irocket-public/5449/potree_structure_files/S1P/r.json'
   // },
-  {
+  { // Hataasia-9-2, import of all
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S3P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S3P/r.json'
+  },
+  { // Hataasia-9-2, sample of 10
     loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
     json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
   },
@@ -158,11 +162,15 @@ const loadResonaiPotree = () => {
   //   // console.log('Loaded node!', node);
   // }
   const onLoad = () => {};
-  sps.forEach(({ loc, json }) => {
+  sps.forEach(({ loc, json }, index) => {
+    console.log(index);
     fetch(gsToPath(loc)).then(res => {
       res.text().then(text => {
         viewer.loadResonaiPotree(gsToPath(json), JSON5.parse(text), [onLoad])
-          .then(onPCOLoad)
+          .then(pco => {
+            // pco.visible = index % 2 === 0
+            onPCOLoad(pco)
+          })
           .catch(err => console.error(err));
       })
     })

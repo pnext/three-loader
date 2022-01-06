@@ -155,6 +155,7 @@ export class Viewer {
     // console.timeEnd('previous-render')
 
     // console.time('previous-render')
+    // console.log(this.pointClouds[0].progress);
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }
