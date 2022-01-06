@@ -162,8 +162,8 @@ const loadResonaiPotree = () => {
   //   // console.log('Loaded node!', node);
   // }
   const onLoad = () => {};
-  sps.forEach(({ loc, json }, index) => {
-    console.log(index);
+  sps.forEach(({ loc, json }) => {
+    // console.log(index);
     fetch(gsToPath(loc)).then(res => {
       res.text().then(text => {
         viewer.loadResonaiPotree(gsToPath(json), JSON5.parse(text), [onLoad])

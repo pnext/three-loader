@@ -54712,10 +54712,10 @@ class PointCloudOctree extends _point_cloud_tree__WEBPACK_IMPORTED_MODULE_4__.Po
                 bounds.expandByPoint(node.boundingBox.max);
             }
         }
-        console.log('Stats:');
-        Object.entries(stats).forEach(([level, stat]) => {
-            console.log(`Level: ${level}, count: ${stat.count}, average: ${(stat.totalNumPoints / stat.count / 1000).toFixed(1)}k`);
-        });
+        // console.log('Stats:');
+        // Object.entries(stats).forEach(([level, stat]: [string, any]) => {
+        //   console.log(`Level: ${level}, count: ${stat.count}, average: ${(stat.totalNumPoints / stat.count / 1000).toFixed(1)}k`);
+        // })
     }
     updateBoundingBoxes() {
         if (!this.showBoundingBox || !this.parent) {

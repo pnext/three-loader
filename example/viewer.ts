@@ -189,7 +189,7 @@ export class Viewer {
       this.renderer,
       this.camera,
       ray.ray)
-    console.log(pick?.position?.toArray());
+    // console.log(pick?.position?.toArray());
     if (pick?.position) {
       const dir = this.camera.position.clone().sub(this.cameraControls.target.clone());
       const pos = pick.position.clone().add(dir);

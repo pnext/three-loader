@@ -135,10 +135,10 @@ export class PointCloudOctree extends PointCloudTree {
         bounds.expandByPoint(node.boundingBox.max);
       }
     }
-    console.log('Stats:');
-    Object.entries(stats).forEach(([level, stat]: [string, any]) => {
-      console.log(`Level: ${level}, count: ${stat.count}, average: ${(stat.totalNumPoints / stat.count / 1000).toFixed(1)}k`);
-    })
+    // console.log('Stats:');
+    // Object.entries(stats).forEach(([level, stat]: [string, any]) => {
+    //   console.log(`Level: ${level}, count: ${stat.count}, average: ${(stat.totalNumPoints / stat.count / 1000).toFixed(1)}k`);
+    // })
   }
 
   updateBoundingBoxes(): void {
