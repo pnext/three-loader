@@ -23,7 +23,7 @@ enum DemoPotree {
 }
 
 const parameters = {
-  budget: 1e6,
+  budget: 1e4,
   maxLevel: 20,
   minNodePixelSize: 50,
   'points size': 0.2,
@@ -61,7 +61,7 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   pco.maxLevel = parameters.maxLevel;
   pco.minNodePixelSize = parameters.minNodePixelSize;
   pco.potree.pointBudget = parameters.budget;
-  pco.potree.maxNumNodesLoading = 16;
+  pco.potree.maxNumNodesLoading = 1;
   // pointCloud.rotateX(-Math.PI / 2);
   pco.material.size = parameters['points size'];
   pco.material.pointOpacityType = parameters.pointOpacityType;
@@ -120,40 +120,148 @@ const sps = [
     json: 'gs://resonai-irocket-public/5511/potree_structure_files/S3P/r.json'
   },
   { // Hataasia-9-2, sample of 10
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S0P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S0P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S1P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S1P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S1P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S1P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S2P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S2P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S2P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S2P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S3P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S3P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S3P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S3P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S4P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S4P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S4P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S4P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S5P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S5P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S5P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S5P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S6P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S6P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S6P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S6P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S7P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S7P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S7P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S7P/r.json'
   },
   {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S8P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S8P/r.json'
+  },
+  { // Hataasia-9-2, sample of 10
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S0P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S0P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S1P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S1P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S2P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S2P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S3P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S3P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S4P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S4P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S5P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S5P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S6P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S6P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S7P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S7P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S8P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S8P/r.json'
+  },
+  { // Hataasia-9-2, sample of 10
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S10P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S10P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S11P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S11P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S12P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S12P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S13P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S13P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S14P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S14P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S15P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S15P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S16P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S16P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S17P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S17P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S18P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S18P/r.json'
+  },
+  { // Hataasia-9-2, sample of 10
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S20P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S20P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S21P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S21P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S22P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S22P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S23P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S23P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S24P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S24P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S25P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S25P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S26P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S26P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S27P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S27P/r.json'
+  },
+  {
+    loc: 'gs://resonai-irocket-public/5511/potree_ybf/S28P/loc.json',
+    json: 'gs://resonai-irocket-public/5511/potree_structure_files/S28P/r.json'
   }
 ]
 
@@ -163,7 +271,7 @@ const loadResonaiPotree = async () => {
   // }
   const onLoad = () => {};
   while (sps.length) {
-    await Promise.all(sps.splice(0, 2).map(task => {
+    await Promise.all(sps.splice(0, 20).map(task => {
       return fetch(gsToPath(task.loc)).then(res => {
         res.text().then(text => {
           return viewer.loadResonaiPotree(gsToPath(task.json), JSON5.parse(text), [onLoad])

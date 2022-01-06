@@ -119,7 +119,7 @@ export class Potree implements IPotree {
     const visibleNodes: PointCloudOctreeNode[] = [];
     const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
     const numNodesLoading = pointClouds.reduce((total, pco) => {
-      return total + pco?.pcoGeometry?.numNodesLoading
+      return total + pco?.pcoGeometry?.numNodesLoading;
     }, 0);
 
     // calculate object space frustum and cam pos and setup priority queue
