@@ -23,7 +23,7 @@ enum DemoPotree {
 }
 
 const parameters = {
-  budget: 1e7,
+  budget: 1e6,
   maxLevel: 20,
   minNodePixelSize: 50,
   'points size': 0.2,
@@ -119,42 +119,42 @@ const sps = [
     loc: 'gs://resonai-irocket-public/5511/potree_ybf/S3P/loc.json',
     json: 'gs://resonai-irocket-public/5511/potree_structure_files/S3P/r.json'
   },
-  { // Hataasia-9-2, sample of 10
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S1P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S1P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S2P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S2P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S3P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S3P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S4P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S4P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S5P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S5P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S6P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S6P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S7P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S7P/r.json'
-  },
-  {
-    loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
-    json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
-  }
+  // { // Hataasia-9-2, sample of 10
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S0P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S0P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S1P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S1P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S2P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S2P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S3P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S3P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S4P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S4P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S5P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S5P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S6P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S6P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S7P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S7P/r.json'
+  // },
+  // {
+  //   loc: 'gs://resonai-irocket-public/5450/potree_ybf/S8P/loc.json',
+  //   json: 'gs://resonai-irocket-public/5450/potree_structure_files/S8P/r.json'
+  // }
 ]
 
 const loadResonaiPotree = () => {

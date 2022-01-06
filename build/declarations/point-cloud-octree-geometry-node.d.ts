@@ -23,7 +23,7 @@ export declare class PointCloudOctreeGeometryNode extends EventDispatcher implem
     boundingBox: Box3;
     tightBoundingBox: Box3;
     boundingSphere: Sphere;
-    hierarchyUrl: string;
+    hierarchyData: any;
     mean: Vector3;
     numPoints: number;
     geometry: BufferGeometry | undefined;

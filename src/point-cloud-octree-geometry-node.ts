@@ -9,8 +9,6 @@ import { IPointCloudTreeNode } from './types';
 import { createChildAABB } from './utils/bounds';
 import { getIndexFromName } from './utils/utils';
 
-const JSON5 = require('json5');
-
 export interface NodeData {
   children: number;
   numPoints: number;
@@ -39,7 +37,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
   boundingBox: Box3;
   tightBoundingBox: Box3;
   boundingSphere: Sphere;
-  hierarchyUrl: string = '';
+  hierarchyData: any = {};
   mean: Vector3 = new Vector3();
   numPoints: number = 50000;
   geometry: BufferGeometry | undefined;
@@ -205,15 +203,11 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       return Promise.resolve();
     }
 
-    return Promise.resolve(fetch(this.hierarchyUrl).then(res => {
-      res.text().then(text => {
-        this.loadResonaiHierarchy(this, JSON5.parse(text));
-      });
-  }));
+    console.log(this.hierarchyData);
+    return Promise.resolve(this.loadResonaiHierarchy(this, this.hierarchyData));
 }
   // tslint:disable:no-bitwise
   private loadResonaiHierarchy(node: PointCloudOctreeGeometryNode, hierarchyData: any) {
-
     const firstNodeData = this.getResonaiNodeData(node.name, 0, hierarchyData);
     node.numPoints = firstNodeData.numPoints;
 

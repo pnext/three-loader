@@ -44,8 +44,7 @@ function parseResonai(
     pco.needsUpdate = true;
 
     const nodes: Record<string, PointCloudOctreeGeometryNode> = {};
-
-    return loadResonaiRoot(url, pco, data, nodes).then(() => {
+    return loadResonaiRoot(pco, data, nodes).then(() => {
       pco.nodes = nodes;
       return pco;
     });
@@ -63,7 +62,6 @@ function getResonaiBoundingBoxes(
 
 // tslint:disable:no-bitwise
 function loadResonaiRoot(
-  url: string,
   pco: PointCloudOctreeGeometry,
   data: any,
   nodes: Record<string, PointCloudOctreeGeometryNode>,
@@ -75,7 +73,7 @@ function loadResonaiRoot(
   const mask = (1 << 24) - 1;
   root.numPoints = data.nodes[0] & mask;
   root.numPoints = 0;
-  root.hierarchyUrl = url;
+  root.hierarchyData = data;
   pco.root = root;
   nodes[name] = root;
   return pco.root.loadResonai();
