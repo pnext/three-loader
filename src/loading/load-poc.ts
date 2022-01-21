@@ -51,11 +51,20 @@ export function loadPOC(
   getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
 ): Promise<PointCloudOctreeGeometry> {
-  return Promise.resolve(getUrl(url)).then(transformedUrl => {
-    return xhrRequest(transformedUrl, { mode: 'cors' })
-      .then(res => res.json())
-      .then(parse(transformedUrl, getUrl, xhrRequest));
-  });
+  try {
+    return Promise.resolve(getUrl(url)).then(transformedUrl => {
+      return xhrRequest(transformedUrl, { mode: 'cors' })
+        .then(res => {
+          if (res.status === 200) {
+            return res.json();
+          }
+          return Promise.reject('Response error');
+        })
+        .then(parse(transformedUrl, getUrl, xhrRequest));
+    });
+  } catch (error) {
+    return Promise.reject(error);
+  }
 }
 
 function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
