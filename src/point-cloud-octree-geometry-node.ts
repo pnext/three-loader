@@ -7,7 +7,7 @@ import { Box3, BufferGeometry, EventDispatcher, Sphere, Vector3 } from 'three';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { IPointCloudTreeNode } from './types';
 import { createChildAABB } from './utils/bounds';
-import { getIndexFromName } from './utils/utils';
+import { getIndexFromName, handleEmptyBuffer, handleFailedRequest } from './utils/utils';
 
 export interface NodeData {
   children: number;
@@ -187,24 +187,12 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       return Promise.resolve();
     }
 
-    try {
-      return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
-        .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
-        .then(res => {
-          if (res.status === 200) {
-            return res.arrayBuffer();
-          }
-          return Promise.reject('Response error');
-        })
-        .then(buffer => {
-          if (buffer) {
-            this.loadHierarchy(this, buffer);
-          }
-          Promise.reject('Buffer is empty');
-        });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
+      .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
+      .then(res => handleFailedRequest(res))
+      .then(okRes => okRes.arrayBuffer())
+      .then(buffer => handleEmptyBuffer(buffer))
+      .then(okBuffer => this.loadHierarchy(this, okBuffer));
   }
 
   /**

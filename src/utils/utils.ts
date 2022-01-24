@@ -20,3 +20,17 @@ export function byLevelAndIndex(a: IPointCloudTreeNode, b: IPointCloudTreeNode) 
     return 0;
   }
 }
+
+export function handleFailedRequest(response: Response): Response {
+  if (response.status != 200) {
+    throw Error('Response error');
+  }
+  return response;
+}
+
+export function handleEmptyBuffer(buffer: ArrayBuffer) {
+  if (!buffer || buffer.byteLength === 0) {
+    throw Error('Empty buffer');
+  }
+  return buffer;
+}

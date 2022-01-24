@@ -3,6 +3,7 @@
 // -------------------------------------------------------------------------------------------------
 
 import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
+import { handleFailedRequest, handleEmptyBuffer } from '../utils/utils';
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
 import { Version } from '../version';
@@ -79,24 +80,15 @@ export class BinaryLoader {
     if (node.loaded || this.disposed) {
       return Promise.resolve();
     }
-    try {
-      return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
-        .then(url => this.xhrRequest(url, { mode: 'cors' }))
-        .then(res => {
-          if (res.status === 200) {
-            return res.arrayBuffer();
-          }
-          return Promise.reject('Response error');
-        })
-        .then(buffer => {
-          if (buffer) {
-            return new Promise(resolve => this.parse(node, buffer, resolve));
-          }
-          return Promise.reject('Buffer is empty');
-        });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+
+    return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
+      .then(url => this.xhrRequest(url, { mode: 'cors' }))
+      .then(res => handleFailedRequest(res))
+      .then(okRes => okRes.arrayBuffer())
+      .then(buffer => handleEmptyBuffer(buffer))
+      .then(okBuffer => {
+        return new Promise(resolve => this.parse(node, okBuffer, resolve));
+      });
   }
 
   private getNodeUrl(node: PointCloudOctreeGeometryNode): string {
