@@ -21,7 +21,9 @@ uniform float screenHeight;
 
 uniform sampler2D depthMap;
 
-uniform vec4 clipExtent;
+#if defined (clip_horizontally) || defined (clip_vertically)
+	uniform vec4 clipExtent;
+#endif
 
 #ifdef highlight_point
 	uniform vec4 highlightedPointColor;
