@@ -37,7 +37,7 @@ export class WorkerPool {
   private pool = new AsyncBlockingQueue<AutoTerminatingWorker>();
   private poolSize = 0;
 
-  constructor(private maxWorkers: number, private workerType: any) {}
+  constructor(public maxWorkers: number, private workerType: any) {}
 
   /**
    * Returns a worker promise which is resolved when one is available.

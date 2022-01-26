@@ -47,7 +47,7 @@ export class BinaryLoader {
   xhrRequest: XhrRequest;
   callbacks: Callback[];
 
-  private static readonly WORKER_POOL = new WorkerPool(
+  public static readonly WORKER_POOL = new WorkerPool(
     32,
     require('../workers/binary-decoder.worker.js'),
   );
