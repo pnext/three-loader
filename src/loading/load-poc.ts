@@ -7,7 +7,7 @@ import { PointAttributes, PointAttributeStringName } from '../point-attributes';
 import { PointCloudOctreeGeometry } from '../point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
 import { createChildAABB } from '../utils/bounds';
-import { getIndexFromName } from '../utils/utils';
+import { getIndexFromName, handleFailedRequest } from '../utils/utils';
 import { Version } from '../version';
 import { BinaryLoader } from './binary-loader';
 import { GetUrlFn, XhrRequest } from './types';
@@ -53,7 +53,8 @@ export function loadPOC(
 ): Promise<PointCloudOctreeGeometry> {
   return Promise.resolve(getUrl(url)).then(transformedUrl => {
     return xhrRequest(transformedUrl, { mode: 'cors' })
-      .then(res => res.json())
+      .then(res => handleFailedRequest(res))
+      .then(okRes => okRes.json())
       .then(parse(transformedUrl, getUrl, xhrRequest));
   });
 }

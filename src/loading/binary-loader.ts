@@ -3,6 +3,7 @@
 // -------------------------------------------------------------------------------------------------
 
 import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
+import { handleFailedRequest, handleEmptyBuffer } from '../utils/utils';
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
 import { WorkerPool } from '../utils/worker-pool';
@@ -83,9 +84,11 @@ export class BinaryLoader {
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
-      .then(res => res.arrayBuffer())
-      .then(buffer => {
-        return new Promise(resolve => this.parse(node, buffer, resolve));
+      .then(res => handleFailedRequest(res))
+      .then(okRes => okRes.arrayBuffer())
+      .then(buffer => handleEmptyBuffer(buffer))
+      .then(okBuffer => {
+        return new Promise(resolve => this.parse(node, okBuffer, resolve));
       });
   }
 
