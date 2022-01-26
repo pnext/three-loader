@@ -17,7 +17,7 @@ import {
   PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
-import { GetUrlFn, loadPOC } from './loading';
+import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
@@ -99,6 +99,14 @@ export class Potree implements IPotree {
       this.lru.pointBudget = value;
       this.lru.freeMemory();
     }
+  }
+
+  static set maxLoaderWorkers(value: number) {
+    BinaryLoader.WORKER_POOL.maxWorkers = value;
+  }
+
+  static get maxLoaderWorkers(): number {
+    return BinaryLoader.WORKER_POOL.maxWorkers;
   }
 
   private updateVisibility(
