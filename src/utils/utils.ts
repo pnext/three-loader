@@ -22,7 +22,7 @@ export function byLevelAndIndex(a: IPointCloudTreeNode, b: IPointCloudTreeNode) 
 }
 
 export function handleFailedRequest(response: Response): Response {
-  if (response.status != 200) {
+  if (response.status !== 200) {
     throw Error('Response error');
   }
   return response;

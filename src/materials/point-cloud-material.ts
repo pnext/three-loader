@@ -25,19 +25,15 @@ import {
   DEFAULT_RGB_GAMMA,
   PERSPECTIVE_CAMERA,
 } from '../constants';
-import { PointCloudOctree } from '../point-cloud-octree';
-import { PointCloudOctreeNode } from '../point-cloud-octree-node';
-import { byLevelAndIndex } from '../utils/utils';
-import { DEFAULT_CLASSIFICATION } from './classification';
-import { ClipMode, IClipBox } from './clipping';
-import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
-import { SPECTRAL } from './gradients';
-import {
-  generateClassificationTexture,
-  generateDataTexture,
-  generateGradientTexture,
-} from './texture-generation';
-import { IClassification, IGradient, IUniform } from './types';
+import {PointCloudOctree} from '../point-cloud-octree';
+import {PointCloudOctreeNode} from '../point-cloud-octree-node';
+import {byLevelAndIndex} from '../utils/utils';
+import {DEFAULT_CLASSIFICATION} from './classification';
+import {ClipMode, IClipBox} from './clipping';
+import {NormalFilteringMode, PointCloudMixingMode, PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType} from './enums';
+import {SPECTRAL} from './gradients';
+import {generateClassificationTexture, generateDataTexture, generateGradientTexture,} from './texture-generation';
+import {IClassification, IGradient, IUniform} from './types';
 
 export interface IPointCloudMaterialParameters {
   size: number;
@@ -93,6 +89,10 @@ export interface IPointCloudMaterialUniforms {
   highlightedPointColor: IUniform<Vector4>;
   enablePointHighlighting: IUniform<boolean>;
   highlightedPointScale: IUniform<number>;
+  normalFilteringMode: IUniform<number>;
+  backgroundMap: IUniform<Texture | null>;
+  pointCloudID: IUniform<number>;
+  pointCloudMixingMode: IUniform<number>;
 }
 
 const TREE_TYPE_DEFS = {
@@ -208,6 +208,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
     highlightedPointColor: makeUniform('fv', DEFAULT_HIGHLIGHT_COLOR.clone()),
     enablePointHighlighting: makeUniform('b', true),
     highlightedPointScale: makeUniform('f', 2.0),
+    backgroundMap: makeUniform('t', null),
+    normalFilteringMode: makeUniform('i', NormalFilteringMode.ABSOLUTE_NORMAL_FILTERING_MODE),
+    pointCloudID: makeUniform('f', 2),
+    pointCloudMixingMode: makeUniform('i', PointCloudMixingMode.CHECKBOARD)
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -244,6 +248,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('highlightedPointColor') highlightedPointColor!: Vector4;
   @uniform('enablePointHighlighting') enablePointHighlighting!: boolean;
   @uniform('highlightedPointScale') highlightedPointScale!: number;
+  @uniform('normalFilteringMode') normalFilteringMode!: number;
+  @uniform('backgroundMap') backgroundMap!: Texture | undefined;
+  @uniform('pointCloudID') pointCloudID!: number;
+  @uniform('pointCloudMixingMode') pointCloudMixingMode!: number;
+
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;
@@ -255,6 +264,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE;
   @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED;
   @requiresShaderUpdate() useFilterByNormal: boolean = false;
+  @requiresShaderUpdate() useTextureBlending: boolean = false;
+  @requiresShaderUpdate() usePointCloudMixing: boolean = false;
   @requiresShaderUpdate() highlightPoint: boolean = false;
 
   attributes = {
@@ -316,6 +327,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
     if (this.depthMap) {
       this.depthMap.dispose();
       this.depthMap = undefined;
+    }
+    if (this.backgroundMap) {
+      this.backgroundMap.dispose();
+      this.backgroundMap = undefined;
     }
   }
 
@@ -396,12 +411,32 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('highlight_point');
     }
 
+    if (this.useTextureBlending) {
+      define('use_texture_blending');
+    }
+
+    if (this.usePointCloudMixing) {
+      define('use_point_cloud_mixing');
+    }
+
     define('MAX_POINT_LIGHTS 0');
     define('MAX_DIR_LIGHTS 0');
 
     parts.push(shaderSrc);
 
     return parts.join('\n');
+  }
+
+  setPointCloudMixingMode(mode: PointCloudMixingMode) {
+    this.pointCloudMixingMode = mode;
+  }
+
+  getPointCloudMixingMode(): PointCloudMixingMode {
+    if (this.pointCloudMixingMode === PointCloudMixingMode.STRIPES) {
+      return PointCloudMixingMode.STRIPES;
+    }
+
+    return PointCloudMixingMode.CHECKBOARD;
   }
 
   setClipBoxes(clipBoxes: IClipBox[]): void {
