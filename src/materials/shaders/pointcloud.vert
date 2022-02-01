@@ -74,6 +74,13 @@ uniform sampler2D depthMap;
 #ifdef use_point_cloud_mixing
 	uniform int pointCloudMixingMode;
 	uniform float pointCloudID;
+
+	uniform float pointCloudMixAngle;
+	uniform float stripeDistanceX;
+	uniform float stripeDistanceY;
+
+	uniform float stripeDivisorX;
+	uniform float stripeDivisorY;
 #endif
 
 #ifdef highlight_point

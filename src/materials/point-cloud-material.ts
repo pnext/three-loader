@@ -92,6 +92,11 @@ export interface IPointCloudMaterialUniforms {
   normalFilteringMode: IUniform<number>;
   backgroundMap: IUniform<Texture | null>;
   pointCloudID: IUniform<number>;
+  pointCloudMixAngle: IUniform<number>;
+  stripeDistanceX: IUniform<number>;
+  stripeDistanceY: IUniform<number>;
+  stripeDivisorX: IUniform<number>;
+  stripeDivisorY: IUniform<number>;
   pointCloudMixingMode: IUniform<number>;
 }
 
@@ -211,7 +216,12 @@ export class PointCloudMaterial extends RawShaderMaterial {
     backgroundMap: makeUniform('t', null),
     normalFilteringMode: makeUniform('i', NormalFilteringMode.ABSOLUTE_NORMAL_FILTERING_MODE),
     pointCloudID: makeUniform('f', 2),
-    pointCloudMixingMode: makeUniform('i', PointCloudMixingMode.CHECKBOARD)
+    pointCloudMixingMode: makeUniform('i', PointCloudMixingMode.CHECKBOARD),
+    stripeDistanceX: makeUniform('f', 5),
+    stripeDistanceY: makeUniform('f', 5),
+    stripeDivisorX: makeUniform('f', 2),
+    stripeDivisorY: makeUniform('f', 2),
+    pointCloudMixAngle: makeUniform('f', 31),
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -252,7 +262,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('backgroundMap') backgroundMap!: Texture | undefined;
   @uniform('pointCloudID') pointCloudID!: number;
   @uniform('pointCloudMixingMode') pointCloudMixingMode!: number;
-
+  @uniform('stripeDistanceX') stripeDistanceX!: number;
+  @uniform('stripeDistanceY') stripeDistanceY!: number;
+  @uniform('stripeDivisorX') stripeDivisorX!: number;
+  @uniform('stripeDivisorY') stripeDivisorY!: number;
+  @uniform('pointCloudMixAngle') pointCloudMixAngle!: number;
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;

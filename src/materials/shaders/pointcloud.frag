@@ -29,6 +29,12 @@ uniform sampler2D depthMap;
 #ifdef use_point_cloud_mixing
 	uniform int pointCloudMixingMode;
 	uniform float pointCloudID;
+	uniform float pointCloudMixAngle;
+	uniform float stripeDistanceX;
+	uniform float stripeDistanceY;
+
+	uniform float stripeDivisorX;
+	uniform float stripeDivisorY;
 #endif
 
 #ifdef highlight_point
@@ -99,18 +105,17 @@ void main() {
 
 	#ifdef use_point_cloud_mixing
 		bool discardFragment = false;
-		float stripeDistance = 5.;
 
 		if (pointCloudMixingMode == 1) {  // Checkboard
 			float vPointCloudID = pointCloudID > 10. ? pointCloudID/10.: pointCloudID;
 			discardFragment = mod(gl_FragCoord.x, vPointCloudID) > 0.5 && mod(gl_FragCoord.y, vPointCloudID) > 0.5;
 		}
 		else if (pointCloudMixingMode == 2) {  // Stripes
-			float angle = 31. * pointCloudID / 180.;
+			float angle = pointCloudMixAngle * pointCloudID / 180.;
 			float u = cos(angle) * gl_FragCoord.x + sin(angle) * gl_FragCoord.y;
 			float v = -sin(angle) * gl_FragCoord.x + cos(angle) * gl_FragCoord.y;
 
-			discardFragment = mod(u, stripeDistance) >= stripeDistance/2. && mod(v, stripeDistance) >= stripeDistance/2.;
+			discardFragment = mod(u, stripeDistanceX) >= stripeDistanceX/stripeDivisorX && mod(v, stripeDistanceY) >= stripeDistanceY/stripeDivisorY;
 		}
 		if (discardFragment) {
 			discard;
