@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, WebGLRenderer, Vector3, Raycaster, Matrix4, Quaternion } from 'three';
+import {PerspectiveCamera, Scene, WebGLRenderer, Vector3, Raycaster, Matrix4, Quaternion, AxesHelper} from 'three';
 import { PointCloudOctree, Potree } from '../src';
 import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { gsToPath } from '../src/utils/utils';
@@ -25,6 +25,10 @@ export class Viewer {
    * Controls which update the position of the camera.
    */
   cameraControls!: any;
+  /**
+   * helps with target
+   */
+  targetHelper!: any;
   /**
    * Out potree instance which handles updating point clouds, keeps track of loaded nodes, etc.
    */
@@ -57,6 +61,9 @@ export class Viewer {
     targetEl.appendChild(this.renderer.domElement);
 
     this.cameraControls = new OrbitControls(this.camera, this.targetEl);
+    this.targetHelper = new AxesHelper(1)
+    this.scene.add(this.targetHelper)
+
 
     this.resize();
     window.addEventListener('resize', this.resize);
@@ -172,6 +179,8 @@ export class Viewer {
     if (prevTime === undefined) {
       return;
     }
+
+    this.targetHelper.position.copy(this.cameraControls.target)
 
     this.update(time - prevTime);
     this.render();

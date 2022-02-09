@@ -96,7 +96,7 @@ const onPCOLoad = (pco: PointCloudOctree) => {
   const camera = viewer.camera;
   camera.far = 1000;
   camera.updateProjectionMatrix();
-  camera.position.set(-7.994910999999999, 20.095619, -18.737658);
+  camera.position.set(-7.994910999999999, 40.095619, -18.737658);
   camera.lookAt(new Vector3());
 
   viewer.add(pco);
