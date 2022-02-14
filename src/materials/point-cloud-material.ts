@@ -10,11 +10,10 @@ import {
   PerspectiveCamera,
   RawShaderMaterial,
   Scene,
-  Texture,
+  Texture, Vector2,
   Vector3,
   Vector4,
   WebGLRenderer,
-  WebGLRenderTarget,
 } from 'three';
 import {
   DEFAULT_HIGHLIGHT_COLOR,
@@ -32,7 +31,7 @@ import {DEFAULT_CLASSIFICATION} from './classification';
 import {ClipMode, IClipBox} from './clipping';
 import {NormalFilteringMode, PointCloudMixingMode, PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType} from './enums';
 import {SPECTRAL} from './gradients';
-import {generateClassificationTexture, generateDataTexture, generateGradientTexture,} from './texture-generation';
+import {generateClassificationTexture, generateDataTexture, generateGradientTexture} from './texture-generation';
 import {IClassification, IGradient, IUniform} from './types';
 
 export interface IPointCloudMaterialParameters {
@@ -148,7 +147,13 @@ const CLIP_MODE_DEFS = {
 
 export class PointCloudMaterial extends RawShaderMaterial {
   private static helperVec3 = new Vector3();
+  private static helperVec2 = new Vector2();
 
+  /**
+   * Use the drawing buffer size instead of the dom client width and height when passing the screen height and screen width uniforms to the
+   * shader. This is useful if you have offscreen canvases (which in some browsers return 0 as client width and client height).
+   */
+  useDrawingBufferSize = false;
   lights = false;
   fog = false;
   numClipBoxes: number = 0;
@@ -577,12 +582,19 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.fov = Math.PI / 2; // will result in slope = 1 in the shader
     }
     const renderTarget = renderer.getRenderTarget();
-    if (renderTarget !== null && renderTarget instanceof WebGLRenderTarget) {
+    if (renderTarget !== null) {
       this.screenWidth = renderTarget.width;
       this.screenHeight = renderTarget.height;
     } else {
       this.screenWidth = renderer.domElement.clientWidth * pixelRatio;
       this.screenHeight = renderer.domElement.clientHeight * pixelRatio;
+    }
+
+    if (this.useDrawingBufferSize)
+    {
+      renderer.getDrawingBufferSize(PointCloudMaterial.helperVec2);
+      this.screenWidth = PointCloudMaterial.helperVec2.width;
+      this.screenHeight = PointCloudMaterial.helperVec2.height;
     }
 
     const maxScale = Math.max(octree.scale.x, octree.scale.y, octree.scale.z);

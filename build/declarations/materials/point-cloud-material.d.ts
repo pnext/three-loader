@@ -69,6 +69,12 @@ export interface IPointCloudMaterialUniforms {
 }
 export declare class PointCloudMaterial extends RawShaderMaterial {
     private static helperVec3;
+    private static helperVec2;
+    /**
+     * Use the drawing buffer size instead of the dom client width and height when passing the screen height and screen width uniforms to the
+     * shader. This is useful if you have offscreen canvases (which in some browsers return 0 as client width and client height).
+     */
+    useDrawingBufferSize: boolean;
     lights: boolean;
     fog: boolean;
     numClipBoxes: number;
