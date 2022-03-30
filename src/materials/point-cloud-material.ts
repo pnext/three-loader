@@ -11,10 +11,10 @@ import {
   RawShaderMaterial,
   Scene,
   Texture,
+  Vector2,
   Vector3,
   Vector4,
   WebGLRenderer,
-  WebGLRenderTarget,
 } from 'three';
 import {
   DEFAULT_HIGHLIGHT_COLOR,
@@ -30,7 +30,15 @@ import { PointCloudOctreeNode } from '../point-cloud-octree-node';
 import { byLevelAndIndex } from '../utils/utils';
 import { DEFAULT_CLASSIFICATION } from './classification';
 import { ClipMode, IClipBox } from './clipping';
-import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
+import {
+  NormalFilteringMode,
+  PointCloudMixingMode,
+  PointColorType,
+  PointOpacityType,
+  PointShape,
+  PointSizeType,
+  TreeType,
+} from './enums';
 import { SPECTRAL } from './gradients';
 import {
   generateClassificationTexture,
@@ -93,6 +101,15 @@ export interface IPointCloudMaterialUniforms {
   highlightedPointColor: IUniform<Vector4>;
   enablePointHighlighting: IUniform<boolean>;
   highlightedPointScale: IUniform<number>;
+  normalFilteringMode: IUniform<number>;
+  backgroundMap: IUniform<Texture | null>;
+  pointCloudID: IUniform<number>;
+  pointCloudMixAngle: IUniform<number>;
+  stripeDistanceX: IUniform<number>;
+  stripeDistanceY: IUniform<number>;
+  stripeDivisorX: IUniform<number>;
+  stripeDivisorY: IUniform<number>;
+  pointCloudMixingMode: IUniform<number>;
 }
 
 const TREE_TYPE_DEFS = {
@@ -143,7 +160,13 @@ const CLIP_MODE_DEFS = {
 
 export class PointCloudMaterial extends RawShaderMaterial {
   private static helperVec3 = new Vector3();
+  private static helperVec2 = new Vector2();
 
+  /**
+   * Use the drawing buffer size instead of the dom client width and height when passing the screen height and screen width uniforms to the
+   * shader. This is useful if you have offscreen canvases (which in some browsers return 0 as client width and client height).
+   */
+  useDrawingBufferSize = false;
   lights = false;
   fog = false;
   numClipBoxes: number = 0;
@@ -208,6 +231,15 @@ export class PointCloudMaterial extends RawShaderMaterial {
     highlightedPointColor: makeUniform('fv', DEFAULT_HIGHLIGHT_COLOR.clone()),
     enablePointHighlighting: makeUniform('b', true),
     highlightedPointScale: makeUniform('f', 2.0),
+    backgroundMap: makeUniform('t', null),
+    normalFilteringMode: makeUniform('i', NormalFilteringMode.ABSOLUTE_NORMAL_FILTERING_MODE),
+    pointCloudID: makeUniform('f', 2),
+    pointCloudMixingMode: makeUniform('i', PointCloudMixingMode.CHECKBOARD),
+    stripeDistanceX: makeUniform('f', 5),
+    stripeDistanceY: makeUniform('f', 5),
+    stripeDivisorX: makeUniform('f', 2),
+    stripeDivisorY: makeUniform('f', 2),
+    pointCloudMixAngle: makeUniform('f', 31),
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -244,6 +276,15 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('highlightedPointColor') highlightedPointColor!: Vector4;
   @uniform('enablePointHighlighting') enablePointHighlighting!: boolean;
   @uniform('highlightedPointScale') highlightedPointScale!: number;
+  @uniform('normalFilteringMode') normalFilteringMode!: number;
+  @uniform('backgroundMap') backgroundMap!: Texture | undefined;
+  @uniform('pointCloudID') pointCloudID!: number;
+  @uniform('pointCloudMixingMode') pointCloudMixingMode!: number;
+  @uniform('stripeDistanceX') stripeDistanceX!: number;
+  @uniform('stripeDistanceY') stripeDistanceY!: number;
+  @uniform('stripeDivisorX') stripeDivisorX!: number;
+  @uniform('stripeDivisorY') stripeDivisorY!: number;
+  @uniform('pointCloudMixAngle') pointCloudMixAngle!: number;
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;
@@ -255,6 +296,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE;
   @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED;
   @requiresShaderUpdate() useFilterByNormal: boolean = false;
+  @requiresShaderUpdate() useTextureBlending: boolean = false;
+  @requiresShaderUpdate() usePointCloudMixing: boolean = false;
   @requiresShaderUpdate() highlightPoint: boolean = false;
 
   attributes = {
@@ -316,6 +359,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
     if (this.depthMap) {
       this.depthMap.dispose();
       this.depthMap = undefined;
+    }
+    if (this.backgroundMap) {
+      this.backgroundMap.dispose();
+      this.backgroundMap = undefined;
     }
   }
 
@@ -396,12 +443,32 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('highlight_point');
     }
 
+    if (this.useTextureBlending) {
+      define('use_texture_blending');
+    }
+
+    if (this.usePointCloudMixing) {
+      define('use_point_cloud_mixing');
+    }
+
     define('MAX_POINT_LIGHTS 0');
     define('MAX_DIR_LIGHTS 0');
 
     parts.push(shaderSrc);
 
     return parts.join('\n');
+  }
+
+  setPointCloudMixingMode(mode: PointCloudMixingMode) {
+    this.pointCloudMixingMode = mode;
+  }
+
+  getPointCloudMixingMode(): PointCloudMixingMode {
+    if (this.pointCloudMixingMode === PointCloudMixingMode.STRIPES) {
+      return PointCloudMixingMode.STRIPES;
+    }
+
+    return PointCloudMixingMode.CHECKBOARD;
   }
 
   setClipBoxes(clipBoxes: IClipBox[]): void {
@@ -528,12 +595,18 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.fov = Math.PI / 2; // will result in slope = 1 in the shader
     }
     const renderTarget = renderer.getRenderTarget();
-    if (renderTarget !== null && renderTarget instanceof WebGLRenderTarget) {
+    if (renderTarget !== null) {
       this.screenWidth = renderTarget.width;
       this.screenHeight = renderTarget.height;
     } else {
       this.screenWidth = renderer.domElement.clientWidth * pixelRatio;
       this.screenHeight = renderer.domElement.clientHeight * pixelRatio;
+    }
+
+    if (this.useDrawingBufferSize) {
+      renderer.getDrawingBufferSize(PointCloudMaterial.helperVec2);
+      this.screenWidth = PointCloudMaterial.helperVec2.width;
+      this.screenHeight = PointCloudMaterial.helperVec2.height;
     }
 
     const maxScale = Math.max(octree.scale.x, octree.scale.y, octree.scale.z);

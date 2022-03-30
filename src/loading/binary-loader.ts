@@ -3,8 +3,10 @@
 // -------------------------------------------------------------------------------------------------
 
 import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
+import { handleFailedRequest, handleEmptyBuffer } from '../utils/utils';
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
+import { WorkerPool } from '../utils/worker-pool';
 import { Version } from '../version';
 import { GetUrlFn, XhrRequest } from './types';
 
@@ -46,7 +48,10 @@ export class BinaryLoader {
   xhrRequest: XhrRequest;
   callbacks: Callback[];
 
-  private workers: Worker[] = [];
+  public static readonly WORKER_POOL = new WorkerPool(
+    32,
+    require('../workers/binary-decoder.worker.js'),
+  );
 
   constructor({
     getUrl = s => Promise.resolve(s),
@@ -69,9 +74,6 @@ export class BinaryLoader {
   }
 
   dispose(): void {
-    this.workers.forEach(worker => worker.terminate());
-    this.workers = [];
-
     this.disposed = true;
   }
 
@@ -82,9 +84,11 @@ export class BinaryLoader {
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
-      .then(res => res.arrayBuffer())
-      .then(buffer => {
-        return new Promise(resolve => this.parse(node, buffer, resolve));
+      .then(res => handleFailedRequest(res))
+      .then(okRes => okRes.arrayBuffer())
+      .then(buffer => handleEmptyBuffer(buffer))
+      .then(okBuffer => {
+        return new Promise(resolve => this.parse(node, okBuffer, resolve));
       });
   }
 
@@ -107,71 +111,56 @@ export class BinaryLoader {
       return;
     }
 
-    const worker = this.getWorker();
+    BinaryLoader.WORKER_POOL.getWorker().then(autoTerminatingWorker => {
+      const pointAttributes = node.pcoGeometry.pointAttributes;
+      const numPoints = buffer.byteLength / pointAttributes.byteSize;
 
-    const pointAttributes = node.pcoGeometry.pointAttributes;
-    const numPoints = buffer.byteLength / pointAttributes.byteSize;
-
-    if (this.version.upTo('1.5')) {
-      node.numPoints = numPoints;
-    }
-
-    worker.onmessage = (e: WorkerResponse) => {
-      if (this.disposed) {
-        resolve();
-        return;
+      if (this.version.upTo('1.5')) {
+        node.numPoints = numPoints;
       }
 
-      const data = e.data;
+      autoTerminatingWorker.worker.onmessage = (e: WorkerResponse) => {
+        if (this.disposed) {
+          resolve();
+          BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
+          return;
+        }
 
-      const geometry = (node.geometry = node.geometry || new BufferGeometry());
-      geometry.boundingBox = node.boundingBox;
+        const data = e.data;
 
-      this.addBufferAttributes(geometry, data.attributeBuffers);
-      this.addIndices(geometry, data.indices);
-      this.addNormalAttribute(geometry, numPoints);
+        const geometry = (node.geometry = node.geometry || new BufferGeometry());
+        geometry.boundingBox = node.boundingBox;
 
-      node.mean = new Vector3().fromArray(data.mean);
-      node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
-      node.loaded = true;
-      node.loading = false;
-      node.failed = false;
-      node.pcoGeometry.numNodesLoading--;
-      node.pcoGeometry.needsUpdate = true;
+        this.addBufferAttributes(geometry, data.attributeBuffers);
+        this.addIndices(geometry, data.indices);
+        this.addNormalAttribute(geometry, numPoints);
 
-      this.releaseWorker(worker);
+        node.mean = new Vector3().fromArray(data.mean);
+        node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
+        node.loaded = true;
+        node.loading = false;
+        node.failed = false;
+        node.pcoGeometry.numNodesLoading--;
+        node.pcoGeometry.needsUpdate = true;
 
-      this.callbacks.forEach(callback => callback(node));
-      resolve();
-    };
+        this.callbacks.forEach(callback => callback(node));
+        resolve();
+        BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
+      };
 
-    const message = {
-      buffer,
-      pointAttributes,
-      version: this.version.version,
-      min: node.boundingBox.min.toArray(),
-      offset: node.pcoGeometry.offset.toArray(),
-      scale: this.scale,
-      spacing: node.spacing,
-      hasChildren: node.hasChildren,
-    };
+      const message = {
+        buffer,
+        pointAttributes,
+        version: this.version.version,
+        min: node.boundingBox.min.toArray(),
+        offset: node.pcoGeometry.offset.toArray(),
+        scale: this.scale,
+        spacing: node.spacing,
+        hasChildren: node.hasChildren,
+      };
 
-    worker.postMessage(message, [message.buffer]);
-  }
-
-  private getWorker(): Worker {
-    const worker = this.workers.pop();
-    if (worker) {
-      return worker;
-    }
-
-    const ctor = require('../workers/binary-decoder.worker.js');
-
-    return new ctor();
-  }
-
-  private releaseWorker(worker: Worker): void {
-    this.workers.push(worker);
+      autoTerminatingWorker.worker.postMessage(message, [message.buffer]);
+    });
   }
 
   private getTightBoundingBox({ min, max }: { min: number[]; max: number[] }): Box3 {

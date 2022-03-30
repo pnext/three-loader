@@ -39,3 +39,14 @@ export enum PointColorType {
   RGB_HEIGHT = 13,
   COMPOSITE = 50,
 }
+
+export enum NormalFilteringMode {
+  ABSOLUTE_NORMAL_FILTERING_MODE = 1,
+  LESS_EQUAL_NORMAL_FILTERING_MODE = 2,
+  GREATER_NORMAL_FILTERING_MODE = 3,
+}
+
+export enum PointCloudMixingMode {
+  CHECKBOARD = 1,
+  STRIPES = 2,
+}

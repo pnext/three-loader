@@ -1,6 +1,7 @@
 import {
   BufferAttribute,
   Camera,
+  Color,
   LinearFilter,
   NearestFilter,
   NoBlending,
@@ -13,7 +14,6 @@ import {
   Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
-  Color,
 } from 'three';
 import { COLOR_BLACK, DEFAULT_PICK_WINDOW_SIZE } from './constants';
 import { ClipMode, PointCloudMaterial, PointColorType } from './materials';
