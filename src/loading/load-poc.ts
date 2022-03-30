@@ -105,7 +105,11 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
 
 function getBoundingBoxes(
   data: POCJson,
-): { offset: Vector3; boundingBox: Box3; tightBoundingBox: Box3 } {
+): {
+  offset: Vector3;
+  boundingBox: Box3;
+  tightBoundingBox: Box3;
+} {
   const min = new Vector3(data.boundingBox.lx, data.boundingBox.ly, data.boundingBox.lz);
   const max = new Vector3(data.boundingBox.ux, data.boundingBox.uy, data.boundingBox.uz);
   const boundingBox = new Box3(min, max);

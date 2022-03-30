@@ -10,7 +10,8 @@ import {
   PerspectiveCamera,
   RawShaderMaterial,
   Scene,
-  Texture, Vector2,
+  Texture,
+  Vector2,
   Vector3,
   Vector4,
   WebGLRenderer,
@@ -24,15 +25,27 @@ import {
   DEFAULT_RGB_GAMMA,
   PERSPECTIVE_CAMERA,
 } from '../constants';
-import {PointCloudOctree} from '../point-cloud-octree';
-import {PointCloudOctreeNode} from '../point-cloud-octree-node';
-import {byLevelAndIndex} from '../utils/utils';
-import {DEFAULT_CLASSIFICATION} from './classification';
-import {ClipMode, IClipBox} from './clipping';
-import {NormalFilteringMode, PointCloudMixingMode, PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType} from './enums';
-import {SPECTRAL} from './gradients';
-import {generateClassificationTexture, generateDataTexture, generateGradientTexture} from './texture-generation';
-import {IClassification, IGradient, IUniform} from './types';
+import { PointCloudOctree } from '../point-cloud-octree';
+import { PointCloudOctreeNode } from '../point-cloud-octree-node';
+import { byLevelAndIndex } from '../utils/utils';
+import { DEFAULT_CLASSIFICATION } from './classification';
+import { ClipMode, IClipBox } from './clipping';
+import {
+  NormalFilteringMode,
+  PointCloudMixingMode,
+  PointColorType,
+  PointOpacityType,
+  PointShape,
+  PointSizeType,
+  TreeType,
+} from './enums';
+import { SPECTRAL } from './gradients';
+import {
+  generateClassificationTexture,
+  generateDataTexture,
+  generateGradientTexture,
+} from './texture-generation';
+import { IClassification, IGradient, IUniform } from './types';
 
 export interface IPointCloudMaterialParameters {
   size: number;
@@ -590,8 +603,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.screenHeight = renderer.domElement.clientHeight * pixelRatio;
     }
 
-    if (this.useDrawingBufferSize)
-    {
+    if (this.useDrawingBufferSize) {
       renderer.getDrawingBufferSize(PointCloudMaterial.helperVec2);
       this.screenWidth = PointCloudMaterial.helperVec2.width;
       this.screenHeight = PointCloudMaterial.helperVec2.height;

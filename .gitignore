@@ -1,6 +1,7 @@
 .project
 .vscode/
 .idea/
+/build
 /pointclouds/alszeile
 /pointclouds/D
 /pointclouds/wrneustadt
