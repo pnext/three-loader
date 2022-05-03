@@ -61,6 +61,7 @@ export interface IPointCloudMaterialUniforms {
   classificationLUT: IUniform<Texture>;
   clipBoxCount: IUniform<number>;
   clipBoxes: IUniform<Float32Array>;
+  clipExtent: IUniform<[number, number, number, number]>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
   fov: IUniform<number>;
@@ -156,6 +157,8 @@ const CLIP_MODE_DEFS = {
   [ClipMode.DISABLED]: 'clip_disabled',
   [ClipMode.CLIP_OUTSIDE]: 'clip_outside',
   [ClipMode.HIGHLIGHT_INSIDE]: 'clip_highlight_inside',
+  [ClipMode.CLIP_HORIZONTALLY]: 'clip_horizontally',
+  [ClipMode.CLIP_VERTICALLY]: 'clip_vertically',
 };
 
 export class PointCloudMaterial extends RawShaderMaterial {
@@ -189,6 +192,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     classificationLUT: makeUniform('t', this.classificationTexture || new Texture()),
     clipBoxCount: makeUniform('f', 0),
     clipBoxes: makeUniform('Matrix4fv', [] as any),
+    clipExtent: makeUniform('fv', [0.0, 1.0, 0.0, 1.0] as [number, number, number, number]),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     fov: makeUniform('f', 1.0),
@@ -243,6 +247,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
+  @uniform('clipExtent') clipExtent!: [number, number, number, number];
   @uniform('depthMap') depthMap!: Texture | undefined;
   @uniform('fov') fov!: number;
   @uniform('heightMax') heightMax!: number;
