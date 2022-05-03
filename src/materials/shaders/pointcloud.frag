@@ -21,6 +21,10 @@ uniform float screenHeight;
 
 uniform sampler2D depthMap;
 
+#if defined (clip_horizontally) || defined (clip_vertically)
+	uniform vec4 clipExtent;
+#endif
+
 #ifdef use_texture_blending
 	uniform sampler2D backgroundMap;
 #endif
@@ -76,6 +80,20 @@ float specularStrength = 1.0;
 void main() {
 	vec3 color = vColor;
 	float depth = gl_FragCoord.z;
+
+	#if defined (clip_horizontally) || defined (clip_vertically)
+	vec2 ndc = vec2((gl_FragCoord.x / screenWidth), 1.0 - (gl_FragCoord.y / screenHeight));
+
+	if(step(clipExtent.x, ndc.x) * step(ndc.x, clipExtent.z) < 1.0)
+	{
+		discard;
+	}
+
+	if(step(clipExtent.y, ndc.y) * step(ndc.y, clipExtent.w) < 1.0)
+	{
+		discard;
+	}
+	#endif  
 
 	#if defined(circle_point_shape) || defined(paraboloid_point_shape) || defined (weighted_splats)
 		float u = 2.0 * gl_PointCoord.x - 1.0;
