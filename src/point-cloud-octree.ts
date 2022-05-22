@@ -184,7 +184,6 @@ export class PointCloudOctree extends PointCloudTree {
   hideDescendants(object: Object3D): void {
     const toHide: Object3D[] = [];
     addVisibleChildren(object);
-
     while (toHide.length > 0) {
       const objToHide = toHide.shift()!;
       objToHide.visible = false;
