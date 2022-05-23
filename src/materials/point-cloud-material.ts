@@ -192,7 +192,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     classificationLUT: makeUniform('t', this.classificationTexture || new Texture()),
     clipBoxCount: makeUniform('f', 0),
     clipBoxes: makeUniform('Matrix4fv', [] as any),
-    clipExtent: makeUniform('fv', [0.0, 1.0, 0.0, 1.0] as [number, number, number, number]),
+    clipExtent: makeUniform('fv', [0.0, 0.0, 1.0, 1.0] as [number, number, number, number]),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     fov: makeUniform('f', 1.0),
@@ -625,6 +625,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.updateVisibilityTextureData(visibleNodes);
     }
   }
+
 
   private updateVisibilityTextureData(nodes: PointCloudOctreeNode[]) {
     nodes.sort(byLevelAndIndex);
