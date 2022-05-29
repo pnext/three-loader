@@ -6,6 +6,7 @@ import { Viewer } from './viewer';
 import { gsToPath } from '../src/utils/utils';
 import sps from './hataasyia_9491_sps.json';
 import polyhedron from './hataasyia_crown_polyhedron.json';
+const firstSPs = sps.slice(0, 50);
 
 // import { Potree } from '../src/potree'
 // @ts-ignore
@@ -31,6 +32,11 @@ interface SerializedCamera {
   target: [number, number, number];
 }
 
+const toggleHighlight = (value: boolean) => {
+  const polyhedra = polyhedron.length ? polyhedron : [polyhedron]
+  pointClouds.forEach(pco => pco.material.setHighlightPolyhedra((value ? polyhedra : []) as IClipPolyhedron[]))
+}
+
 const deserializeCamera = async (cameraJSON: string) => {
   if (!cameraJSON) {
     cameraJSON = await navigator.clipboard.readText()
@@ -48,7 +54,6 @@ const serializeCamera = () => {
     quaternion: viewer.camera.quaternion.toArray(),
     target: viewer.cameraControls.target.toArray()
   })
-
 }
 
 const copyCamera = () => {
@@ -64,12 +69,13 @@ const clearDefaultCamera = () => {
 }
 
 const parameters = {
-  budget: 3e7,
-  maxLevel: 20,
+  budget: 3e6,
+  maxLevel: 2,
   minNodePixelSize: 40,
   'points size': 0.2,
   'clipping plane': -100,
   shape: PointShape.SQUARE,
+  useHighlight: false,
   highlightIgnoreDepth: false,
   pointSizeType: PointSizeType.ATTENUATED,
   pointColorType: PointColorType.RGB,
@@ -95,7 +101,7 @@ viewer.initialize(targetEl);
 
 
 const clippingPlane = new Plane();
-const planeHelper = new PlaneHelper(clippingPlane, 5, 0xffc919);
+const planeHelper = new PlaneHelper(clippingPlane, 50, 0xffc919);
 clippingPlane.constant = -parameters['clipping plane'];
 viewer.scene.add(planeHelper);
 
@@ -119,12 +125,10 @@ const onPCOLoad = (pco: PointCloudOctree, quat: number[], translation: number[])
   var translationTuple: [number, number, number] = [translation[0], translation[1], translation[2]]
   pco.position.set(...translationTuple)
   pco.quaternion.set(...quatTuple)
-  // pco.position.set(-4.943994811749849, 19.994607104408757, -18.05086635769811);
-  // pco.quaternion.set(0.0040494408101606535, 0.9865631369397857, -0.0012931641867331405, 0.1633251560141326);
-
-  // pointCloud.material.setClipPolyhedra([{
-    pco.material.setHighlightPolyhedra([polyhedron] as IClipPolyhedron[]);
   viewer.add(pco);
+  if (parameters.useHighlight) {
+    toggleHighlight(parameters.useHighlight)
+  }
 }
 
 const loadResonaiPotree = async () => {
@@ -132,8 +136,8 @@ const loadResonaiPotree = async () => {
   //   // console.log('Loaded node!', node);
   // }
   const onLoad = () => {};
-  while (sps.length) {
-    await Promise.all(sps.splice(0, 1).map(task => {
+  while (firstSPs.length) {
+    await Promise.all(firstSPs.splice(0, 1).map(task => {
       // console.log('__________________');
       return fetch(gsToPath(task.loc)).then(res => {
         res.text().then(text => {
@@ -213,6 +217,7 @@ function initGui() {
       pointCloud.material.shape = Number(val);
     })
   });
+  gui.add(parameters, 'useHighlight', false).onChange(toggleHighlight);
   gui.add(parameters, 'highlightIgnoreDepth', false).onChange(function (val: boolean) {
     pointClouds.forEach(pointCloud => {
       pointCloud.material.setHighlightIgnoreDepth(val);

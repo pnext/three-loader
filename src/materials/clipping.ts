@@ -18,7 +18,7 @@ export interface IClipConvex {
 }
 
 export interface IClipPolyhedron {
-  color: Color;
+  color: Color | number | string;
   outside: boolean;
   convexes: IClipConvex[];
 }
