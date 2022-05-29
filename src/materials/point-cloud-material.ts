@@ -686,6 +686,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
         materialUniforms.clippingPlanes.value = [0, 0, 0, 1]
         pointCloudMaterial.defines.NUM_CLIP_PLANES = 0
       }
+
+      // TODO(Shai) Apply same if logic to the polyhedra
+      // Need to set render order
+
+
       materialUniforms.level.value = node.level;
       materialUniforms.isLeafNode.value = node.isLeafNode;
 

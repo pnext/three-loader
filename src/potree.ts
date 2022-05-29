@@ -183,6 +183,9 @@ export class Potree implements IPotree {
       const halfHeight =
         0.5 * renderer.getSize(this._rendererSize).height * renderer.getPixelRatio();
 
+
+      // TODO(Shai) update the polyhedra / clipping planes on the material here
+
       this.updateChildVisibility(
         queueItem,
         priorityQueue,
