@@ -745,7 +745,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
         convex.planes.forEach((plane) => {
           planeToCon.push(currentConvex);
           planeToPoly.push(polyhedronIndex);
-          flatPlanes.push(...plane.normal.toArray(), -plane.constant);
+          flatPlanes.push(...(new Vector3().copy(plane.normal)).toArray(), -plane.constant);
         });
         currentConvex++;
       });

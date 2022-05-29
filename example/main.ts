@@ -1,10 +1,12 @@
-import { Color, Plane, PlaneHelper, Vector3} from 'three';
+import { Plane, PlaneHelper } from 'three';
 import { PointCloudOctree } from '../src';
 import { IClipPolyhedron } from '../src/materials/clipping';
 import { PointOpacityType, PointShape, PointSizeType, PointColorType } from '../src/materials/enums';
 import { Viewer } from './viewer';
 import { gsToPath } from '../src/utils/utils';
 import sps from './hataasyia_9491_sps.json';
+import polyhedron from './hataasyia_crown_polyhedron.json';
+
 // import { Potree } from '../src/potree'
 // @ts-ignore
 
@@ -121,24 +123,7 @@ const onPCOLoad = (pco: PointCloudOctree, quat: number[], translation: number[])
   // pco.quaternion.set(0.0040494408101606535, 0.9865631369397857, -0.0012931641867331405, 0.1633251560141326);
 
   // pointCloud.material.setClipPolyhedra([{
-    pco.material.setHighlightPolyhedra([{
-    outside: false,
-    color: new Color(0xffff00),
-    convexes: [{
-     planes: [
-       new Plane(new Vector3(-0.23640714656581407, -0.65759338107618, -0.7153199327695319), 5.982078455274273),
-       new Plane(new Vector3(-0.6694967441207063, -0.7385242730936087, -0.07972457377327555), 3.6523286782910587),
-       new Plane(new Vector3(0.49628440624014875, 0.6848974916633837, 0.5334952802378559), -3.511509247643808),
-      ]
-    },
-    {
-      planes: [
-        new Plane(new Vector3(-0.6475844802133526, -0.5347307669341604, 0.5428603392041147), 2.481919875324591),
-        new Plane(new Vector3(0.6694967441207063, 0.7385242730936087, 0.07972457377327552), -3.6523286782910587),
-        new Plane(new Vector3(0.5816752160508767, 0.1388228158752384, -0.8014874726560831), 2.7728004709760365),
-       ]
-     }]
-  }] as IClipPolyhedron[]);
+    pco.material.setHighlightPolyhedra([polyhedron] as IClipPolyhedron[]);
   viewer.add(pco);
 }
 
