@@ -3,6 +3,7 @@ import { PointCloudOctree, Potree } from '../src';
 import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { gsToPath } from '../src/utils/utils';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import * as Stats from 'stats.js';
 
 export class Viewer {
   /**
@@ -70,6 +71,7 @@ export class Viewer {
     window.addEventListener('dblclick', this.ondblclick, false);
 
     requestAnimationFrame(this.loop);
+    this.initStats();
   }
 
   /**
@@ -153,6 +155,20 @@ export class Viewer {
     // console.time('updatePointClouds');
     this.potree.updatePointClouds(this.pointClouds, this.camera, this.renderer);
     // console.timeEnd('updatePointClouds');
+  }
+
+  initStats(): void {
+    var stats = new Stats();
+    stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+    document.body.appendChild(stats.dom);
+
+    function animate() {
+      stats.begin();
+      // monitored code goes here
+      stats.end();
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
   }
 
   /**
