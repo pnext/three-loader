@@ -1,6 +1,7 @@
 import {
   BufferAttribute,
   Camera,
+  Color,
   LinearFilter,
   NearestFilter,
   NoBlending,
@@ -13,10 +14,9 @@ import {
   Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
-  Color,
 } from 'three';
 import { COLOR_BLACK, DEFAULT_PICK_WINDOW_SIZE } from './constants';
-import { ClipMode, PointCloudMaterial, PointColorType } from './materials';
+import { PointCloudMaterial, PointColorType } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickPoint, PointCloudHit } from './types';
@@ -258,7 +258,7 @@ export class PointCloudOctreePicker {
   private static updatePickMaterial(
     pickMaterial: PointCloudMaterial,
     nodeMaterial: PointCloudMaterial,
-    params: Partial<PickParams>,
+    _params: Partial<PickParams>,
   ): void {
     pickMaterial.pointSizeType = nodeMaterial.pointSizeType;
     pickMaterial.shape = nodeMaterial.shape;
@@ -268,15 +268,9 @@ export class PointCloudOctreePicker {
     pickMaterial.classification = nodeMaterial.classification;
     pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
     pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
-
-    if (params.pickOutsideClipRegion) {
-      pickMaterial.clipMode = ClipMode.DISABLED;
-    } else {
-      pickMaterial.clipMode = nodeMaterial.clipMode;
-      pickMaterial.setClipBoxes(
-        nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
-      );
-    }
+    pickMaterial.clipMode = nodeMaterial.clipMode;
+    pickMaterial.clippingPlanes = nodeMaterial.clippingPlanes;
+    pickMaterial.copyPolyhedra(nodeMaterial);
   }
 
   private static updatePickRenderTarget(

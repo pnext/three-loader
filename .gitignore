@@ -1,11 +1,11 @@
 .project
 .vscode/
 .idea/
-/build
 /pointclouds/alszeile
 /pointclouds/D
 /pointclouds/wrneustadt
 /test
+build/report.html
 docs/.doc.md.html
 docs/.file_format.md.html
 docs/.how_does_loading_nodes_work.md.html

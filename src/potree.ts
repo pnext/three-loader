@@ -17,8 +17,7 @@ import {
   PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
-import { GetUrlFn, loadPOC } from './loading';
-import { ClipMode } from './materials';
+import { GetUrlFn, loadResonaiPOC } from './loading';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -43,24 +42,27 @@ export class Potree implements IPotree {
   private _pointBudget: number = DEFAULT_POINT_BUDGET;
   private _rendererSize: Vector2 = new Vector2();
 
-  maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
+  private _maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  loadPointCloud(
-    url: string,
+  loadResonaiPointCloud(
+    potreeName: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+    callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
   ): Promise<PointCloudOctree> {
-    return loadPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    // console.log('here2');
+    return loadResonaiPOC(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new PointCloudOctree(this, geometry));
   }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
-    const result = this.updateVisibility(pointClouds, camera, renderer);
+    const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
 
     for (let i = 0; i < pointClouds.length; i++) {
       const pointCloud = pointClouds[i];
@@ -101,10 +103,19 @@ export class Potree implements IPotree {
     }
   }
 
+  get maxNumNodesLoading(): number {
+    return this._maxNumNodesLoading;
+  }
+
+  set maxNumNodesLoading(value: number) {
+    this._maxNumNodesLoading = value || MAX_NUM_NODES_LOADING;
+  }
+
   private updateVisibility(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
     let numVisiblePoints = 0;
 
@@ -125,8 +136,8 @@ export class Potree implements IPotree {
     while ((queueItem = priorityQueue.pop()) !== undefined) {
       let node = queueItem.node;
 
-      // If we will end up with too many points, we stop right away.
-      if (numVisiblePoints + node.numPoints > this.pointBudget) {
+      // If we will end up with too many points, we stop right away. Allow root.
+      if (numVisiblePoints + node.numPoints > this.pointBudget && node.level !== 0) {
         break;
       }
 
@@ -183,7 +194,8 @@ export class Potree implements IPotree {
       );
     } // end priority queue loop
 
-    const numNodesToLoad = Math.min(this.maxNumNodesLoading, unloadedGeometry.length);
+    // console.log(numNodesLoading, unloadedGeometry.length);
+    const numNodesToLoad = Math.max(Math.min(maxNumNodesLoading || this.maxNumNodesLoading, unloadedGeometry.length), 0);
     const nodeLoadPromises: Promise<void>[] = [];
     for (let i = 0; i < numNodesToLoad; i++) {
       nodeLoadPromises.push(unloadedGeometry[i].load());
@@ -234,8 +246,14 @@ export class Potree implements IPotree {
       }
 
       const sphere = child.boundingSphere;
-      const distance = sphere.center.distanceTo(cameraPosition);
+      // const distancex = sphere.center.x - cameraPosition.x
+      // const distancey = sphere.center.y - cameraPosition.y
+      // const distancez = sphere.center.z - cameraPosition.z
       const radius = sphere.radius;
+      const distance = Math.max(0, sphere.center.distanceTo(cameraPosition) - radius);
+      // const distance = Math.max(0, Math.sqrt(distancex*distancex + distancey*distancey + distancez*distancez) - radius)
+
+
 
       let projectionFactor = 0.0;
 
@@ -251,13 +269,15 @@ export class Potree implements IPotree {
 
       const screenPixelRadius = radius * projectionFactor;
 
-      // Don't add the node if it'll be too small on the screen.
-      if (screenPixelRadius < pointCloud.minNodePixelSize) {
+      // Don't add the node if it'll be too small on the screen, except root.
+      // console.log(pointCloud.level);
+      if (screenPixelRadius < pointCloud.minNodePixelSize && child.level) {
         continue;
       }
 
       // Nodes which are larger will have priority in loading/displaying.
-      const weight = distance < radius ? Number.MAX_VALUE : screenPixelRadius + 1 / distance;
+      const has_children_penalty = child.children.length > 0 ? 1 : 10;
+      const weight = distance < radius ? Number.MAX_VALUE : screenPixelRadius + 1 / (distance * has_children_penalty);
 
       priorityQueue.push(new QueueItem(queueItem.pointCloudIndex, weight, child, node));
     }
@@ -281,30 +301,30 @@ export class Potree implements IPotree {
     }
   }
 
-  private shouldClip(pointCloud: PointCloudOctree, boundingBox: Box3): boolean {
-    const material = pointCloud.material;
+  private shouldClip(_pointCloud: PointCloudOctree, _boundingBox: Box3): boolean {
+    // const material = pointCloud.material;
 
-    if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
-      return false;
-    }
+    // if (material.numClipBoxes === 0 || material.clipMode !== ClipMode.CLIP_OUTSIDE) {
+    //   return false;
+    // }
 
-    const box2 = boundingBox.clone();
-    pointCloud.updateMatrixWorld(true);
-    box2.applyMatrix4(pointCloud.matrixWorld);
+    // const box2 = boundingBox.clone();
+    // pointCloud.updateMatrixWorld(true);
+    // box2.applyMatrix4(pointCloud.matrixWorld);
 
-    const clipBoxes = material.clipBoxes;
-    for (let i = 0; i < clipBoxes.length; i++) {
-      const clipMatrixWorld = clipBoxes[i].matrix;
-      const clipBoxWorld = new Box3(
-        new Vector3(-0.5, -0.5, -0.5),
-        new Vector3(0.5, 0.5, 0.5),
-      ).applyMatrix4(clipMatrixWorld);
-      if (box2.intersectsBox(clipBoxWorld)) {
-        return false;
-      }
-    }
+    // const clipBoxes = material.clipBoxes;
+    // for (let i = 0; i < clipBoxes.length; i++) {
+    //   const clipMatrixWorld = clipBoxes[i].matrix;
+    //   const clipBoxWorld = new Box3(
+    //     new Vector3(-0.5, -0.5, -0.5),
+    //     new Vector3(0.5, 0.5, 0.5),
+    //   ).applyMatrix4(clipMatrixWorld);
+    //   if (box2.intersectsBox(clipBoxWorld)) {
+    //     return false;
+    //   }
+    // }
 
-    return true;
+    return false;
   }
 
   private updateVisibilityStructures = (() => {
@@ -337,7 +357,7 @@ export class Potree implements IPotree {
 
         camera.updateMatrixWorld(false);
 
-        // Furstum in object space.
+        // Frustum in object space.
         const inverseViewMatrix = camera.matrixWorldInverse;
         const worldMatrix = pointCloud.matrixWorld;
         frustumMatrix

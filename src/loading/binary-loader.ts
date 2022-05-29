@@ -8,6 +8,9 @@ import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-nod
 import { Version } from '../version';
 import { GetUrlFn, XhrRequest } from './types';
 
+// @ts-ignore
+import BinaryLoaderWorker from '../workers/binary-decoder.worker.js';
+
 interface AttributeData {
   attribute: {
     name: PointAttributeName;
@@ -80,7 +83,7 @@ export class BinaryLoader {
       return Promise.resolve();
     }
 
-    return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
+    return Promise.resolve(this.getUrl(this.getNodeUrl(node), 0))
       .then(url => this.xhrRequest(url, { mode: 'cors' }))
       .then(res => res.arrayBuffer())
       .then(buffer => {
@@ -164,10 +167,7 @@ export class BinaryLoader {
     if (worker) {
       return worker;
     }
-
-    const ctor = require('../workers/binary-decoder.worker.js');
-
-    return new ctor();
+    return new BinaryLoaderWorker();
   }
 
   private releaseWorker(worker: Worker): void {

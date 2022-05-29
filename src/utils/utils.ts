@@ -1,7 +1,7 @@
 import { IPointCloudTreeNode } from '../types';
 
 export function getIndexFromName(name: string) {
-  return parseInt(name.charAt(name.length - 1), 10);
+  return parseInt(name.charAt(name.length - 1), 10) || 0;
 }
 
 /**
@@ -19,4 +19,8 @@ export function byLevelAndIndex(a: IPointCloudTreeNode, b: IPointCloudTreeNode) 
   } else {
     return 0;
   }
+}
+
+export function gsToPath(gs: string) {
+  return gs.replace('gs://', 'https://storage.googleapis.com/');
 }

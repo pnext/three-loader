@@ -1,9 +1,8 @@
-import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import {PerspectiveCamera, Scene, WebGLRenderer, Vector3, Raycaster, Matrix4, Quaternion, AxesHelper} from 'three';
 import { PointCloudOctree, Potree } from '../src';
-
-// tslint:disable-next-line:no-duplicate-imports
-import * as THREE from 'three';
-const OrbitControls = require('three-orbit-controls')(THREE);
+import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
+import { gsToPath } from '../src/utils/utils';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export class Viewer {
   /**
@@ -26,6 +25,10 @@ export class Viewer {
    * Controls which update the position of the camera.
    */
   cameraControls!: any;
+  /**
+   * helps with target
+   */
+  targetHelper!: any;
   /**
    * Out potree instance which handles updating point clouds, keeps track of loaded nodes, etc.
    */
@@ -58,9 +61,13 @@ export class Viewer {
     targetEl.appendChild(this.renderer.domElement);
 
     this.cameraControls = new OrbitControls(this.camera, this.targetEl);
+    this.targetHelper = new AxesHelper(1)
+    this.scene.add(this.targetHelper)
+
 
     this.resize();
     window.addEventListener('resize', this.resize);
+    window.addEventListener('dblclick', this.ondblclick, false);
 
     requestAnimationFrame(this.loop);
   }
@@ -86,17 +93,31 @@ export class Viewer {
   /**
    * Loads a point cloud into the viewer and returns it.
    *
-   * @param fileName
-   *    The name of the point cloud which is to be loaded.
-   * @param baseUrl
-   *    The url where the point cloud is located and from where we should load the octree nodes.
+   * @param jsonFile
+   *    The path to the pointcloud file to load.
+   * @param locJSON
+   *    The JSON object of loc.json which maps where to find each node's ybf.
    */
-  load(fileName: string, baseUrl: string): Promise<PointCloudOctree> {
-    return this.potree.loadPointCloud(
+  loadResonaiPotree(
+    jsonFile: string,
+    locJSON: any,
+    callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]): Promise<PointCloudOctree> {
+    // console.log('here1');
+    return this.potree.loadResonaiPointCloud(
       // The file name of the point cloud which is to be loaded.
-      fileName,
-      // Given the relative URL of a file, should return a full URL.
-      url => `${baseUrl}${url}`,
+      jsonFile,
+      // Given index of the node should return the full path to the node's ybf.
+      // 5 => "gs://snapshot3/010.ybf"
+      (name, index) => {
+        // TODO Shai - handle null (locJSON.node_locations[index] = 0)
+        if (locJSON.paths_map[locJSON.node_locations[index]] === 'null') {
+          return ''
+        }
+        return gsToPath(`${locJSON.paths_map[locJSON.node_locations[index]]}/${name}.ybf`)
+        // return gsToPath(`${locJSON.paths_map[1]}/${name}.ybf`)
+      },
+      undefined,
+      callbacks
     );
   }
 
@@ -126,16 +147,23 @@ export class Viewer {
     this.cameraControls.update();
 
     // This is where most of the potree magic happens. It updates the
-    // visiblily of the octree nodes based on the camera frustum and it
+    // visibility of the octree nodes based on the camera frustum and it
     // triggers any loads/unloads which are necessary to keep the number
     // of visible points in check.
+    // console.time('updatePointClouds');
     this.potree.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    // console.timeEnd('updatePointClouds');
   }
 
   /**
    * Renders the scene into the canvas.
    */
   render(): void {
+    // this.scene.rotation.y += 0.001
+    // console.timeEnd('previous-render')
+
+    // console.time('previous-render')
+    // console.log(this.pointClouds[0].progress);
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }
@@ -152,9 +180,38 @@ export class Viewer {
       return;
     }
 
+    this.targetHelper.position.copy(this.cameraControls.target)
+
     this.update(time - prevTime);
     this.render();
   };
+
+  ondblclick = (event: MouseEvent) => {
+    const rect = (event.target as HTMLCanvasElement).getBoundingClientRect()
+    const x = (event.clientX - rect.left) / rect.width * 2 - 1;
+    const y = (event.clientY - rect.top) / rect.height * -2 + 1;
+    const dir = new Vector3(x, y, -1);
+    dir.unproject(this.camera);
+
+    const ray = new Raycaster(this.camera.position, dir.sub(this.camera.position).normalize());
+    const pick = Potree.pick(
+      this.pointClouds,
+      this.renderer,
+      this.camera,
+      ray.ray)
+    // console.log(pick?.position?.toArray());
+    if (pick?.position) {
+      const dir = this.camera.position.clone().sub(this.cameraControls.target.clone());
+      const pos = pick.position.clone().add(dir);
+      const m = new Matrix4();
+      m.lookAt(pos, pick.position, this.camera.up);
+      const quat = new Quaternion().setFromRotationMatrix(m);
+      this.camera.quaternion.copy(quat);
+      this.camera.position.copy(pos);
+      this.cameraControls.target.copy(pick.position);
+      this.camera.updateMatrix();
+    }
+  }
 
   /**
    * Triggered anytime the window gets resized.

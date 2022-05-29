@@ -8,16 +8,18 @@ module.exports = {
   context: path.resolve('./example'),
   entry: './main.ts',
   output: {
-    filename: 'example.bundle.js',
+    filename: 'example.bundle.[hash:8].js',
     path: buildPath,
   },
   devtool: 'source-map',
   devServer: {
-    contentBase: buildPath,
+    static: buildPath,
     compress: true,
-    port: 5000,
+    port: 5050,
   },
-  stats: 'errors-only',
+  stats: {
+    children: true
+  },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },
@@ -25,8 +27,7 @@ module.exports = {
     rules: [
       {
         test: /\.worker\.js$/,
-        loader: 'worker-loader',
-        options: { inline: true, fallback: false },
+        loader: 'worker-loader'
       },
       {
         test: /\.js$/,

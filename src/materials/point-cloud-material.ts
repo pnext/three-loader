@@ -1,8 +1,10 @@
+// @ts-nocheck
 import {
   AdditiveBlending,
   BufferGeometry,
   Camera,
   Color,
+  GLSL3,
   LessEqualDepth,
   Material,
   NearestFilter,
@@ -29,7 +31,7 @@ import { PointCloudOctree } from '../point-cloud-octree';
 import { PointCloudOctreeNode } from '../point-cloud-octree-node';
 import { byLevelAndIndex } from '../utils/utils';
 import { DEFAULT_CLASSIFICATION } from './classification';
-import { ClipMode, IClipBox } from './clipping';
+import { ClipMode, IClipPolyhedron } from './clipping';
 import { PointColorType, PointOpacityType, PointShape, PointSizeType, TreeType } from './enums';
 import { SPECTRAL } from './gradients';
 import {
@@ -51,8 +53,24 @@ export interface IPointCloudMaterialUniforms {
   blendDepthSupplement: IUniform<number>;
   blendHardness: IUniform<number>;
   classificationLUT: IUniform<Texture>;
-  clipBoxCount: IUniform<number>;
+  clipPolyhedraCount: IUniform<number>;
+  clipPlanes: IUniform<Float32Array>;
+  clipConToPoly: IUniform<Uint32Array>;
+  clipPlaneToCon: IUniform<Uint32Array>;
+  clipPlaneToPoly: IUniform<Uint32Array>;
+  clipPolyhedronOutside: boolean[];
+  highlightIgnoreDepth: boolean;
+  highlightPolyhedraCount: IUniform<number>;
+  highlightPlanes: IUniform<Float32Array>;
+  highlightConToPoly: IUniform<Uint32Array>;
+  highlightPlaneToCon: IUniform<Uint32Array>;
+  highlightPlaneToPoly: IUniform<Uint32Array>;
+  highlightPolyhedronOutside: boolean[];
+  highlightPolyhedronColors: IUniform<Float32Array>;
   clipBoxes: IUniform<Float32Array>;
+  clipping: IUniform<boolean>;
+  numClippingPlanes: IUniform<number>;
+  clippingPlanes: IUniform<any[]>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
   fov: IUniform<number>;
@@ -146,8 +164,20 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   lights = false;
   fog = false;
-  numClipBoxes: number = 0;
-  clipBoxes: IClipBox[] = [];
+  clipPolyhedraCount: number = 0;
+  clipPlanes: number[] = [0, 0, 0, 1];
+  clipConToPoly: number[] = [0];
+  clipPlaneToCon: number[] = [0];
+  clipPlaneToPoly: number[] = [0];
+  clipPolyhedronOutside: boolean[] = [false];
+  highlightIgnoreDepth: boolean = false;
+  highlightPolyhedraCount: number = 0;
+  highlightPlanes: number[] = [0, 0, 0, 1];
+  highlightConToPoly: number[] = [0];
+  highlightPlaneToCon: number[] = [0];
+  highlightPlaneToPoly: number[] = [0];
+  highlightPolyhedronOutside: boolean[] = [false];
+  highlightPolyhedronColors: Color[] = [new Color(0xff3cff)];
   visibleNodesTexture: Texture | undefined;
   private visibleNodeTextureOffsets = new Map<string, number>();
 
@@ -159,13 +189,51 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this._classification,
   );
 
+  defines: any = {
+    HIGHLIGHT_POLYHEDRA_COUNT: 1,
+    HIGHLIGHT_CONVEXES_COUNT: 1,
+    HIGHLIGHT_PLANES_COUNT: 1,
+    CLIP_POLYHEDRA_COUNT: 1,
+    CLIP_CONVEXES_COUNT: 1,
+    CLIP_PLANES_COUNT: 1,
+    NUM_CLIP_PLANES: 0
+  };
+
   uniforms: IPointCloudMaterialUniforms & Record<string, IUniform<any>> = {
     bbSize: makeUniform('fv', [0, 0, 0] as [number, number, number]),
     blendDepthSupplement: makeUniform('f', 0.0),
     blendHardness: makeUniform('f', 2.0),
     classificationLUT: makeUniform('t', this.classificationTexture || new Texture()),
+    clipPolyhedraCount: makeUniform('f', 0),
+    // @ts-ignore
+    clipPlanes: makeUniform('fv', [0, 0, 0, 1]),
+    // @ts-ignore
+    clipConToPoly: makeUniform('fv', [0]),
+    // @ts-ignore
+    clipPlaneToCon: makeUniform('fv', [0]),
+    // @ts-ignore
+    clipPlaneToPoly: makeUniform('fv', [0]),
+    // @ts-ignore
+    clipPolyhedronOutside: makeUniform('bv', [false]),
+    highlightIgnoreDepth: makeUniform('b', false),
+    highlightPolyhedraCount: makeUniform('f', 0),
+    // @ts-ignore
+    highlightPlanes: makeUniform('fv', [0, 0, 0, 1]),
+    // @ts-ignore
+    highlightConToPoly: makeUniform('fv', [0]),
+    // @ts-ignore
+    highlightPlaneToCon: makeUniform('fv', [0]),
+    // @ts-ignore
+    highlightPlaneToPoly: makeUniform('fv', [0]),
+    // @ts-ignore
+    highlightPolyhedronOutside: makeUniform('bv', [false]),
+    // @ts-ignore
+    highlightPolyhedronColors: makeUniform('fv', [0, 0, 0, 1]),
     clipBoxCount: makeUniform('f', 0),
     clipBoxes: makeUniform('Matrix4fv', [] as any),
+    clipping: makeUniform('b', true),
+    numClippingPlanes: makeUniform('f', 0),
+    clippingPlanes: makeUniform('fv', [] as any),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
     fov: makeUniform('f', 1.0),
@@ -271,6 +339,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   constructor(parameters: Partial<IPointCloudMaterialParameters> = {}) {
     super();
+
+    this.setValues({
+      defines: this.defines,
+      glslVersion: GLSL3
+    });
 
     const tex = (this.visibleNodesTexture = generateDataTexture(2048, 1, new Color(0xffffff)));
     tex.minFilter = NearestFilter;
@@ -388,8 +461,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
       define('weighted_splats');
     }
 
-    if (this.numClipBoxes > 0) {
-      define('use_clip_box');
+    if (this.clipPolyhedraCount > 0) {
+      define('use_clip_polyhedra');
+    }
+    if (this.highlightPolyhedraCount > 0) {
+      define('use_highlight_polyhedra');
     }
 
     if (this.highlightPoint) {
@@ -403,38 +479,29 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     return parts.join('\n');
   }
-
-  setClipBoxes(clipBoxes: IClipBox[]): void {
-    if (!clipBoxes) {
-      return;
-    }
-
-    this.clipBoxes = clipBoxes;
-
-    const doUpdate =
-      this.numClipBoxes !== clipBoxes.length && (clipBoxes.length === 0 || this.numClipBoxes === 0);
-
-    this.numClipBoxes = clipBoxes.length;
-    this.setUniform('clipBoxCount', this.numClipBoxes);
-
-    if (doUpdate) {
-      this.updateShaderSource();
-    }
-
-    const clipBoxesLength = this.numClipBoxes * 16;
-    const clipBoxesArray = new Float32Array(clipBoxesLength);
-
-    for (let i = 0; i < this.numClipBoxes; i++) {
-      clipBoxesArray.set(clipBoxes[i].inverse.elements, 16 * i);
-    }
-
-    for (let i = 0; i < clipBoxesLength; i++) {
-      if (isNaN(clipBoxesArray[i])) {
-        clipBoxesArray[i] = Infinity;
+  setHighlightIgnoreDepth(value) {
+    this.setUniform('highlightIgnoreDepth', value);
+  }
+  copyPolyhedra(other: PointCloudMaterial): void {
+    ['highlight', 'clip'].forEach((type: string) => {
+       // @ts-ignore
+      this.setUniform(`${type}Planes`, other.uniforms[`${type}Planes`].value);
+      // @ts-ignore
+      this.setUniform(`${type}ConToPoly`, other.uniforms[`${type}ConToPoly`].value);
+      // @ts-ignore
+      this.setUniform(`${type}PlaneToCon`, other.uniforms[`${type}PlaneToCon`].value);
+      // @ts-ignore
+      this.setUniform(`${type}PlaneToPoly`, other.uniforms[`${type}PlaneToPoly`].value);
+      // @ts-ignore
+      this.setUniform(`${type}PolyhedronOutside`, other.uniforms[`${type}PolyhedronOutside`].value);
+      if (type === 'highlight') {
+        // @ts-ignore
+        this.setUniform(`${type}PolyhedronColors`, other.uniforms[`${type}PolyhedronColors`].value);
       }
-    }
-
-    this.setUniform('clipBoxes', clipBoxesArray);
+      this.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`] = other.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`];
+      this.defines[`${type.toUpperCase()}_CONVEXES_COUNT`] = other.defines[`${type.toUpperCase()}_CONVEXES_COUNT`];
+      this.defines[`${type.toUpperCase()}_PLANES_COUNT`] = other.defines[`${type.toUpperCase()}_PLANES_COUNT`];
+    });
   }
 
   get gradient(): IGradient {
@@ -601,6 +668,19 @@ export class PointCloudMaterial extends RawShaderMaterial {
       const pointCloudMaterial = material as PointCloudMaterial;
       const materialUniforms = pointCloudMaterial.uniforms;
 
+      // Clip planes
+      if (material.clippingPlanes && material.clippingPlanes.length > 0) {
+        const planes = material.clippingPlanes;
+        const flattenedPlanes = new Array(4 * material.clippingPlanes.length);
+        for (let i = 0; i < planes.length; i++) {
+          flattenedPlanes[4 * i + 0] = planes[i].normal.x;
+          flattenedPlanes[4 * i + 1] = planes[i].normal.y;
+          flattenedPlanes[4 * i + 2] = planes[i].normal.z;
+          flattenedPlanes[4 * i + 3] = planes[i].constant;
+        }
+        materialUniforms.clippingPlanes.value = flattenedPlanes;
+      }
+      pointCloudMaterial.defines.NUM_CLIP_PLANES = material.clippingPlanes?.length || 0;
       materialUniforms.level.value = node.level;
       materialUniforms.isLeafNode.value = node.isLeafNode;
 
@@ -619,6 +699,74 @@ export class PointCloudMaterial extends RawShaderMaterial {
       // Remove the cast to any after updating to Three.JS >= r113
       (material as any) /*ShaderMaterial*/.uniformsNeedUpdate = true;
     };
+  }
+  setClipPolyhedra(clipPolyhedra: IClipPolyhedron[]): void {
+    this.setTypePolyhedra('clip', clipPolyhedra);
+  }
+
+  setHighlightPolyhedra(clipPolyhedra: IClipPolyhedron[]): void {
+    this.setTypePolyhedra('highlight', clipPolyhedra);
+  }
+
+  setTypePolyhedra(type: string, polyhedra: IClipPolyhedron[]): void {
+    // @ts-ignore
+    this[`${type}PolyhedraCount`] = polyhedra.length;
+    // @ts-ignore
+    this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
+    this.updateShaderSource();
+    if (!polyhedra || polyhedra.length === 0) {
+      // @ts-ignore
+      this.setUniform(`${type}Planes`, [0, 0, 0, 1]);
+      // @ts-ignore
+      this.setUniform(`${type}ConToPoly`, [0]);
+      // @ts-ignore
+      this.setUniform(`${type}PlaneToCon`, [0]);
+      // @ts-ignore
+      this.setUniform(`${type}PlaneToPoly`, [0]);
+      // @ts-ignore
+      this.setUniform(`${type}PolyhedronOutside`, [false]);
+      this.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`] = 1;
+      this.defines[`${type.toUpperCase()}_CONVEXES_COUNT`] = 1;
+      this.defines[`${type.toUpperCase()}_PLANES_COUNT`] = 1;
+      if (type === 'highlight') {
+        // @ts-ignore
+        this.setUniform(`${type}PolyhedronColors`, [new Color(0xff3cff)]);
+      }
+      return;
+    }
+    const conToPoly: number[] = [];
+    const planeToCon: number[] = [];
+    const planeToPoly: number[] = [];
+    const flatPlanes: number[] = [];
+    let currentConvex = 0;
+    polyhedra.forEach((polyhedron, polyhedronIndex) => {
+      polyhedron.convexes.forEach((convex) => {
+        conToPoly.push(polyhedronIndex);
+        convex.planes.forEach((plane) => {
+          planeToCon.push(currentConvex);
+          planeToPoly.push(polyhedronIndex);
+          flatPlanes.push(...plane.normal.toArray(), -plane.constant);
+        });
+        currentConvex++;
+      });
+    });
+    // @ts-ignore
+    this.setUniform(`${type}Planes`, flatPlanes);
+    // @ts-ignore
+    this.setUniform(`${type}ConToPoly`, conToPoly);
+    // @ts-ignore
+    this.setUniform(`${type}PlaneToCon`, planeToCon);
+    // @ts-ignore
+    this.setUniform(`${type}PlaneToPoly`, planeToPoly);
+    // @ts-ignore
+    this.setUniform(`${type}PolyhedronOutside`, polyhedra.map(polyhedron => polyhedron.outside));
+    if (type === 'highlight') {
+      // @ts-ignore
+      this.setUniform(`${type}PolyhedronColors`, polyhedra.map(polyhedron => polyhedron.color || new Color(0xff3cff)));
+    }
+    this.defines[`${type.toUpperCase()}_POLYHEDRA_COUNT`] = polyhedra.length;
+    this.defines[`${type.toUpperCase()}_CONVEXES_COUNT`] = this.uniforms[`${type}ConToPoly`].value.length;
+    this.defines[`${type.toUpperCase()}_PLANES_COUNT`] = flatPlanes.length / 4;
   }
 }
 

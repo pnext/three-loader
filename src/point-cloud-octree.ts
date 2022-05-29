@@ -100,7 +100,6 @@ export class PointCloudOctree extends PointCloudTree {
     const points = new Points(geometryNode.geometry, this.material);
     const node = new PointCloudOctreeNode(geometryNode, points);
     points.name = geometryNode.name;
-    points.position.copy(geometryNode.boundingBox.min);
     points.frustumCulled = false;
     points.onBeforeRender = PointCloudMaterial.makeOnBeforeRender(this, node);
 
@@ -126,13 +125,20 @@ export class PointCloudOctree extends PointCloudTree {
     const bounds = this.visibleBounds;
     bounds.min.set(Infinity, Infinity, Infinity);
     bounds.max.set(-Infinity, -Infinity, -Infinity);
-
+    const stats: any = {};
     for (const node of this.visibleNodes) {
+      stats[node.level] = stats[node.level] || { count: 0, totalNumPoints: 0 };
+      stats[node.level].count++;
+      stats[node.level].totalNumPoints += node.numPoints;
       if (node.isLeafNode) {
         bounds.expandByPoint(node.boundingBox.min);
         bounds.expandByPoint(node.boundingBox.max);
       }
     }
+    // console.log('Stats:');
+    // Object.entries(stats).forEach(([level, stat]: [string, any]) => {
+    //   console.log(`Level: ${level}, count: ${stat.count}, average: ${(stat.totalNumPoints / stat.count / 1000).toFixed(1)}k`);
+    // })
   }
 
   updateBoundingBoxes(): void {
@@ -178,7 +184,6 @@ export class PointCloudOctree extends PointCloudTree {
   hideDescendants(object: Object3D): void {
     const toHide: Object3D[] = [];
     addVisibleChildren(object);
-
     while (toHide.length > 0) {
       const objToHide = toHide.shift()!;
       objToHide.visible = false;
