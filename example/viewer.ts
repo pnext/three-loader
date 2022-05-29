@@ -25,7 +25,7 @@ export class Viewer {
   /**
    * Controls which update the position of the camera.
    */
-  cameraControls!: any;
+  cameraControls!: OrbitControls;
   /**
    * helps with target
    */

@@ -22,6 +22,45 @@ enum DemoPotree {
   RESONAI_POTREE = 2
 }
 
+interface SerializedCamera {
+  position: [number, number, number];
+  quaternion: [number, number, number, number];
+  target: [number, number, number];
+}
+
+
+const deserializeCamera = async (cameraJSON: string) => {
+  if (!cameraJSON) {
+    cameraJSON = await navigator.clipboard.readText()
+  }
+  const parsedCamera: SerializedCamera = JSON.parse(cameraJSON);
+  viewer.cameraControls.target.set(...parsedCamera.target);
+  viewer.camera.position.set(...parsedCamera.position);
+  viewer.camera.quaternion.set(...parsedCamera.quaternion);
+  viewer.camera.lookAt(viewer.cameraControls.target);
+}
+
+const serializeCamera = () => {
+  return JSON.stringify({
+    position: viewer.camera.position.toArray(),
+    quaternion: viewer.camera.quaternion.toArray(),
+    target: viewer.cameraControls.target.toArray()
+  })
+
+}
+
+const copyCamera = () => {
+  navigator.clipboard.writeText(serializeCamera());
+}
+
+const setDefaultCamera = () => {
+  localStorage.setItem('defaultCamera', serializeCamera());
+}
+
+const clearDefaultCamera = () => {
+  localStorage.removeItem('defaultCamera');
+}
+
 const parameters = {
   budget: 3e7,
   maxLevel: 20,
@@ -33,7 +72,11 @@ const parameters = {
   pointSizeType: PointSizeType.ATTENUATED,
   pointColorType: PointColorType.RGB,
   pointOpacityType: PointOpacityType.FIXED,
-  demoPotree: DemoPotree.RESONAI_POTREE
+  demoPotree: DemoPotree.RESONAI_POTREE,
+  copyCamera,
+  deserializeCamera,
+  setDefaultCamera,
+  clearDefaultCamera
 };
 
 const targetEl = document.createElement('div');
@@ -1504,14 +1547,11 @@ const loadResonaiPotree = async () => {
 
 switch (parameters.demoPotree) {
   case DemoPotree.RESONAI_POTREE:
-    const camera = viewer.camera;
-    camera.far = 1000;
-    camera.updateProjectionMatrix();
-    camera.position.set(1.0595364337361601,19.164145572555945,-10.864988785269247);
-    viewer.cameraControls.target.set(1.1869623756602856, 17.752190898272897, -7.1836979194608706)
-    camera.lookAt(viewer.cameraControls.target);
-      loadResonaiPotree();
-      break;
+    const fallbackCamera = '{"position":[1.0595364337361601,19.164145572555945,-10.864988785269247],"quaternion":[0.003148537971741608,0.9831510066985465,0.18197479634187416,-0.017010532990133973],"target":[1.1869623756602856,17.752190898272897,-7.1836979194608706]}'
+    const cameraParams = localStorage.getItem('defaultCamera') || fallbackCamera;
+    deserializeCamera(cameraParams);
+    loadResonaiPotree();
+    break;
 }
 initGui();
 
@@ -1586,4 +1626,9 @@ function initGui() {
       pointCloud.material.pointColorType = Number(val);
     })
   });
+
+  gui.add(parameters, 'copyCamera');
+  gui.add(parameters, 'deserializeCamera');
+  gui.add(parameters, 'setDefaultCamera');
+  gui.add(parameters, 'clearDefaultCamera');
 }
