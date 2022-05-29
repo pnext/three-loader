@@ -3,7 +3,7 @@ import { PointCloudOctree, Potree } from '../src';
 import { PointCloudOctreeGeometryNode } from '../src/point-cloud-octree-geometry-node';
 import { gsToPath } from '../src/utils/utils';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import * as Stats from 'stats.js';
+import Stats from 'stats.js';
 
 export class Viewer {
   /**

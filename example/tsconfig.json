@@ -16,7 +16,9 @@
     "experimentalDecorators": true,
     "typeRoots": ["../node_modules/@types"],
     "lib": ["es2017", "dom"],
-    "plugins": []
+    "plugins": [],
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "include": ["**/*.ts"],
   "exclude": ["build", "node_modules"]
