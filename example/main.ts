@@ -96,13 +96,6 @@ const onPCOLoad = (pco: PointCloudOctree, quat: number[], translation: number[])
        ]
      }]
   }] as IClipPolyhedron[]);
-
-  const camera = viewer.camera;
-  camera.far = 1000;
-  camera.updateProjectionMatrix();
-  camera.position.set(1.0595364337361601,19.164145572555945,-10.864988785269247);
-  viewer.cameraControls.target.set(1.1869623756602856, 17.752190898272897, -7.1836979194608706)
-  camera.lookAt(viewer.cameraControls.target);
   viewer.add(pco);
 }
 
@@ -1511,6 +1504,12 @@ const loadResonaiPotree = async () => {
 
 switch (parameters.demoPotree) {
   case DemoPotree.RESONAI_POTREE:
+    const camera = viewer.camera;
+    camera.far = 1000;
+    camera.updateProjectionMatrix();
+    camera.position.set(1.0595364337361601,19.164145572555945,-10.864988785269247);
+    viewer.cameraControls.target.set(1.1869623756602856, 17.752190898272897, -7.1836979194608706)
+    camera.lookAt(viewer.cameraControls.target);
       loadResonaiPotree();
       break;
 }
