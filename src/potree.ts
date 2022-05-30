@@ -218,13 +218,12 @@ export class Potree implements IPotree {
   }
 
   private shouldClipByPolyhedra(pointCloud: PointCloudOctree, bbox: Box3) {
-    // TODO(maor) handle OUT
+
     let tbox = bbox.clone();
-//    tbox.min.applyMatrix4(pointCloud.matrixWorld);
-//    tbox.max.applyMatrix4(pointCloud.matrixWorld);
     tbox.applyMatrix4(pointCloud.matrixWorld)
     const material = pointCloud.material;
 
+    // TODO(maor) disable lint?
     const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
     const relateConToPoly = material.uniforms.highlightConToPoly.value;
     const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
@@ -274,11 +273,9 @@ export class Potree implements IPotree {
         }
       }
       if (outside && disjointFromPoly) {
-        console.log('clipped')
         return true;
       }
     }
-    console.log('not clipped')
     return false;
   }
 
@@ -295,19 +292,12 @@ export class Potree implements IPotree {
         }
       }
     }
-    if (!clippedOutBB) {
-      // console.log('render box: ', bbox.min.x, ' ', bbox.max.x);
-    } else {
-      // console.log('do not render box: ', bbox.min.x, ' ', bbox.max.x);
-    }
     return clippedOutBB;
   }
 
   private box_vertices_outside_of_halfspace(box: Box3, plane: any) {
     let counter = 0
     if (box &&  plane) {
-      // console.log(box.max.x - box.min.x);
-      // console.log(plane);
       let point = new Vector3(0, 0, 0)
       for (var i = 0; i < 8; i++) {
         point.x = (i % 2 < 1 ? box.min.x : box.max.x);
@@ -315,7 +305,6 @@ export class Potree implements IPotree {
         point.z = (i < 4 ? box.min.z : box.max.z);
         // TODO (maor) is it "+" just for the clipping planes?
         let temp = point.dot(plane.normal) - plane.constant;
-        // console.log('    >>', temp)
         if (temp <= 0) {
           counter = counter + 1;
         }
