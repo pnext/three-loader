@@ -5,7 +5,7 @@ import { PointOpacityType, PointShape, PointSizeType, PointColorType } from '../
 import { Viewer } from './viewer';
 import { gsToPath } from '../src/utils/utils';
 import sps from './hataasyia_9491_sps.json';
-import polyhedron from './hataasyia_crown_polyhedron.json';
+import polyhedron from './hataasyia_crown_polyhedron_simple.json';
 const firstSPs = sps.slice(0, 50);
 
 // import { Potree } from '../src/potree'
@@ -73,9 +73,9 @@ const parameters = {
   maxLevel: 5,
   minNodePixelSize: 40,
   'points size': 0.2,
-  'clipping plane': 0,
+  'clipping plane': 100,
   shape: PointShape.SQUARE,
-  useHighlight: false,
+  useHighlight: true,
   highlightIgnoreDepth: false,
   pointSizeType: PointSizeType.ATTENUATED,
   pointColorType: PointColorType.RGB,

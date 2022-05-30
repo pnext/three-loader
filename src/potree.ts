@@ -10,6 +10,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
+import {Plane} from 'three/src/math/Plane';
 import {
   DEFAULT_POINT_BUDGET,
   MAX_LOADS_TO_GPU,
@@ -150,7 +151,8 @@ export class Potree implements IPotree {
         node.level > maxLevel ||
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
         this.shouldClip(pointCloud, node.boundingBox) ||
-        this.shouldClipByPlanes(pointCloud, node.boundingBox)
+        this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
+        this.shouldClipByPolyhedra(pointCloud, node.boundingBox)
       ) {
         continue;
       }
@@ -215,17 +217,79 @@ export class Potree implements IPotree {
     };
   }
 
+  private shouldClipByPolyhedra(pointCloud: PointCloudOctree, bbox: Box3) {
+    // TODO(maor) handle OUT
+    let tbox = bbox.clone();
+//    tbox.min.applyMatrix4(pointCloud.matrixWorld);
+//    tbox.max.applyMatrix4(pointCloud.matrixWorld);
+    tbox.applyMatrix4(pointCloud.matrixWorld)
+    const material = pointCloud.material;
+
+    const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
+    const relateConToPoly = material.uniforms.highlightConToPoly.value;
+    const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
+    const allFlattenedPlanes = material.uniforms.highlightPlanes.value;
+    // const relateConToPoly = material.uniforms.clippingConToPoly.value;
+    // const relatePlaneToCon = material.uniforms.clippingPlaneToCon.value;
+    // const allFlattenedPlanes = material.uniforms.clippingPlanes.value;
+
+    // going over all polyhedra
+    for (let poly_i = 0; poly_i < pointCloud.material.uniforms.highlightPolyhedraCount.value; poly_i++) {
+      const outside = polyOutside[poly_i];
+      let disjointFromPoly = true;
+      // going over all convexes
+      for (let conv_i = 0; conv_i < relateConToPoly.length; conv_i++) {
+        // check if convex belongs to poly
+        if (relateConToPoly[conv_i] === poly_i) {
+          // if it is, loop over all planes that belong to the convex
+          let disjointFromConvex = false;
+          let containedInConvex = true;
+          for (let plane_i = 0; plane_i < relatePlaneToCon.length; plane_i++) {
+            if (relatePlaneToCon[plane_i] === conv_i) {
+              const normal = new Vector3(
+                  allFlattenedPlanes[plane_i * 4],
+                  allFlattenedPlanes[plane_i * 4 + 1],
+                  allFlattenedPlanes[plane_i * 4 + 2]);
+              const constant = allFlattenedPlanes[plane_i * 4 + 3];
+              // TODO(maor) initialize out of loop
+              // TODO(maor) enum ALL PARTIAL NONE
+              let plane = new Plane(normal, constant);
+              if (outside === false) {
+                if (this.box_vertices_outside_of_halfspace(tbox, plane) > 0) {
+                  containedInConvex = false;
+                }
+              } else {
+                if (this.box_vertices_outside_of_halfspace(tbox, plane) == 8) {
+                  disjointFromConvex = true;
+                }
+              }
+            }
+          }
+          if (!outside && containedInConvex) {
+            return true;
+          }
+          if (outside && !disjointFromConvex) {
+            disjointFromPoly = false;
+          }
+        }
+      }
+      if (outside && disjointFromPoly) {
+        console.log('clipped')
+        return true;
+      }
+    }
+    console.log('not clipped')
+    return false;
+  }
+
   private shouldClipByPlanes(pointCloud: PointCloudOctree, bbox: Box3) {
     let clippedOutBB = false;
 
-    let tbox = bbox.clone()
-    tbox.min.applyMatrix4(pointCloud.matrixWorld)
-    tbox.max.applyMatrix4(pointCloud.matrixWorld)
+    let tbox = bbox.clone().applyMatrix4(pointCloud.matrixWorld)
     const material = pointCloud.material;
     if (material.clippingPlanes) {
       for (let clip_i = 0; clip_i < material.clippingPlanes.length; clip_i++) {
         const vertices_out = this.box_vertices_outside_of_halfspace(tbox, material.clippingPlanes[clip_i])
-        // console.log('vertices out:  ', vertices_out)
         if (vertices_out == 8) {
           clippedOutBB = true;
         }
@@ -249,7 +313,8 @@ export class Potree implements IPotree {
         point.x = (i % 2 < 1 ? box.min.x : box.max.x);
         point.y = (i % 4 < 2 ? box.min.y : box.max.y);
         point.z = (i < 4 ? box.min.z : box.max.z);
-        let temp = point.dot(plane.normal) + plane.constant
+        // TODO (maor) is it "+" just for the clipping planes?
+        let temp = point.dot(plane.normal) - plane.constant;
         // console.log('    >>', temp)
         if (temp <= 0) {
           counter = counter + 1;
