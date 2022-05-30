@@ -669,7 +669,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
       const materialUniforms = pointCloudMaterial.uniforms;
 
       // Clip planes
-      if (Math.random() > 0.5) { // TODO(Shai) make calculations to determine wether we need to ignore this node
+      if (Math.random() > 1.0) { // TODO(Shai) make calculations to determine wether we need to ignore this node
         if (material.clippingPlanes && material.clippingPlanes.length > 0) {
           const planes = material.clippingPlanes;
           const flattenedPlanes = new Array(4 * material.clippingPlanes.length);

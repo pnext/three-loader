@@ -149,10 +149,15 @@ export class Potree implements IPotree {
       if (
         node.level > maxLevel ||
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
-        this.shouldClip(pointCloud, node.boundingBox)
+        this.shouldClip(pointCloud, node.boundingBox) ||
+        this.shouldClipByPlanes(pointCloud, node.boundingBox)
       ) {
         continue;
       }
+
+      // TODO(Shai) update the polyhedra / clipping planes on the material here
+      // TODO(maor) if we can add a "contained in planes" bool to each node,
+      //  we can save lots of time by skipping the test in the render
 
       numVisiblePoints += node.numPoints;
       pointCloud.numVisiblePoints += node.numPoints;
@@ -183,9 +188,6 @@ export class Potree implements IPotree {
       const halfHeight =
         0.5 * renderer.getSize(this._rendererSize).height * renderer.getPixelRatio();
 
-
-      // TODO(Shai) update the polyhedra / clipping planes on the material here
-
       this.updateChildVisibility(
         queueItem,
         priorityQueue,
@@ -211,6 +213,51 @@ export class Potree implements IPotree {
       nodeLoadFailed: nodeLoadFailed,
       nodeLoadPromises: nodeLoadPromises,
     };
+  }
+
+  private shouldClipByPlanes(pointCloud: PointCloudOctree, bbox: Box3) {
+    let clippedOutBB = false;
+
+    let tbox = bbox.clone()
+    tbox.min.applyMatrix4(pointCloud.matrixWorld)
+    tbox.max.applyMatrix4(pointCloud.matrixWorld)
+    const material = pointCloud.material;
+    if (material.clippingPlanes) {
+      for (let clip_i = 0; clip_i < material.clippingPlanes.length; clip_i++) {
+        const vertices_out = this.box_vertices_outside_of_halfspace(tbox, material.clippingPlanes[clip_i])
+        // console.log('vertices out:  ', vertices_out)
+        if (vertices_out == 8) {
+          clippedOutBB = true;
+        }
+      }
+    }
+    if (!clippedOutBB) {
+      // console.log('render box: ', bbox.min.x, ' ', bbox.max.x);
+    } else {
+      // console.log('do not render box: ', bbox.min.x, ' ', bbox.max.x);
+    }
+    return clippedOutBB;
+  }
+
+  private box_vertices_outside_of_halfspace(box: Box3, plane: any) {
+    let counter = 0
+    if (box &&  plane) {
+      // console.log(box.max.x - box.min.x);
+      // console.log(plane);
+      let point = new Vector3(0, 0, 0)
+      for (var i = 0; i < 8; i++) {
+        point.x = (i % 2 < 1 ? box.min.x : box.max.x);
+        point.y = (i % 4 < 2 ? box.min.y : box.max.y);
+        point.z = (i < 4 ? box.min.z : box.max.z);
+        let temp = point.dot(plane.normal) + plane.constant
+        // console.log('    >>', temp)
+        if (temp <= 0) {
+          counter = counter + 1;
+        }
+      }
+    }
+    return counter;
+
   }
 
   private updateTreeNodeVisibility(

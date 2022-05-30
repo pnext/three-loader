@@ -70,10 +70,10 @@ const clearDefaultCamera = () => {
 
 const parameters = {
   budget: 3e6,
-  maxLevel: 2,
+  maxLevel: 5,
   minNodePixelSize: 40,
   'points size': 0.2,
-  'clipping plane': -100,
+  'clipping plane': 0,
   shape: PointShape.SQUARE,
   useHighlight: false,
   highlightIgnoreDepth: false,
