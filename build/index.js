@@ -55548,11 +55548,9 @@ class Potree {
             const maxLevel = pointCloud.maxLevel !== undefined ? pointCloud.maxLevel : Infinity;
             if (node.level > maxLevel ||
                 !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
-                this.shouldClip(pointCloud, node.boundingBox)
-            //  ||
-            // this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
-            // this.shouldClipByPolyhedra(pointCloud, node.boundingBox)
-            ) {
+                this.shouldClip(pointCloud, node.boundingBox) ||
+                this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
+                this.shouldClipByPolyhedra(pointCloud, node.boundingBox)) {
                 continue;
             }
             // TODO(Shai) update the polyhedra / clipping planes on the material here
@@ -55599,7 +55597,6 @@ class Potree {
             nodeLoadPromises: nodeLoadPromises,
         };
     }
-    // @ts-ignore
     shouldClipByPolyhedra(pointCloud, bbox) {
         const tbox = bbox.clone();
         tbox.applyMatrix4(pointCloud.matrixWorld);
@@ -55658,8 +55655,8 @@ class Potree {
         }
         return false;
     }
-    // @ts-ignore
     shouldClipByPlanes(pointCloud, bbox) {
+        return false;
         let clippedOutBB = false;
         const tbox = bbox.clone().applyMatrix4(pointCloud.matrixWorld);
         const material = pointCloud.material;
