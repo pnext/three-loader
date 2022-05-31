@@ -55661,7 +55661,7 @@ class Potree {
         if (material.clippingPlanes) {
             for (let clip_i = 0; clip_i < material.clippingPlanes.length; clip_i++) {
                 const vertices_out = this.box_vertices_outside_of_halfspace(tbox, material.clippingPlanes[clip_i]);
-                if (vertices_out == 8) {
+                if (vertices_out === 8) {
                     clippedOutBB = true;
                 }
             }
@@ -55670,7 +55670,7 @@ class Potree {
     }
     box_vertices_outside_of_halfspace(box, plane) {
         let counter = 0;
-        let point = new three__WEBPACK_IMPORTED_MODULE_9__.Vector3(0, 0, 0);
+        const point = new three__WEBPACK_IMPORTED_MODULE_9__.Vector3(0, 0, 0);
         if (box && plane) {
             for (let i = 0; i < 8; i++) {
                 point.x = (i % 2 < 1 ? box.min.x : box.max.x);
