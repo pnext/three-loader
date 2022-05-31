@@ -267,6 +267,7 @@ export class Potree implements IPotree {
             }
           }
           if (!outside && containedInConvex) {
+            console.log('clipped')
             return true;
           }
           if (outside && !disjointFromConvex) {
@@ -275,6 +276,7 @@ export class Potree implements IPotree {
         }
       }
       if (outside && disjointFromPoly) {
+        console.log('clipped')
         return true;
       }
     }
