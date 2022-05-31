@@ -53,6 +53,7 @@ export class Potree implements IPotree {
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
     callbacks: ((node: PointCloudOctreeGeometryNode) => void)[]
   ): Promise<PointCloudOctree> {
+    // console.log('here2');
     return loadResonaiPOC(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new PointCloudOctree(this, geometry));
   }
 
@@ -222,8 +223,7 @@ export class Potree implements IPotree {
     tbox.applyMatrix4(pointCloud.matrixWorld);
     const material = pointCloud.material;
 
-    // TODO(maor) is it possible to disable the ignore here?
-    //  it doesn't like material.uniforms.highlightPolyhedronOutside.value
+    // TODO(maor) is it possible to disable the ignore here? it doesn't like material.uniforms.highlightPolyhedronOutside.value
     // @ts-ignore
     const polyOutside = material.uniforms.clipPolyhedronOutside.value;
     const relateConToPoly = material.uniforms.clipConToPoly.value;
@@ -267,7 +267,6 @@ export class Potree implements IPotree {
             }
           }
           if (!outside && containedInConvex) {
-            console.log('clipped!');
             return true;
           }
           if (outside && !disjointFromConvex) {
@@ -276,11 +275,9 @@ export class Potree implements IPotree {
         }
       }
       if (outside && disjointFromPoly) {
-        console.log('clipped!');
         return true;
       }
     }
-    console.log('unclipped!!');
     return false;
   }
 
