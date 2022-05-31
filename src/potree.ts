@@ -150,10 +150,9 @@ export class Potree implements IPotree {
       if (
         node.level > maxLevel ||
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
-        this.shouldClip(pointCloud, node.boundingBox)
-        //  ||
+        this.shouldClip(pointCloud, node.boundingBox) ||
         // this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
-        // this.shouldClipByPolyhedra(pointCloud, node.boundingBox)
+        this.shouldClipByPolyhedra(pointCloud, node.boundingBox)
       ) {
         continue;
       }
@@ -218,7 +217,6 @@ export class Potree implements IPotree {
     };
   }
 
-  // @ts-ignore
   private shouldClipByPolyhedra(pointCloud: PointCloudOctree, bbox: Box3) {
 
     const tbox = bbox.clone();
@@ -283,7 +281,6 @@ export class Potree implements IPotree {
     return false;
   }
 
-  // @ts-ignore
   private shouldClipByPlanes(pointCloud: PointCloudOctree, bbox: Box3) {
     let clippedOutBB = false;
 
