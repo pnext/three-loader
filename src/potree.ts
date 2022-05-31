@@ -151,7 +151,7 @@ export class Potree implements IPotree {
         node.level > maxLevel ||
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
         this.shouldClip(pointCloud, node.boundingBox) ||
-        // this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
+        this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
         this.shouldClipByPolyhedra(pointCloud, node.boundingBox)
       ) {
         continue;
@@ -282,6 +282,7 @@ export class Potree implements IPotree {
   }
 
   private shouldClipByPlanes(pointCloud: PointCloudOctree, bbox: Box3) {
+    return false;
     let clippedOutBB = false;
 
     const tbox = bbox.clone().applyMatrix4(pointCloud.matrixWorld);
