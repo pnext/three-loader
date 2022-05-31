@@ -117,6 +117,8 @@ export class Potree implements IPotree {
     renderer: WebGLRenderer,
     maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
+
+    console.log('i am updating visibility!');
     let numVisiblePoints = 0;
 
     const visibleNodes: PointCloudOctreeNode[] = [];
