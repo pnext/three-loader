@@ -748,6 +748,9 @@ export class PointCloudMaterial extends RawShaderMaterial {
     const planeToPoly: number[] = [];
     const flatPlanes: number[] = [];
     let currentConvex = 0;
+
+    // TODO(maor): don't push irrelevant polyhedra
+
     polyhedra.forEach((polyhedron, polyhedronIndex) => {
       polyhedron.convexes.forEach((convex) => {
         conToPoly.push(polyhedronIndex);

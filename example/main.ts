@@ -6,7 +6,7 @@ import { Viewer } from './viewer';
 import { gsToPath } from '../src/utils/utils';
 import sps from './hataasyia_9491_sps.json';
 import polyhedron from './hataasyia_crown_polyhedron_simple.json';
-const firstSPs = sps.slice(0, 50);
+const firstSPs = sps.slice(0, 200);
 
 // import { Potree } from '../src/potree'
 // @ts-ignore
