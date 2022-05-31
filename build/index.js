@@ -55527,6 +55527,7 @@ class Potree {
         this._maxNumNodesLoading = value || _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
     }
     updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading = 0) {
+        console.log('i am updating visibility!');
         let numVisiblePoints = 0;
         const visibleNodes = [];
         const unloadedGeometry = [];
