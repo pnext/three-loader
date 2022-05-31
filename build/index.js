@@ -55490,7 +55490,6 @@ class Potree {
         })();
     }
     loadResonaiPointCloud(potreeName, getUrl, xhrRequest = (input, init) => fetch(input, init), callbacks) {
-        // console.log('here2');
         return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
     updatePointClouds(pointClouds, camera, renderer, maxNumNodesLoading = 0) {
@@ -55643,6 +55642,7 @@ class Potree {
                         }
                     }
                     if (!outside && containedInConvex) {
+                        console.log('clipped!');
                         return true;
                     }
                     if (outside && !disjointFromConvex) {
@@ -55651,6 +55651,7 @@ class Potree {
                 }
             }
             if (outside && disjointFromPoly) {
+                console.log('clipped!');
                 return true;
             }
         }
