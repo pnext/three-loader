@@ -280,7 +280,7 @@ export class Potree implements IPotree {
         return true;
       }
     }
-    console.log('unclipped!');
+    console.log('unclipped');
     return false;
   }
 
