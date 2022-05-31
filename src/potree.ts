@@ -223,15 +223,17 @@ export class Potree implements IPotree {
     tbox.applyMatrix4(pointCloud.matrixWorld);
     const material = pointCloud.material;
 
-    // TODO(maor) is it possible to disable lint? it doesn't like material.uniforms.highlightPolyhedronOutside.value
+    // TODO(maor) is it possible to disable the ignore here?
+    //  it doesn't like material.uniforms.highlightPolyhedronOutside.value
     // @ts-ignore
-    const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
-    const relateConToPoly = material.uniforms.highlightConToPoly.value;
-    const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
-    const allFlattenedPlanes = material.uniforms.highlightPlanes.value;
-    // const relateConToPoly = material.uniforms.clippingConToPoly.value;
-    // const relatePlaneToCon = material.uniforms.clippingPlaneToCon.value;
-    // const allFlattenedPlanes = material.uniforms.clippingPlanes.value;
+    const polyOutside = material.uniforms.clipPolyhedronOutside.value;
+    const relateConToPoly = material.uniforms.clipConToPoly.value;
+    const relatePlaneToCon = material.uniforms.clipPlaneToCon.value;
+    const allFlattenedPlanes = material.uniforms.clipPlanes.value;
+    // const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
+    // const relateConToPoly = material.uniforms.highlightConToPoly.value;
+    // const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
+    // const allFlattenedPlanes = material.uniforms.highlightPlanes.value;
 
     // going over all polyhedra
     for (let poly_i = 0; poly_i < pointCloud.material.uniforms.highlightPolyhedraCount.value; poly_i++) {
