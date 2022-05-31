@@ -32,6 +32,9 @@ export declare class Potree implements IPotree {
     get maxNumNodesLoading(): number;
     set maxNumNodesLoading(value: number);
     private updateVisibility;
+    private shouldClipByPolyhedra;
+    private shouldClipByPlanes;
+    private box_vertices_outside_of_halfspace;
     private updateTreeNodeVisibility;
     private updateChildVisibility;
     private updateBoundingBoxVisibility;

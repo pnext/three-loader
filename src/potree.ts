@@ -223,7 +223,8 @@ export class Potree implements IPotree {
     tbox.applyMatrix4(pointCloud.matrixWorld)
     const material = pointCloud.material;
 
-    // TODO(maor) disable lint?
+    // TODO(maor) is it possible to disable lint? it doesn't like material.uniforms.highlightPolyhedronOutside.value
+    // @ts-ignore
     const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
     const relateConToPoly = material.uniforms.highlightConToPoly.value;
     const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
