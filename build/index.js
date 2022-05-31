@@ -55598,7 +55598,7 @@ class Potree {
         };
     }
     shouldClipByPolyhedra(pointCloud, bbox) {
-        let tbox = bbox.clone();
+        const tbox = bbox.clone();
         tbox.applyMatrix4(pointCloud.matrixWorld);
         const material = pointCloud.material;
         // TODO(maor) is it possible to disable lint? it doesn't like material.uniforms.highlightPolyhedronOutside.value
@@ -55627,14 +55627,14 @@ class Potree {
                             const constant = allFlattenedPlanes[plane_i * 4 + 3];
                             // TODO(maor) initialize out of loop
                             // TODO(maor) enum ALL PARTIAL NONE
-                            let plane = new three_src_math_Plane__WEBPACK_IMPORTED_MODULE_10__.Plane(normal, constant);
+                            const plane = new three_src_math_Plane__WEBPACK_IMPORTED_MODULE_10__.Plane(normal, constant);
                             if (outside === false) {
                                 if (this.box_vertices_outside_of_halfspace(tbox, plane) > 0) {
                                     containedInConvex = false;
                                 }
                             }
                             else {
-                                if (this.box_vertices_outside_of_halfspace(tbox, plane) == 8) {
+                                if (this.box_vertices_outside_of_halfspace(tbox, plane) === 8) {
                                     disjointFromConvex = true;
                                 }
                             }
@@ -55656,7 +55656,7 @@ class Potree {
     }
     shouldClipByPlanes(pointCloud, bbox) {
         let clippedOutBB = false;
-        let tbox = bbox.clone().applyMatrix4(pointCloud.matrixWorld);
+        const tbox = bbox.clone().applyMatrix4(pointCloud.matrixWorld);
         const material = pointCloud.material;
         if (material.clippingPlanes) {
             for (let clip_i = 0; clip_i < material.clippingPlanes.length; clip_i++) {
@@ -55670,15 +55670,14 @@ class Potree {
     }
     box_vertices_outside_of_halfspace(box, plane) {
         let counter = 0;
+        let point = new three__WEBPACK_IMPORTED_MODULE_9__.Vector3(0, 0, 0);
         if (box && plane) {
-            let point = new three__WEBPACK_IMPORTED_MODULE_9__.Vector3(0, 0, 0);
-            for (var i = 0; i < 8; i++) {
+            for (let i = 0; i < 8; i++) {
                 point.x = (i % 2 < 1 ? box.min.x : box.max.x);
                 point.y = (i % 4 < 2 ? box.min.y : box.max.y);
                 point.z = (i < 4 ? box.min.z : box.max.z);
                 // TODO (maor) is it "+" just for the clipping planes?
-                let temp = point.dot(plane.normal) - plane.constant;
-                if (temp <= 0) {
+                if (point.dot(plane.normal) - plane.constant <= 0) {
                     counter = counter + 1;
                 }
             }
