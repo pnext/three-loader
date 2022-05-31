@@ -55655,7 +55655,7 @@ class Potree {
                 return true;
             }
         }
-        console.log('unclipped');
+        console.log('unclipped!!');
         return false;
     }
     shouldClipByPlanes(pointCloud, bbox) {
