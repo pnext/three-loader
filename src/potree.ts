@@ -218,6 +218,7 @@ export class Potree implements IPotree {
     };
   }
 
+  // @ts-ignore
   private shouldClipByPolyhedra(pointCloud: PointCloudOctree, bbox: Box3) {
 
     const tbox = bbox.clone();
@@ -282,6 +283,7 @@ export class Potree implements IPotree {
     return false;
   }
 
+  // @ts-ignore
   private shouldClipByPlanes(pointCloud: PointCloudOctree, bbox: Box3) {
     let clippedOutBB = false;
 
