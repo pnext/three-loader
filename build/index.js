@@ -55642,6 +55642,7 @@ class Potree {
                         }
                     }
                     if (!outside && containedInConvex) {
+                        console.log('clipped');
                         return true;
                     }
                     if (outside && !disjointFromConvex) {
@@ -55650,6 +55651,7 @@ class Potree {
                 }
             }
             if (outside && disjointFromPoly) {
+                console.log('clipped');
                 return true;
             }
         }
