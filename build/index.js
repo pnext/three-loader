@@ -55415,19 +55415,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "BBoxExclusion": () => (/* binding */ BBoxExclusion),
 /* harmony export */   "Potree": () => (/* binding */ Potree)
 /* harmony export */ });
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var three_src_math_Plane__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! three/src/math/Plane */ "./node_modules/three/src/math/Plane.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three_src_math_Plane__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! three/src/math/Plane */ "./node_modules/three/src/math/Plane.js");
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants */ "./src/constants.ts");
 /* harmony import */ var _features__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./features */ "./src/features.ts");
 /* harmony import */ var _loading__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./loading */ "./src/loading/index.ts");
-/* harmony import */ var _materials__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./materials */ "./src/materials/index.ts");
-/* harmony import */ var _point_cloud_octree__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./point-cloud-octree */ "./src/point-cloud-octree.ts");
-/* harmony import */ var _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./point-cloud-octree-picker */ "./src/point-cloud-octree-picker.ts");
-/* harmony import */ var _type_predicates__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./type-predicates */ "./src/type-predicates.ts");
-/* harmony import */ var _utils_binary_heap__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/binary-heap */ "./src/utils/binary-heap.js");
-/* harmony import */ var _utils_box3_helper__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/box3-helper */ "./src/utils/box3-helper.ts");
-/* harmony import */ var _utils_lru__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils/lru */ "./src/utils/lru.ts");
-
+/* harmony import */ var _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./point-cloud-octree */ "./src/point-cloud-octree.ts");
+/* harmony import */ var _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./point-cloud-octree-picker */ "./src/point-cloud-octree-picker.ts");
+/* harmony import */ var _type_predicates__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./type-predicates */ "./src/type-predicates.ts");
+/* harmony import */ var _utils_binary_heap__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./utils/binary-heap */ "./src/utils/binary-heap.js");
+/* harmony import */ var _utils_box3_helper__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/box3-helper */ "./src/utils/box3-helper.ts");
+/* harmony import */ var _utils_lru__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/lru */ "./src/utils/lru.ts");
 
 
 
@@ -55456,18 +55454,18 @@ var BBoxExclusion;
 class Potree {
     constructor() {
         this._pointBudget = _constants__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_POINT_BUDGET;
-        this._rendererSize = new three__WEBPACK_IMPORTED_MODULE_10__.Vector2();
+        this._rendererSize = new three__WEBPACK_IMPORTED_MODULE_9__.Vector2();
         this._maxNumNodesLoading = _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_NUM_NODES_LOADING;
         this.features = _features__WEBPACK_IMPORTED_MODULE_1__.FEATURES;
-        this.lru = new _utils_lru__WEBPACK_IMPORTED_MODULE_9__.LRU(this._pointBudget);
+        this.lru = new _utils_lru__WEBPACK_IMPORTED_MODULE_8__.LRU(this._pointBudget);
         this.updateVisibilityStructures = (() => {
-            const frustumMatrix = new three__WEBPACK_IMPORTED_MODULE_10__.Matrix4();
-            const inverseWorldMatrix = new three__WEBPACK_IMPORTED_MODULE_10__.Matrix4();
-            const cameraMatrix = new three__WEBPACK_IMPORTED_MODULE_10__.Matrix4();
+            const frustumMatrix = new three__WEBPACK_IMPORTED_MODULE_9__.Matrix4();
+            const inverseWorldMatrix = new three__WEBPACK_IMPORTED_MODULE_9__.Matrix4();
+            const cameraMatrix = new three__WEBPACK_IMPORTED_MODULE_9__.Matrix4();
             return (pointClouds, camera) => {
                 const frustums = [];
                 const cameraPositions = [];
-                const priorityQueue = new _utils_binary_heap__WEBPACK_IMPORTED_MODULE_7__.BinaryHeap(x => 1 / x.weight);
+                const priorityQueue = new _utils_binary_heap__WEBPACK_IMPORTED_MODULE_6__.BinaryHeap(x => 1 / x.weight);
                 for (let i = 0; i < pointClouds.length; i++) {
                     const pointCloud = pointClouds[i];
                     if (!pointCloud.initialized()) {
@@ -55485,20 +55483,20 @@ class Potree {
                         .multiply(camera.projectionMatrix)
                         .multiply(inverseViewMatrix)
                         .multiply(worldMatrix);
-                    frustums.push(new three__WEBPACK_IMPORTED_MODULE_10__.Frustum().setFromProjectionMatrix(frustumMatrix));
+                    frustums.push(new three__WEBPACK_IMPORTED_MODULE_9__.Frustum().setFromProjectionMatrix(frustumMatrix));
                     // Camera position in object space
                     inverseWorldMatrix.copy(worldMatrix).invert();
                     cameraMatrix
                         .identity()
                         .multiply(inverseWorldMatrix)
                         .multiply(camera.matrixWorld);
-                    cameraPositions.push(new three__WEBPACK_IMPORTED_MODULE_10__.Vector3().setFromMatrixPosition(cameraMatrix));
+                    cameraPositions.push(new three__WEBPACK_IMPORTED_MODULE_9__.Vector3().setFromMatrixPosition(cameraMatrix));
                     if (pointCloud.visible && pointCloud.root !== null) {
                         const weight = Number.MAX_VALUE;
                         priorityQueue.push(new QueueItem(i, weight, pointCloud.root));
                     }
                     // Hide any previously visible nodes. We will later show only the needed ones.
-                    if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isTreeNode)(pointCloud.root)) {
+                    if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isTreeNode)(pointCloud.root)) {
                         pointCloud.hideDescendants(pointCloud.root.sceneNode);
                     }
                     for (const boundingBoxNode of pointCloud.boundingBoxNodes) {
@@ -55511,7 +55509,7 @@ class Potree {
     }
     loadResonaiPointCloud(potreeName, getUrl, xhrRequest = (input, init) => fetch(input, init), callbacks) {
         // console.log('here2');
-        return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_4__.PointCloudOctree(this, geometry));
+        return (0,_loading__WEBPACK_IMPORTED_MODULE_2__.loadResonaiPOC)(potreeName, getUrl, xhrRequest, callbacks).then(geometry => new _point_cloud_octree__WEBPACK_IMPORTED_MODULE_3__.PointCloudOctree(this, geometry));
     }
     updatePointClouds(pointClouds, camera, renderer, maxNumNodesLoading = 0) {
         let count_none = 0;
@@ -55524,7 +55522,6 @@ class Potree {
             if (exclusion === BBoxExclusion.NONE) {
                 count_none++;
                 pointClouds[i].material.clipPolyhedraIgnored = true;
-                pointClouds[i].material.pointColorType = _materials__WEBPACK_IMPORTED_MODULE_3__.PointColorType.LOD;
                 // pointClouds[i].material.highlightPolyhedraIgnored = true;
             }
             if (exclusion === BBoxExclusion.PARTIAL) {
@@ -55551,7 +55548,7 @@ class Potree {
         return result;
     }
     static pick(pointClouds, renderer, camera, ray, params = {}) {
-        Potree.picker = Potree.picker || new _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_5__.PointCloudOctreePicker();
+        Potree.picker = Potree.picker || new _point_cloud_octree_picker__WEBPACK_IMPORTED_MODULE_4__.PointCloudOctreePicker();
         return Potree.picker.pick(renderer, camera, ray, pointClouds, params);
     }
     get pointBudget() {
@@ -55602,7 +55599,7 @@ class Potree {
             numVisiblePoints += node.numPoints;
             pointCloud.numVisiblePoints += node.numPoints;
             const parentNode = queueItem.parent;
-            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isGeometryNode)(node) && (!parentNode || (0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isTreeNode)(parentNode))) {
+            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isGeometryNode)(node) && (!parentNode || (0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isTreeNode)(parentNode))) {
                 if (node.loaded && loadedToGPUThisFrame < _constants__WEBPACK_IMPORTED_MODULE_0__.MAX_LOADS_TO_GPU) {
                     node = pointCloud.toTreeNode(node, parentNode);
                     loadedToGPUThisFrame++;
@@ -55619,7 +55616,7 @@ class Potree {
                     continue;
                 }
             }
-            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_6__.isTreeNode)(node)) {
+            if ((0,_type_predicates__WEBPACK_IMPORTED_MODULE_5__.isTreeNode)(node)) {
                 this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
                 pointCloud.visibleGeometry.push(node.geometryNode);
             }
@@ -55654,8 +55651,8 @@ class Potree {
         // const relateConToPoly = material.uniforms.highlightConToPoly.value;
         // const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
         // const allFlattenedPlanes = material.uniforms.highlightPlanes.value;
-        const normal = new three__WEBPACK_IMPORTED_MODULE_10__.Vector3(0, 0, 0);
-        const plane = new three_src_math_Plane__WEBPACK_IMPORTED_MODULE_11__.Plane(normal, 0);
+        const normal = new three__WEBPACK_IMPORTED_MODULE_9__.Vector3(0, 0, 0);
+        const plane = new three_src_math_Plane__WEBPACK_IMPORTED_MODULE_10__.Plane(normal, 0);
         let disjointFromAllPolyhedra = true;
         // going over all polyhedra
         for (let poly_i = 0; poly_i < pointCloud.material.clipPolyhedraCount; poly_i++) {
@@ -55723,7 +55720,7 @@ class Potree {
     }
     box_vertices_outside_of_halfspace(box, plane) {
         let counter = 0;
-        const point = new three__WEBPACK_IMPORTED_MODULE_10__.Vector3(0, 0, 0);
+        const point = new three__WEBPACK_IMPORTED_MODULE_9__.Vector3(0, 0, 0);
         if (box && plane) {
             for (let i = 0; i < 8; i++) {
                 point.x = (i % 2 < 1 ? box.min.x : box.max.x);
@@ -55782,7 +55779,7 @@ class Potree {
     }
     updateBoundingBoxVisibility(pointCloud, node) {
         if (pointCloud.showBoundingBox && !node.boundingBoxNode) {
-            const boxHelper = new _utils_box3_helper__WEBPACK_IMPORTED_MODULE_8__.Box3Helper(node.boundingBox);
+            const boxHelper = new _utils_box3_helper__WEBPACK_IMPORTED_MODULE_7__.Box3Helper(node.boundingBox);
             boxHelper.matrixAutoUpdate = false;
             pointCloud.boundingBoxNodes.push(boxHelper);
             node.boundingBoxNode = boxHelper;
