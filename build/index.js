@@ -54117,14 +54117,14 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         // @ts-ignore
         this[`${type}PolyhedraCount`] = polyhedra.length;
         // @ts-ignore
-        if (this[`${type}PolyhedraIgnored`]) {
+        if (type === 'clip' && this[`${type}PolyhedraIgnored`]) {
             this.setUniform(`${type}PolyhedraCount`, 0);
         }
         else {
             this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
         }
         this.updateShaderSource();
-        if (!polyhedra || polyhedra.length === 0 || (this[`${type}PolyhedraIgnored`])) {
+        if (!polyhedra || polyhedra.length === 0 || (type === 'clip' && this[`${type}PolyhedraIgnored`])) {
             // TODO(maor) remove
             //  this.pointColorType = PointColorType.LOD;
             // @ts-ignore
@@ -55516,13 +55516,11 @@ class Potree {
         let count_partial = 0;
         let count_complete = 0;
         for (let i = 0; i < pointClouds.length; i++) {
-            pointClouds[i].material.clipPolyhedraIgnored = false;
-            // pointClouds[i].material.highlightPolyhedraIgnored = false;
-            let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox);
+            const exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox);
+            pointClouds[i].material.clipPolyhedraIgnored = (exclusion === BBoxExclusion.NONE);
+            // pointClouds[i].material.highlightPolyhedraIgnored = (exclusion === BBoxExclusion.NONE);
             if (exclusion === BBoxExclusion.NONE) {
                 count_none++;
-                pointClouds[i].material.clipPolyhedraIgnored = true;
-                // pointClouds[i].material.highlightPolyhedraIgnored = true;
             }
             if (exclusion === BBoxExclusion.PARTIAL) {
                 count_partial++;
@@ -55531,7 +55529,7 @@ class Potree {
                 count_complete++;
             }
         }
-        if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+        if (count_none > 0 || count_partial > 0 || count_complete > 0) {
             console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
         }
         const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
