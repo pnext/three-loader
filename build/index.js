@@ -54117,14 +54117,12 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         // @ts-ignore
         this[`${type}PolyhedraCount`] = polyhedra.length;
         // @ts-ignore
-        if (this[`${type}PolyhedraIgnored`]) {
-            this.setUniform(`${type}PolyhedraCount`, 0);
-        }
+        if (false) {}
         else {
             this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
         }
         this.updateShaderSource();
-        if (!polyhedra || polyhedra.length === 0 || this[`${type}PolyhedraIgnored`]) {
+        if (!polyhedra || polyhedra.length === 0 || ( false && 0)) {
             // TODO(maor) remove
             //  this.pointColorType = PointColorType.LOD;
             // @ts-ignore
