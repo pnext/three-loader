@@ -54117,14 +54117,14 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         // @ts-ignore
         this[`${type}PolyhedraCount`] = polyhedra.length;
         // @ts-ignore
-        if (this.clipPolyhedraIgnored) {
+        if (this[`${type}PolyhedraIgnored`]) {
             this.setUniform(`${type}PolyhedraCount`, 0);
         }
         else {
             this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
         }
         this.updateShaderSource();
-        if (!polyhedra || polyhedra.length === 0 || this.clipPolyhedraIgnored) {
+        if (!polyhedra || polyhedra.length === 0 || this[`${type}PolyhedraIgnored`]) {
             // TODO(maor) remove
             //  this.pointColorType = PointColorType.LOD;
             // @ts-ignore
@@ -54146,12 +54146,6 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
             }
             return;
         }
-        // TODO(maor) remove
-        // if (this.clipPolyhedraIgnored) {
-        //   this.pointColorType = PointColorType.LOD;
-        // } else {
-        //   this.pointColorType = PointColorType.RGB;
-        // }
         const conToPoly = [];
         const planeToCon = [];
         const planeToPoly = [];
