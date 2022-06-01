@@ -12,6 +12,11 @@ export declare class QueueItem {
     parent?: IPointCloudTreeNode | null | undefined;
     constructor(pointCloudIndex: number, weight: number, node: IPointCloudTreeNode, parent?: IPointCloudTreeNode | null | undefined);
 }
+export declare enum BBoxExclusion {
+    COMPLETE = 0,
+    PARTIAL = 1,
+    NONE = 2
+}
 export declare class Potree implements IPotree {
     private static picker;
     private _pointBudget;
@@ -32,7 +37,7 @@ export declare class Potree implements IPotree {
     get maxNumNodesLoading(): number;
     set maxNumNodesLoading(value: number);
     private updateVisibility;
-    private shouldClipByPolyhedra;
+    private BBoxClippingByPolyhedra;
     private shouldClipByPlanes;
     private box_vertices_outside_of_halfspace;
     private updateTreeNodeVisibility;

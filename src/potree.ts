@@ -38,6 +38,12 @@ export class QueueItem {
   ) {}
 }
 
+export enum BBoxExclusion {
+  COMPLETE = 0,
+  PARTIAL = 1,
+  NONE = 2,
+}
+
 export class Potree implements IPotree {
   private static picker: PointCloudOctreePicker | undefined;
   private _pointBudget: number = DEFAULT_POINT_BUDGET;
@@ -63,6 +69,29 @@ export class Potree implements IPotree {
     renderer: WebGLRenderer,
     maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
+
+    let count_none = 0;
+    let count_partial = 0;
+    let count_complete = 0;
+
+    for (let i = 0; i < pointClouds.length; i++) {
+      pointClouds[i].material.highlightPolyhedraIgnored = false;
+      let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox)
+      if (exclusion === BBoxExclusion.NONE) {
+        count_none++;
+      }
+      if (exclusion === BBoxExclusion.PARTIAL) {
+        pointClouds[i].material.highlightPolyhedraIgnored = true;
+        count_partial++;
+      }
+      if (exclusion === BBoxExclusion.COMPLETE) {
+        count_complete++;
+      }
+    }
+
+    console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+
+
     const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
 
     for (let i = 0; i < pointClouds.length; i++) {
@@ -152,7 +181,7 @@ export class Potree implements IPotree {
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
         this.shouldClip(pointCloud, node.boundingBox) ||
         this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
-        this.shouldClipByPolyhedra(pointCloud, node.boundingBox)
+        this.BBoxClippingByPolyhedra(pointCloud, node.boundingBox) === BBoxExclusion.COMPLETE
       ) {
         continue;
       }
@@ -217,7 +246,7 @@ export class Potree implements IPotree {
     };
   }
 
-  private shouldClipByPolyhedra(pointCloud: PointCloudOctree, bbox: Box3) {
+  private BBoxClippingByPolyhedra(pointCloud: PointCloudOctree, bbox: Box3) {
 
     const tbox = bbox.clone();
     tbox.applyMatrix4(pointCloud.matrixWorld);
@@ -225,62 +254,71 @@ export class Potree implements IPotree {
 
     // TODO(maor) is it possible to disable the ignore here? it doesn't like material.uniforms.highlightPolyhedronOutside.value
     // @ts-ignore
-    // const polyOutside = material.uniforms.clipPolyhedronOutside.value;
-    // const relateConToPoly = material.uniforms.clipConToPoly.value;
-    // const relatePlaneToCon = material.uniforms.clipPlaneToCon.value;
-    // const allFlattenedPlanes = material.uniforms.clipPlanes.value;
-    const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
-    const relateConToPoly = material.uniforms.highlightConToPoly.value;
-    const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
-    const allFlattenedPlanes = material.uniforms.highlightPlanes.value;
+    const polyOutside = material.uniforms.clipPolyhedronOutside.value;
+    const relateConToPoly = material.uniforms.clipConToPoly.value;
+    const relatePlaneToCon = material.uniforms.clipPlaneToCon.value;
+    const allFlattenedPlanes = material.uniforms.clipPlanes.value;
+    // const polyOutside = material.uniforms.highlightPolyhedronOutside.value;
+    // const relateConToPoly = material.uniforms.highlightConToPoly.value;
+    // const relatePlaneToCon = material.uniforms.highlightPlaneToCon.value;
+    // const allFlattenedPlanes = material.uniforms.highlightPlanes.value;
+
+    const normal = new Vector3(0, 0, 0);
+    const plane = new Plane(normal, 0);
+
+    let disjointFromAllPolyhedra = true;
 
     // going over all polyhedra
-    for (let poly_i = 0; poly_i < pointCloud.material.uniforms.highlightPolyhedraCount.value; poly_i++) {
+    for (let poly_i = 0; poly_i < pointCloud.material.highlightPolyhedraCount; poly_i++) {
       const outside = polyOutside[poly_i];
       let disjointFromPoly = true;
       // going over all convexes
       for (let conv_i = 0; conv_i < relateConToPoly.length; conv_i++) {
         // check if convex belongs to poly
+        let disjointFromConvex = false;
+        let containedInConvex = true;
         if (relateConToPoly[conv_i] === poly_i) {
           // if it is, loop over all planes that belong to the convex
-          let disjointFromConvex = false;
-          let containedInConvex = true;
+
           for (let plane_i = 0; plane_i < relatePlaneToCon.length; plane_i++) {
             if (relatePlaneToCon[plane_i] === conv_i) {
-              const normal = new Vector3(
-                  allFlattenedPlanes[plane_i * 4],
-                  allFlattenedPlanes[plane_i * 4 + 1],
-                  allFlattenedPlanes[plane_i * 4 + 2]);
-              const constant = allFlattenedPlanes[plane_i * 4 + 3];
-              // TODO(maor) initialize out of loop
-              // TODO(maor) enum ALL PARTIAL NONE
-              const plane = new Plane(normal, constant);
-              if (outside === false) {
-                if (this.box_vertices_outside_of_halfspace(tbox, plane) > 0) {
-                  containedInConvex = false;
-                }
-              } else {
-                if (this.box_vertices_outside_of_halfspace(tbox, plane) === 8) {
-                  disjointFromConvex = true;
-                }
+              plane.normal.x = allFlattenedPlanes[plane_i * 4];
+              plane.normal.y = allFlattenedPlanes[plane_i * 4 + 1];
+              plane.normal.z = allFlattenedPlanes[plane_i * 4 + 2];
+              plane.constant = allFlattenedPlanes[plane_i * 4 + 3];
+
+              const bBoxVertexCount = this.box_vertices_outside_of_halfspace(tbox, plane);
+              // TODO(maor): does it matter if inside or outside at this point
+              if (bBoxVertexCount > 0) {
+                containedInConvex = false;
+              }
+              if (bBoxVertexCount === 8) {
+                disjointFromConvex = true;
               }
             }
           }
-          if (!outside && containedInConvex) {
-            console.log('clipped')
-            return true;
+          if (containedInConvex) {
+            if (!outside) {
+              return BBoxExclusion.COMPLETE;
+            }
           }
-          if (outside && !disjointFromConvex) {
+          if (!disjointFromConvex) {
             disjointFromPoly = false;
           }
         }
       }
+      if (!disjointFromPoly) {
+        disjointFromAllPolyhedra = false;
+      }
       if (outside && disjointFromPoly) {
-        console.log('clipped')
-        return true;
+        return BBoxExclusion.COMPLETE;
       }
     }
-    return false;
+
+    if (disjointFromAllPolyhedra) {
+      return BBoxExclusion.NONE;
+    }
+    return BBoxExclusion.PARTIAL;
   }
 
   private shouldClipByPlanes(pointCloud: PointCloudOctree, bbox: Box3) {

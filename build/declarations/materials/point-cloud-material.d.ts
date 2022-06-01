@@ -84,6 +84,8 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     clipPlaneToCon: number[];
     clipPlaneToPoly: number[];
     clipPolyhedronOutside: boolean[];
+    clipPolyhedraIgnored: boolean;
+    clipPolyhedronIgnored: boolean;
     highlightIgnoreDepth: boolean;
     highlightPolyhedraCount: number;
     highlightPlanes: number[];
@@ -91,6 +93,7 @@ export declare class PointCloudMaterial extends RawShaderMaterial {
     highlightPlaneToCon: number[];
     highlightPlaneToPoly: number[];
     highlightPolyhedronOutside: boolean[];
+    highlightPolyhedraIgnored: boolean;
     highlightPolyhedronColors: Color[];
     visibleNodesTexture: Texture | undefined;
     private visibleNodeTextureOffsets;

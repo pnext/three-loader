@@ -170,6 +170,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   clipPlaneToCon: number[] = [0];
   clipPlaneToPoly: number[] = [0];
   clipPolyhedronOutside: boolean[] = [false];
+  clipPolyhedraIgnored: boolean = false;
+  clipPolyhedronIgnored: boolean = false;
   highlightIgnoreDepth: boolean = false;
   highlightPolyhedraCount: number = 0;
   highlightPlanes: number[] = [0, 0, 0, 1];
@@ -177,6 +179,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   highlightPlaneToCon: number[] = [0];
   highlightPlaneToPoly: number[] = [0];
   highlightPolyhedronOutside: boolean[] = [false];
+  highlightPolyhedraIgnored: boolean = false;
   highlightPolyhedronColors: Color[] = [new Color(0xff3cff)];
   visibleNodesTexture: Texture | undefined;
   private visibleNodeTextureOffsets = new Map<string, number>();
@@ -721,9 +724,17 @@ export class PointCloudMaterial extends RawShaderMaterial {
     // @ts-ignore
     this[`${type}PolyhedraCount`] = polyhedra.length;
     // @ts-ignore
-    this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
+    if (this.highlightPolyhedraIgnored) {
+      this.setUniform(`${type}PolyhedraCount`, 0);
+    } else {
+      this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
+    }
     this.updateShaderSource();
-    if (!polyhedra || polyhedra.length === 0) {
+
+    if (!polyhedra || polyhedra.length === 0 || this.highlightPolyhedraIgnored) {
+
+      // TODO(maor) remove
+      //  this.pointColorType = PointColorType.LOD;
       // @ts-ignore
       this.setUniform(`${type}Planes`, [0, 0, 0, 1]);
       // @ts-ignore
@@ -743,6 +754,14 @@ export class PointCloudMaterial extends RawShaderMaterial {
       }
       return;
     }
+
+    // TODO(maor) remove
+    if (this.highlightPolyhedraIgnored) {
+      this.pointColorType = PointColorType.LOD;
+    } else {
+      this.pointColorType = PointColorType.RGB;
+    }
+
     const conToPoly: number[] = [];
     const planeToCon: number[] = [];
     const planeToPoly: number[] = [];
