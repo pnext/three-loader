@@ -724,14 +724,14 @@ export class PointCloudMaterial extends RawShaderMaterial {
     // @ts-ignore
     this[`${type}PolyhedraCount`] = polyhedra.length;
     // @ts-ignore
-    if (this.clipPolyhedraIgnored) {
+    if (this[`${type}PolyhedraIgnored`]) {
       this.setUniform(`${type}PolyhedraCount`, 0);
     } else {
       this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
     }
     this.updateShaderSource();
 
-    if (!polyhedra || polyhedra.length === 0 || this.clipPolyhedraIgnored) {
+    if (!polyhedra || polyhedra.length === 0 || this[`${type}PolyhedraIgnored`]) {
 
       // TODO(maor) remove
       //  this.pointColorType = PointColorType.LOD;
@@ -754,13 +754,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
       }
       return;
     }
-
-    // TODO(maor) remove
-    // if (this.clipPolyhedraIgnored) {
-    //   this.pointColorType = PointColorType.LOD;
-    // } else {
-    //   this.pointColorType = PointColorType.RGB;
-    // }
 
     const conToPoly: number[] = [];
     const planeToCon: number[] = [];
