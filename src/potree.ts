@@ -19,6 +19,7 @@ import {
 } from './constants';
 import { FEATURES } from './features';
 import { GetUrlFn, loadResonaiPOC } from './loading';
+import {PointColorType} from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -70,29 +71,30 @@ export class Potree implements IPotree {
     maxNumNodesLoading: number = 0
   ): IVisibilityUpdateResult {
 
-    // let count_none = 0;
-    // let count_partial = 0;
-    // let count_complete = 0;
+    let count_none = 0;
+    let count_partial = 0;
+    let count_complete = 0;
 
     for (let i = 0; i < pointClouds.length; i++) {
       pointClouds[i].material.clipPolyhedraIgnored = false;
       // pointClouds[i].material.highlightPolyhedraIgnored = false;
-      let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox)
+      let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox);
       if (exclusion === BBoxExclusion.NONE) {
-        // count_none++;
+        count_none++;
         pointClouds[i].material.clipPolyhedraIgnored = true;
+        pointClouds[i].material.pointColorType = PointColorType.LOD;
         // pointClouds[i].material.highlightPolyhedraIgnored = true;
       }
-      // if (exclusion === BBoxExclusion.PARTIAL) {
-      //   count_partial++;
-      // }
-      // if (exclusion === BBoxExclusion.COMPLETE) {
-      //   count_complete++;
-      // }
+      if (exclusion === BBoxExclusion.PARTIAL) {
+        count_partial++;
+      }
+      if (exclusion === BBoxExclusion.COMPLETE) {
+        count_complete++;
+      }
     }
-    // if (count_none > 0 && count_partial > 0 && count_complete > 0) {
-    //  console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
-    // }
+    if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+      console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+    }
 
     const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
 
