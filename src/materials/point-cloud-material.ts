@@ -724,14 +724,14 @@ export class PointCloudMaterial extends RawShaderMaterial {
     // @ts-ignore
     this[`${type}PolyhedraCount`] = polyhedra.length;
     // @ts-ignore
-    if (this[`${type}PolyhedraIgnored`]) {
+    if (false && this[`${type}PolyhedraIgnored`]) {
       this.setUniform(`${type}PolyhedraCount`, 0);
     } else {
       this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
     }
     this.updateShaderSource();
 
-    if (!polyhedra || polyhedra.length === 0 || this[`${type}PolyhedraIgnored`]) {
+    if (!polyhedra || polyhedra.length === 0 || (false && this[`${type}PolyhedraIgnored`])) {
 
       // TODO(maor) remove
       //  this.pointColorType = PointColorType.LOD;
