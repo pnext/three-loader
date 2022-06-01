@@ -724,7 +724,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     // @ts-ignore
     this[`${type}PolyhedraCount`] = polyhedra.length;
     // @ts-ignore
-    if (this.highlightPolyhedraIgnored) {
+    if (this.clipPolyhedraIgnored) {
       this.setUniform(`${type}PolyhedraCount`, 0);
     } else {
       this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);

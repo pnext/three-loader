@@ -76,12 +76,12 @@ export class Potree implements IPotree {
 
     for (let i = 0; i < pointClouds.length; i++) {
       pointClouds[i].material.clipPolyhedraIgnored = false;
-      pointClouds[i].material.highlightPolyhedraIgnored = false;
+      // pointClouds[i].material.highlightPolyhedraIgnored = false;
       let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox)
       if (exclusion === BBoxExclusion.NONE) {
         count_none++;
         pointClouds[i].material.clipPolyhedraIgnored = true;
-        pointClouds[i].material.highlightPolyhedraIgnored = true;
+        // pointClouds[i].material.highlightPolyhedraIgnored = true;
       }
       if (exclusion === BBoxExclusion.PARTIAL) {
         count_partial++;
