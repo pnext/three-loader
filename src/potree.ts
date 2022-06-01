@@ -75,13 +75,11 @@ export class Potree implements IPotree {
     let count_complete = 0;
 
     for (let i = 0; i < pointClouds.length; i++) {
-      pointClouds[i].material.clipPolyhedraIgnored = false;
-      // pointClouds[i].material.highlightPolyhedraIgnored = false;
-      let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox)
+      const exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox);
+      pointClouds[i].material.clipPolyhedraIgnored = (exclusion === BBoxExclusion.NONE);
+      pointClouds[i].material.highlightPolyhedraIgnored = (exclusion === BBoxExclusion.NONE);
       if (exclusion === BBoxExclusion.NONE) {
         count_none++;
-        pointClouds[i].material.clipPolyhedraIgnored = true;
-        // pointClouds[i].material.highlightPolyhedraIgnored = true;
       }
       if (exclusion === BBoxExclusion.PARTIAL) {
         count_partial++;
@@ -90,7 +88,7 @@ export class Potree implements IPotree {
         count_complete++;
       }
     }
-    if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+    if (count_none > 0 || count_partial > 0 || count_complete > 0) {
       console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
     }
 
