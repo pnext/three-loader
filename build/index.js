@@ -54124,7 +54124,7 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
             this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
         }
         this.updateShaderSource();
-        if (!polyhedra || polyhedra.length === 0 || this.highlightPolyhedraIgnored) {
+        if (!polyhedra || polyhedra.length === 0 || this.clipPolyhedraIgnored) {
             // TODO(maor) remove
             //  this.pointColorType = PointColorType.LOD;
             // @ts-ignore
@@ -54147,12 +54147,11 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
             return;
         }
         // TODO(maor) remove
-        if (this.highlightPolyhedraIgnored) {
-            this.pointColorType = _enums__WEBPACK_IMPORTED_MODULE_4__.PointColorType.LOD;
-        }
-        else {
-            this.pointColorType = _enums__WEBPACK_IMPORTED_MODULE_4__.PointColorType.RGB;
-        }
+        // if (this.clipPolyhedraIgnored) {
+        //   this.pointColorType = PointColorType.LOD;
+        // } else {
+        //   this.pointColorType = PointColorType.RGB;
+        // }
         const conToPoly = [];
         const planeToCon = [];
         const planeToPoly = [];
@@ -55523,20 +55522,24 @@ class Potree {
         let count_partial = 0;
         let count_complete = 0;
         for (let i = 0; i < pointClouds.length; i++) {
+            pointClouds[i].material.clipPolyhedraIgnored = false;
             pointClouds[i].material.highlightPolyhedraIgnored = false;
             let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox);
             if (exclusion === BBoxExclusion.NONE) {
                 count_none++;
+                pointClouds[i].material.clipPolyhedraIgnored = true;
+                pointClouds[i].material.highlightPolyhedraIgnored = true;
             }
             if (exclusion === BBoxExclusion.PARTIAL) {
-                pointClouds[i].material.highlightPolyhedraIgnored = true;
                 count_partial++;
             }
             if (exclusion === BBoxExclusion.COMPLETE) {
                 count_complete++;
             }
         }
-        console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+        if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+            console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+        }
         const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
         for (let i = 0; i < pointClouds.length; i++) {
             const pointCloud = pointClouds[i];
@@ -55593,7 +55596,7 @@ class Potree {
                 !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
                 this.shouldClip(pointCloud, node.boundingBox) ||
                 this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
-                this.BBoxClippingByPolyhedra(pointCloud, node.boundingBox) === BBoxExclusion.COMPLETE) {
+                (this.BBoxClippingByPolyhedra(pointCloud, node.boundingBox) === BBoxExclusion.COMPLETE)) {
                 continue;
             }
             // TODO(Shai) update the polyhedra / clipping planes on the material here
@@ -55658,7 +55661,7 @@ class Potree {
         const plane = new three_src_math_Plane__WEBPACK_IMPORTED_MODULE_10__.Plane(normal, 0);
         let disjointFromAllPolyhedra = true;
         // going over all polyhedra
-        for (let poly_i = 0; poly_i < pointCloud.material.highlightPolyhedraCount; poly_i++) {
+        for (let poly_i = 0; poly_i < pointCloud.material.clipPolyhedraCount; poly_i++) {
             const outside = polyOutside[poly_i];
             let disjointFromPoly = true;
             // going over all convexes
