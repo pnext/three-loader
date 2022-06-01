@@ -731,7 +731,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     }
     this.updateShaderSource();
 
-    if (!polyhedra || polyhedra.length === 0 || this.highlightPolyhedraIgnored) {
+    if (!polyhedra || polyhedra.length === 0 || this.clipPolyhedraIgnored) {
 
       // TODO(maor) remove
       //  this.pointColorType = PointColorType.LOD;
@@ -756,11 +756,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
     }
 
     // TODO(maor) remove
-    if (this.highlightPolyhedraIgnored) {
-      this.pointColorType = PointColorType.LOD;
-    } else {
-      this.pointColorType = PointColorType.RGB;
-    }
+    // if (this.clipPolyhedraIgnored) {
+    //   this.pointColorType = PointColorType.LOD;
+    // } else {
+    //   this.pointColorType = PointColorType.RGB;
+    // }
 
     const conToPoly: number[] = [];
     const planeToCon: number[] = [];

@@ -75,22 +75,24 @@ export class Potree implements IPotree {
     let count_complete = 0;
 
     for (let i = 0; i < pointClouds.length; i++) {
+      pointClouds[i].material.clipPolyhedraIgnored = false;
       pointClouds[i].material.highlightPolyhedraIgnored = false;
       let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox)
       if (exclusion === BBoxExclusion.NONE) {
         count_none++;
+        pointClouds[i].material.clipPolyhedraIgnored = true;
+        pointClouds[i].material.highlightPolyhedraIgnored = true;
       }
       if (exclusion === BBoxExclusion.PARTIAL) {
-        pointClouds[i].material.highlightPolyhedraIgnored = true;
         count_partial++;
       }
       if (exclusion === BBoxExclusion.COMPLETE) {
         count_complete++;
       }
     }
-
-    console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
-
+    if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+      console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+    }
 
     const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
 
@@ -181,7 +183,7 @@ export class Potree implements IPotree {
         !frustums[pointCloudIndex].intersectsBox(node.boundingBox) ||
         this.shouldClip(pointCloud, node.boundingBox) ||
         this.shouldClipByPlanes(pointCloud, node.boundingBox) ||
-        this.BBoxClippingByPolyhedra(pointCloud, node.boundingBox) === BBoxExclusion.COMPLETE
+        (this.BBoxClippingByPolyhedra(pointCloud, node.boundingBox) === BBoxExclusion.COMPLETE)
       ) {
         continue;
       }
@@ -269,7 +271,7 @@ export class Potree implements IPotree {
     let disjointFromAllPolyhedra = true;
 
     // going over all polyhedra
-    for (let poly_i = 0; poly_i < pointCloud.material.highlightPolyhedraCount; poly_i++) {
+    for (let poly_i = 0; poly_i < pointCloud.material.clipPolyhedraCount; poly_i++) {
       const outside = polyOutside[poly_i];
       let disjointFromPoly = true;
       // going over all convexes
