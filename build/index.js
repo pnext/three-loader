@@ -54117,7 +54117,7 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         // @ts-ignore
         this[`${type}PolyhedraCount`] = polyhedra.length;
         // @ts-ignore
-        if (this.highlightPolyhedraIgnored) {
+        if (this.clipPolyhedraIgnored) {
             this.setUniform(`${type}PolyhedraCount`, 0);
         }
         else {
@@ -55523,12 +55523,12 @@ class Potree {
         let count_complete = 0;
         for (let i = 0; i < pointClouds.length; i++) {
             pointClouds[i].material.clipPolyhedraIgnored = false;
-            pointClouds[i].material.highlightPolyhedraIgnored = false;
+            // pointClouds[i].material.highlightPolyhedraIgnored = false;
             let exclusion = this.BBoxClippingByPolyhedra(pointClouds[i], pointClouds[i].boundingBox);
             if (exclusion === BBoxExclusion.NONE) {
                 count_none++;
                 pointClouds[i].material.clipPolyhedraIgnored = true;
-                pointClouds[i].material.highlightPolyhedraIgnored = true;
+                // pointClouds[i].material.highlightPolyhedraIgnored = true;
             }
             if (exclusion === BBoxExclusion.PARTIAL) {
                 count_partial++;
