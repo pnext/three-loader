@@ -54117,12 +54117,14 @@ class PointCloudMaterial extends three__WEBPACK_IMPORTED_MODULE_7__.RawShaderMat
         // @ts-ignore
         this[`${type}PolyhedraCount`] = polyhedra.length;
         // @ts-ignore
-        if (false) {}
+        if (this[`${type}PolyhedraIgnored`]) {
+            this.setUniform(`${type}PolyhedraCount`, 0);
+        }
         else {
             this.setUniform(`${type}PolyhedraCount`, this[`${type}PolyhedraCount`]);
         }
         this.updateShaderSource();
-        if (!polyhedra || polyhedra.length === 0 || ( false && 0)) {
+        if (!polyhedra || polyhedra.length === 0 || (this[`${type}PolyhedraIgnored`])) {
             // TODO(maor) remove
             //  this.pointColorType = PointColorType.LOD;
             // @ts-ignore
@@ -55529,9 +55531,9 @@ class Potree {
                 count_complete++;
             }
         }
-        if (count_none > 0 && count_partial > 0 && count_complete > 0) {
-            console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
-        }
+        // if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+        console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+        // }
         const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
         for (let i = 0; i < pointClouds.length; i++) {
             const pointCloud = pointClouds[i];

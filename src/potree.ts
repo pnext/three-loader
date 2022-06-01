@@ -90,9 +90,9 @@ export class Potree implements IPotree {
         count_complete++;
       }
     }
-    if (count_none > 0 && count_partial > 0 && count_complete > 0) {
-      console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
-    }
+    // if (count_none > 0 && count_partial > 0 && count_complete > 0) {
+    console.log('           >>> none: ', count_none, ' part: ', count_partial, ' comp: ', count_complete);
+    // }
 
     const result = this.updateVisibility(pointClouds, camera, renderer, maxNumNodesLoading);
 
