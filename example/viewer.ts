@@ -101,6 +101,22 @@ export class Viewer {
   }
 
   add(pco: PointCloudOctree): void {
+
+    const box = pco.pcoGeometry.boundingBox;
+    const size = box.getSize(new THREE.Vector3());
+
+    const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    const material = new THREE.MeshBasicMaterial({color:0xFF0000, wireframe: true});
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(pco.position);
+    mesh.scale.copy(pco.scale);
+    mesh.rotation.copy(pco.rotation);
+
+    size.multiplyScalar(0.5);
+    mesh.position.add(new THREE.Vector3(size.x, size.y, -size.z));
+
+    this.scene.add(mesh);
+
     this.scene.add(pco);
     this.pointClouds.push(pco);
   }

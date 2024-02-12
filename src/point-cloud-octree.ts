@@ -1,18 +1,17 @@
 import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, WebGLRenderer } from 'three';
 import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
 import { PointCloudMaterial, PointSizeType } from './materials';
-import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudTreeNode, IPotree, PickPoint } from './types';
+import { IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
   disposed: boolean = false;
-  pcoGeometry: PointCloudOctreeGeometry;
+  pcoGeometry: PCOGeometry;
   boundingBox: Box3;
   boundingSphere: Sphere;
   material: PointCloudMaterial;
@@ -33,7 +32,7 @@ export class PointCloudOctree extends PointCloudTree {
 
   constructor(
     potree: IPotree,
-    pcoGeometry: PointCloudOctreeGeometry,
+    pcoGeometry: PCOGeometry,
     material?: PointCloudMaterial,
   ) {
     super();
@@ -49,6 +48,7 @@ export class PointCloudOctree extends PointCloudTree {
     this.updateMatrix();
 
     this.material = material || new PointCloudMaterial();
+    
     this.initMaterial(this.material);
   }
 
@@ -70,7 +70,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.root.dispose();
     }
 
-    this.pcoGeometry.root.traverse(n => this.potree.lru.remove(n));
+    this.pcoGeometry.root.traverse((n: any) => this.potree.lru.remove(n));
     this.pcoGeometry.dispose();
     this.material.dispose();
 

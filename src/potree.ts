@@ -28,6 +28,8 @@ import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PickPoint } from
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
+import { loadOctree } from './loading2/load-octree';
+import { OctreeGeometry } from './loading2/OctreeGeometry';
 
 export class QueueItem {
   constructor(
@@ -47,13 +49,21 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  loadPointCloud(
-    url: string,
-    getUrl: GetUrlFn,
-    xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-  ): Promise<PointCloudOctree> {
-    return loadPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
-  }
+	async loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = (input: RequestInfo, init?: RequestInit) => {return fetch(input, init);}): Promise<PointCloudOctree> 
+	{
+		if (url === 'cloud.js') 
+		{
+			return await loadPOC(url, getUrl, xhrRequest).then((geometry) => {
+				return new PointCloudOctree(this, geometry);
+			});
+		}
+		else if (url === 'metadata.json') 
+		{
+			return await loadOctree(url, getUrl, xhrRequest).then((geometry: OctreeGeometry) => {
+				return new PointCloudOctree(this, geometry);});
+		}
+		throw new Error('Unsupported file type');
+	}
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
@@ -158,6 +168,7 @@ export class Potree implements IPotree {
 
       if (isGeometryNode(node) && (!parentNode || isTreeNode(parentNode))) {
         if (node.loaded && loadedToGPUThisFrame < MAX_LOADS_TO_GPU) {
+          // @ts-ignore
           node = pointCloud.toTreeNode(node, parentNode);
           loadedToGPUThisFrame++;
         } else if (!node.failed) {
@@ -173,7 +184,9 @@ export class Potree implements IPotree {
       }
 
       if (isTreeNode(node)) {
+        // @ts-ignore
         this.updateTreeNodeVisibility(pointCloud, node, visibleNodes);
+        // @ts-ignore
         pointCloud.visibleGeometry.push(node.geometryNode);
       }
 
@@ -370,6 +383,7 @@ export class Potree implements IPotree {
 
         // Hide any previously visible nodes. We will later show only the needed ones.
         if (isTreeNode(pointCloud.root)) {
+          // @ts-ignore
           pointCloud.hideDescendants(pointCloud.root.sceneNode);
         }
 
