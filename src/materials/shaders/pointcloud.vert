@@ -5,6 +5,11 @@ precision highp int;
 
 attribute vec3 position;
 attribute vec3 color;
+
+#ifdef color_rgba
+	attribute vec4 rgba;
+#endif
+
 attribute vec3 normal;
 attribute float intensity;
 attribute float classification;
@@ -310,15 +315,21 @@ float getContrastFactor(float contrast) {
 }
 
 vec3 getRGB() {
+	
+	#ifdef color_rgba
+		vec3 rgb = rgba.rgb;
+	#else	
+		vec3 rgb = color;
+	#endif		
+
 	#if defined(use_rgb_gamma_contrast_brightness)
-	  vec3 rgb = color;
 		rgb = pow(rgb, vec3(rgbGamma));
 		rgb = rgb + rgbBrightness;
 		rgb = (rgb - 0.5) * getContrastFactor(rgbContrast) + 0.5;
 		rgb = clamp(rgb, 0.0, 1.0);
 		return rgb;
 	#else
-		return color;
+		return rgb;
 	#endif
 }
 

@@ -42,7 +42,7 @@ loadBtn.addEventListener('click', () => {
     // )
     .load(
       'metadata.json',
-      'http://172.21.17.152:8080/pump/',
+      'http://172.21.17.152:8080/pump/'
     )    
     .then(pco => {
       pointCloud = pco;
@@ -50,7 +50,7 @@ loadBtn.addEventListener('click', () => {
       pointCloud.material.size = 1.0;
 
       pointCloud.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
-      pointCloud.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
+      pointCloud.material.clipExtent = [0.0, 0.0, 0.5, 1.0];
 
       const camera = viewer.camera;
       camera.far = 1000;

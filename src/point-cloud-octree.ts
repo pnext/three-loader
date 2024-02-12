@@ -7,6 +7,7 @@ import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker'
 import { PointCloudTree } from './point-cloud-tree';
 import { IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
+import { OctreeGeometry } from './loading2/OctreeGeometry';
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
@@ -47,8 +48,8 @@ export class PointCloudOctree extends PointCloudTree {
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
 
-    this.material = material || new PointCloudMaterial();
-    
+    this.material = material || pcoGeometry instanceof OctreeGeometry ? new PointCloudMaterial({ colorRgba: true }) : new PointCloudMaterial();
+
     this.initMaterial(this.material);
   }
 
