@@ -36,14 +36,10 @@ loadBtn.addEventListener('click', () => {
   loaded = true;
 
   viewer
-    // .load(
-    //   'cloud.js',
-    //   'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    // )
     .load(
-      'metadata.json',
-      'http://172.21.17.152:8080/pump/'
-    )    
+      'cloud.js',
+      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+    )
     .then(pco => {
       pointCloud = pco;
       pointCloud.rotateX(-Math.PI / 2);
@@ -57,8 +53,6 @@ loadBtn.addEventListener('click', () => {
       camera.updateProjectionMatrix();
       camera.position.set(0, 0, 10);
       camera.lookAt(new Vector3());
-
-      console.log(pco);
 
       viewer.add(pco);
     })
