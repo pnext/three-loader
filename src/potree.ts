@@ -18,6 +18,8 @@ import {
 } from './constants';
 import { FEATURES } from './features';
 import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
+import { loadOctree } from './loading2/load-octree';
+import { OctreeGeometry } from './loading2/OctreeGeometry';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
@@ -28,8 +30,6 @@ import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PickPoint } from
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
-import { loadOctree } from './loading2/load-octree';
-import { OctreeGeometry } from './loading2/OctreeGeometry';
 
 export class QueueItem {
   constructor(
@@ -49,18 +49,14 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-	async loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = (input: RequestInfo, init?: RequestInit) => {return fetch(input, init);}): Promise<PointCloudOctree> 
-	{
-		if (url === 'cloud.js') 
-		{
+	async loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init)): Promise<PointCloudOctree> {
+		if (url === 'cloud.js') {
 			return await loadPOC(url, getUrl, xhrRequest).then((geometry) => {
 				return new PointCloudOctree(this, geometry);
 			});
-		}
-		else if (url === 'metadata.json') 
-		{
+		} else if (url === 'metadata.json') {
 			return await loadOctree(url, getUrl, xhrRequest).then((geometry: OctreeGeometry) => {
-				return new PointCloudOctree(this, geometry);});
+				return new PointCloudOctree(this, geometry); });
 		}
 		throw new Error('Unsupported file type');
 	}

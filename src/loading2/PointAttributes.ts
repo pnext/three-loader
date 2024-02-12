@@ -27,19 +27,17 @@ type PointAttributeTypeType = {
 };
 
 let i = 0;
-for (let obj in PointAttributeTypes) 
-{
+for (const obj in PointAttributeTypes) {
 	PointAttributeTypes[i] = PointAttributeTypes[obj];
 	i++;
 }
 
 export {PointAttributeTypes};
 
-type RangeType = number[] | [number[], number[]]
+type RangeType = number[] | [number[], number[]];
 
 // Class that represents a certain point attribute
-class PointAttribute
-{
+class PointAttribute {
 	byteSize: number;
 
 	description: string;
@@ -51,8 +49,7 @@ class PointAttribute
 		public type: PointAttributeTypeType,
 		public numElements: number,
 		public range: RangeType = [Infinity, -Infinity]
-	)
-	{
+	) {
 		this.byteSize = this.numElements * this.type.size;
 		this.description = '';
 	}
@@ -83,28 +80,23 @@ export const POINT_ATTRIBUTES: {[key: string]: PointAttribute} = {
 type PAVectorType = {
 	name: string;
 	attributes: string[];
-}
+};
 
 // Instantiated during loading
-export class PointAttributes
-{
-
+export class PointAttributes {
 
 	// pointAttributes will be a list of strings
 	constructor(pointAttributes?: string[],
 				public attributes: PointAttribute[] = [],
 				public byteSize: number = 0,
 				public size: number = 0,
-				public vectors: PAVectorType[]=[]
-	)
-	{
+				public vectors: PAVectorType[]= []
+	) {
 
-		if (pointAttributes != null) 
-		{
-			for (let i = 0; i < pointAttributes.length; i++) 
-			{
-				let pointAttributeName = pointAttributes[i];
-				let pointAttribute = POINT_ATTRIBUTES[pointAttributeName];
+		if (pointAttributes != null) {
+			for (let i = 0; i < pointAttributes.length; i++) {
+				const pointAttributeName = pointAttributes[i];
+				const pointAttribute = POINT_ATTRIBUTES[pointAttributeName];
 				this.attributes.push(pointAttribute);
 				this.byteSize += pointAttribute.byteSize;
 				this.size++;
@@ -113,29 +105,24 @@ export class PointAttributes
 	}
 
 	// I hate these argument names that are so similar to each other but have completely different types
-	add(pointAttribute: PointAttribute)
-	{
+	add(pointAttribute: PointAttribute) {
 		this.attributes.push(pointAttribute);
 		this.byteSize += pointAttribute.byteSize;
 		this.size++;
 	}
 
-	addVector(vector: PAVectorType)
-	{
+	addVector(vector: PAVectorType) {
 		this.vectors.push(vector);
 	}
 
-	hasNormals()
-	{
-		for (let name in this.attributes) 
-		{
-			let pointAttribute = this.attributes[name];
+	hasNormals() {
+		for (const name in this.attributes) {
+			const pointAttribute = this.attributes[name];
 			if (
 				pointAttribute === POINT_ATTRIBUTES.NORMAL_SPHEREMAPPED ||
 				pointAttribute === POINT_ATTRIBUTES.NORMAL_FLOATS ||
 				pointAttribute === POINT_ATTRIBUTES.NORMAL ||
-				pointAttribute === POINT_ATTRIBUTES.NORMAL_OCT16) 
-			{
+				pointAttribute === POINT_ATTRIBUTES.NORMAL_OCT16) {
 				return true;
 			}
 		}

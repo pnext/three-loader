@@ -1,12 +1,10 @@
+import {Box3, BufferGeometry, Sphere} from 'three';
 import {IPointCloudTreeNode} from './../types';
-import {Box3, Sphere, BufferGeometry} from 'three';
 import {OctreeGeometry} from './OctreeGeometry';
 
-export class OctreeGeometryNode implements IPointCloudTreeNode
-{
+export class OctreeGeometryNode implements IPointCloudTreeNode {
 
-	constructor(public name: string, public octreeGeometry: OctreeGeometry, public boundingBox: Box3)
-	{
+	constructor(public name: string, public octreeGeometry: OctreeGeometry, public boundingBox: Box3) {
 		this.id = OctreeGeometryNode.IDCount++;
 		this.index = parseInt(name.charAt(name.length - 1));
 		this.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
@@ -70,103 +68,66 @@ export class OctreeGeometryNode implements IPointCloudTreeNode
 
 	oneTimeDisposeHandlers: Function[];
 
-	// isGeometryNode(){
-	// 	return true;
-	// }
-
-	getLevel()
-	{
+	getLevel() {
 		return this.level;
 	}
 
-	// isTreeNode(){
-	// 	return false;
-	// } // Converted to property
-
-	isLoaded()
-	{
+	isLoaded() {
 		return this.loaded;
 	}
 
-	getBoundingSphere()
-	{
+	getBoundingSphere() {
 		return this.boundingSphere;
 	}
 
-	// getChildren(){
-	// 	let children = [];
-
-	// 	for (let i = 0; i < 8; i++) {
-	// 		if (this.children[i]) {
-	// 			children.push(this.children[i]);
-	// 		}
-	// 	}
-
-	// 	return children;
-	// }
-
-	getBoundingBox()
-	{
+	getBoundingBox() {
 		return this.boundingBox;
 	}
 
-	load()
-	{
+	load() {
 
-		if (this.octreeGeometry.numNodesLoading >= this.octreeGeometry.maxNumNodesLoading) 
-		{
+		if (this.octreeGeometry.numNodesLoading >= this.octreeGeometry.maxNumNodesLoading) {
 			return;
 		}
 
-		if (this.octreeGeometry.loader) 
-		{
+		if (this.octreeGeometry.loader) {
 			this.octreeGeometry.loader.load(this);
 		}
 	}
 
-	getNumPoints()
-	{
+	getNumPoints() {
 		return this.numPoints;
 	}
 
-	dispose(): void
-	{
-		if (this.geometry && this.parent != null) 
-		{
+	dispose(): void {
+		if (this.geometry && this.parent != null) {
 			this.geometry.dispose();
 			this.geometry = null;
 			this.loaded = false;
 
-			// this.dispatchEvent( { type: 'dispose' } );
-			for (let i = 0; i < this.oneTimeDisposeHandlers.length; i++) 
-			{
-				let handler = this.oneTimeDisposeHandlers[i];
+			for (let i = 0; i < this.oneTimeDisposeHandlers.length; i++) {
+				const handler = this.oneTimeDisposeHandlers[i];
 				handler();
 			}
 			this.oneTimeDisposeHandlers = [];
 		}
 	}
 
-	traverse(cb: (node: OctreeGeometryNode)=> void, includeSelf = true): void 
-	{
+	traverse(cb: (node: OctreeGeometryNode) => void, includeSelf = true): void {
 		const stack: OctreeGeometryNode[] = includeSelf ? [this] : [];
-	
+
 		let current: OctreeGeometryNode | undefined;
-	
-		while ((current = stack.pop()) !== undefined) 
-		{
+
+		while ((current = stack.pop()) !== undefined) {
 			cb(current);
-		
-			for (const child of current.children) 
-			{
-				if (child !== null) 
-				{
+
+			for (const child of current.children) {
+				if (child !== null) {
 					stack.push(child);
 				}
 			}
 		}
 	}
-
 
 }
 

@@ -635,7 +635,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     }
   }
 
-
   private updateVisibilityTextureData(nodes: PointCloudOctreeNode[]) {
     nodes.sort(byLevelAndIndex);
 

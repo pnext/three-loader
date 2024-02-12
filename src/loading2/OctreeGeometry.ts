@@ -1,10 +1,9 @@
-import {NodeLoader, Metadata} from './OctreeLoader';
 import {Box3, Sphere, Vector3} from 'three';
-import {PointAttributes} from './PointAttributes';
 import {OctreeGeometryNode} from './OctreeGeometryNode';
+import {Metadata, NodeLoader} from './OctreeLoader';
+import {PointAttributes} from './PointAttributes';
 
-export class OctreeGeometry
-{
+export class OctreeGeometry {
 	root!: OctreeGeometryNode;
 
 	url: string | null = null;
@@ -17,7 +16,7 @@ export class OctreeGeometry
 
 	numNodesLoading: number = 0;
 
-	maxNumNodesLoading: number = 3; // I don't understand why this is also a property of IPotree then. Duplicate functionality?
+	maxNumNodesLoading: number = 3;
 
 	boundingSphere: Sphere;
 
@@ -33,18 +32,15 @@ export class OctreeGeometry
 
 	constructor(
 		public loader: NodeLoader,
-		public boundingBox: Box3, // Need to be get from metadata.json
-	)
-	{
+		public boundingBox: Box3, 
+	) {
 		this.tightBoundingBox = this.boundingBox.clone();
 		this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
 		this.tightBoundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
 	}
 
-	dispose(): void 
-	{
-		// this.loader.dispose();
-		this.root.traverse((node) => {return node.dispose();});
+	dispose(): void {
+		this.root.traverse((node) => node.dispose());
 		this.disposed = true;
 	}
 
