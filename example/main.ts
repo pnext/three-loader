@@ -36,14 +36,10 @@ loadBtn.addEventListener('click', () => {
   loaded = true;
 
   viewer
-    // .load(
-    //   'cloud.js',
-    //   'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    // )
     .load(
-      'metadata.json',
-      'http://127.0.0.1:8080/pump/',
-    )    
+      'cloud.js',
+      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+    )
     .then(pco => {
       pointCloud = pco;
       pointCloud.rotateX(-Math.PI / 2);
