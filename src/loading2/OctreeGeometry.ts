@@ -32,7 +32,7 @@ export class OctreeGeometry {
 
 	constructor(
 		public loader: NodeLoader,
-		public boundingBox: Box3, 
+		public boundingBox: Box3,
 	) {
 		this.tightBoundingBox = this.boundingBox.clone();
 		this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
