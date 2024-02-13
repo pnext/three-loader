@@ -71,7 +71,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.root.dispose();
     }
 
-    this.pcoGeometry.root.traverse((n: any) => this.potree.lru.remove(n));
+    this.pcoGeometry.root.traverse(n => this.potree.lru.remove(n));
     this.pcoGeometry.dispose();
     this.material.dispose();
 

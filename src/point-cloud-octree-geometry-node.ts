@@ -7,7 +7,7 @@ import { Box3, BufferGeometry, EventDispatcher, Sphere, Vector3 } from 'three';
 import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { IPointCloudTreeNode } from './types';
 import { createChildAABB } from './utils/bounds';
-import { getIndexFromName } from './utils/utils';
+import { getIndexFromName, handleEmptyBuffer, handleFailedRequest } from './utils/utils';
 
 export interface NodeData {
   children: number;
@@ -189,7 +189,9 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
 
     return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
     .then((url) => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
+    .then(res => handleFailedRequest(res))
     .then((res) => res.arrayBuffer())
+    .then(buffer => handleEmptyBuffer(buffer))
     .then((data) => this.loadHierarchy(this, data));
   }
 
