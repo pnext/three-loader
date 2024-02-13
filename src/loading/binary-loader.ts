@@ -50,7 +50,7 @@ export class BinaryLoader {
 
   public static readonly WORKER_POOL = new WorkerPool(
     32,
-    require('../workers/binary-decoder.worker.js'),
+    require('../workers/binary-decoder.worker.js').default,
   );
 
   constructor({

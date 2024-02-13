@@ -401,7 +401,7 @@ export class PointCloudOctreePicker {
 
   private static getPickState() {
     const scene = new Scene();
-    scene.autoUpdate = false;
+    // scene.autoUpdate = false;
 
     const material = new PointCloudMaterial();
     material.pointColorType = PointColorType.POINT_INDEX;
