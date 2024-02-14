@@ -332,7 +332,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.minSize = getValid(parameters.minSize, 2.0);
     this.maxSize = getValid(parameters.maxSize, 50.0);
 
-  	this.colorRgba = Boolean(parameters.colorRgba);
+    this.colorRgba = Boolean(parameters.colorRgba);
 
     this.classification = DEFAULT_CLASSIFICATION;
 
@@ -380,7 +380,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
   }
 
   updateShaderSource(): void {
-
     this.vertexShader = this.applyDefines(require('./shaders/pointcloud.vert').default);
     this.fragmentShader = this.applyDefines(require('./shaders/pointcloud.frag').default);
 

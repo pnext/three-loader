@@ -49,17 +49,17 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-	async loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init)): Promise<PointCloudOctree> {
-		if (url === 'cloud.js') {
-			return await loadPOC(url, getUrl, xhrRequest).then((geometry) => {
-				return new PointCloudOctree(this, geometry);
-			});
-		} else if (url === 'metadata.json') {
-			return await loadOctree(url, getUrl, xhrRequest).then((geometry: OctreeGeometry) => {
-				return new PointCloudOctree(this, geometry); });
-		}
-		throw new Error('Unsupported file type');
-	}
+  async loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init)): Promise<PointCloudOctree> {
+    if (url === 'cloud.js') {
+      return await loadPOC(url, getUrl, xhrRequest).then((geometry) => {
+        return new PointCloudOctree(this, geometry);
+      });
+    } else if (url === 'metadata.json') {
+      return await loadOctree(url, getUrl, xhrRequest).then((geometry: OctreeGeometry) => {
+        return new PointCloudOctree(this, geometry); });
+    }
+    throw new Error('Unsupported file type');
+  }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
