@@ -3,8 +3,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree } from '../src';
 
-// tslint:disable-next-line:no-duplicate-imports
-
 export class Viewer {
   /**
    * The element where we will insert our canvas.
