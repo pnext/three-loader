@@ -1,9 +1,7 @@
-const BrotliDecoderWorker = require('./brotli-decoder.worker.js').default;
 const DecoderWorker = require('./decoder.worker.js').default;
 
 // Create enums for different types of workers
 export enum WorkerType {
-	DECODER_WORKER_BROTLI = 'DECODER_WORKER_BROTLI',
 	DECODER_WORKER = 'DECODER_WORKER',
 }
 
@@ -13,9 +11,6 @@ export enum WorkerType {
 function createWorker(type: WorkerType): Worker {
 	// console.log(type)
 	switch (type) {
-	case WorkerType.DECODER_WORKER_BROTLI: {
-		return new BrotliDecoderWorker();
-	}
 	case WorkerType.DECODER_WORKER: {
 		return new DecoderWorker();
 	}
@@ -26,7 +21,7 @@ function createWorker(type: WorkerType): Worker {
 
 export class WorkerPool {
 	// Workers will be an object that has a key for each worker type and the value is an array of Workers that can be empty
-	private workers: { [key in WorkerType]: Worker[] } = {DECODER_WORKER: [], DECODER_WORKER_BROTLI: []};
+	private workers: { [key in WorkerType]: Worker[] } = {DECODER_WORKER: []};
 
 	getWorker(workerType: WorkerType): Worker {
 		// Throw error if workerType is not recognized

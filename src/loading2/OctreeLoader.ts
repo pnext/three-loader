@@ -59,7 +59,7 @@ export class NodeLoader {
 				buffer = await response.arrayBuffer();
 			}
 
-			const workerType = this.metadata.encoding === 'BROTLI' ? WorkerType.DECODER_WORKER_BROTLI : WorkerType.DECODER_WORKER;
+			const workerType = WorkerType.DECODER_WORKER;
 
 			const worker = this.workerPool.getWorker(workerType);
 
