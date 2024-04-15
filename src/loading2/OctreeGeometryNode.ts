@@ -13,33 +13,20 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 	}
 
 	loaded: boolean = false;
-
 	loading: boolean = false;
-
 	parent: OctreeGeometryNode | null = null;
-
 	geometry: BufferGeometry | null = null;
-
 	nodeType?: number;
-
 	byteOffset?: bigint ;
-
 	byteSize?: bigint;
-
 	hierarchyByteOffset?: bigint;
-
 	hierarchyByteSize?: bigint;
-
 	hasChildren: boolean = false;
-
 	spacing!: number;
-
 	density?: number;
-
 	isLeafNode: boolean = true;
 
 	readonly isTreeNode: boolean = false;
-
   	readonly isGeometryNode: boolean = true;
 
 	readonly children: ReadonlyArray<OctreeGeometryNode | null> = [
@@ -53,19 +40,13 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 		null
 	];
 
-	// create static IDCount variable
 	static IDCount = 0;
 
 	id: number;
-
 	index: number;
-
 	boundingSphere: Sphere;
-
 	numPoints: number;
-
 	level!: number;
-
 	oneTimeDisposeHandlers: Function[];
 
 	getLevel() {

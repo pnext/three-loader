@@ -9,9 +9,7 @@ import {WorkerPool, WorkerType} from './WorkerPool';
 export class NodeLoader {
 
 	attributes?: PointAttributes;
-
 	scale?: [number, number, number];
-
 	offset?: [number, number, number];
 
 	constructor(public url: string, public workerPool: WorkerPool, public metadata: Metadata) {
@@ -24,11 +22,10 @@ export class NodeLoader {
 		}
 
 		node.loading = true;
-		// TODO: Need to put the numNodesLoading to the pco
 		node.octreeGeometry.numNodesLoading++;
 
 		try {
-			if (node.nodeType === 2) { // TODO: Investigate
+			if (node.nodeType === 2) {
 				await this.loadHierarchy(node);
 			}
 
@@ -60,7 +57,6 @@ export class NodeLoader {
 			}
 
 			const workerType = WorkerType.DECODER_WORKER;
-
 			const worker = this.workerPool.getWorker(workerType);
 
 			worker.onmessage = (e) => {
@@ -103,13 +99,10 @@ export class NodeLoader {
 					}
 
 				}
-				// indices ??
-
 				node.density = data.density;
 				node.geometry = geometry;
 				node.loaded = true;
 				node.loading = false;
-				// Potree.numNodesLoading--;
 				node.octreeGeometry.numNodesLoading--;
 			};
 
@@ -141,10 +134,6 @@ export class NodeLoader {
 			node.loaded = false;
 			node.loading = false;
 			node.octreeGeometry.numNodesLoading--;
-
-			// console.log(`failed to load ${node.name}`);
-			// console.log(e);
-			// console.log(`trying again!`);
 		}
 	}
 
@@ -155,7 +144,6 @@ export class NodeLoader {
 		const numNodes = buffer.byteLength / bytesPerNode;
 
 		const octree = node.octreeGeometry;
-		// let nodes = [node];
 		const nodes: OctreeGeometryNode[] = new Array(numNodes);
 		nodes[0] = node;
 		let nodePos = 1;
@@ -168,10 +156,6 @@ export class NodeLoader {
 			const numPoints = view.getUint32(i * bytesPerNode + 2, true);
 			const byteOffset = view.getBigInt64(i * bytesPerNode + 6, true);
 			const byteSize = view.getBigInt64(i * bytesPerNode + 14, true);
-
-			// if(byteSize === 0n){
-			// 	// debugger;
-			// }
 
 			if (current.nodeType === 2) {
 				// replace proxy with real node
@@ -214,20 +198,10 @@ export class NodeLoader {
 				(current.children as any)[childIndex] = child;
 				child.parent = current;
 
-				// nodes.push(child);
 				nodes[nodePos] = child;
 				nodePos++;
 			}
-
-			// if((i % 500) === 0){
-			// 	yield;
-			// }
 		}
-
-		// if(duration > 20){
-		// 	let msg = `duration: ${duration}ms, numNodes: ${numNodes}`;
-		// 	console.log(msg);
-		// }
 	}
 
 	async loadHierarchy(node: OctreeGeometryNode) {
@@ -342,13 +316,12 @@ export class OctreeLoader {
 
 		const attributes = new PointAttributes();
 
-		// Replacements object for string to string
 		const replacements: {[key: string]: string} = {rgb: 'rgba'};
 
 		for (const jsonAttribute of jsonAttributes) {
 			const {name, numElements, min, max} = jsonAttribute;
 
-			const type = typenameTypeattributeMap[jsonAttribute.type]; // Fix the typing, currently jsonAttribute has type 'never'
+			const type = typenameTypeattributeMap[jsonAttribute.type]; 
 
 			const potreeAttributeName = replacements[name] ? replacements[name] : name;
 
@@ -372,7 +345,6 @@ export class OctreeLoader {
 		}
 
 		{
-			// check if it has normals
 			const hasNormals =
 				attributes.attributes.find((a) => a.name === 'NormalX') !== undefined &&
 				attributes.attributes.find((a) => a.name === 'NormalY') !== undefined &&
@@ -390,13 +362,12 @@ export class OctreeLoader {
 		return attributes;
 	}
 
-	async load(url: string, xhrRequest: XhrRequest) { // Previously a static method
+	async load(url: string, xhrRequest: XhrRequest) { 
 
 		const response = await xhrRequest(url);
 		const metadata: Metadata = await response.json();
 
 		const attributes = OctreeLoader.parseAttributes(metadata.attributes);
-		// console.log(attributes)
 
 		const loader = new NodeLoader(url, this.workerPool, metadata);
 		loader.attributes = attributes;
@@ -430,7 +401,7 @@ export class OctreeLoader {
 		root.hierarchyByteOffset = BigInt(0);
 		root.hierarchyByteSize = BigInt(metadata.hierarchy.firstChunkSize);
 		root.spacing = octree.spacing;
-		root.byteOffset = BigInt(0); // Originally 0
+		root.byteOffset = BigInt(0);
 
 		octree.root = root;
 
@@ -439,7 +410,5 @@ export class OctreeLoader {
 		const result = {geometry: octree};
 
 		return result;
-
 	}
-
 }

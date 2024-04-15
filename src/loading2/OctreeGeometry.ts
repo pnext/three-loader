@@ -4,31 +4,21 @@ import {Metadata, NodeLoader} from './OctreeLoader';
 import {PointAttributes} from './PointAttributes';
 
 export class OctreeGeometry {
-	root!: OctreeGeometryNode;
-
-	url: string | null = null;
-
-	pointAttributes: PointAttributes | null = null;
-
-	spacing: number = 0;
-
-	tightBoundingBox: Box3;
-
-	numNodesLoading: number = 0;
-
-	maxNumNodesLoading: number = 3;
-
 	boundingSphere: Sphere;
-
+	tightBoundingBox: Box3;
 	tightBoundingSphere: Sphere;
 
-	offset!: Vector3;
-
-	scale!: [number, number, number];
+	maxNumNodesLoading: number = 3;
+	numNodesLoading: number = 0;
 
 	disposed: boolean = false;
-
+	offset!: Vector3;
+	pointAttributes: PointAttributes | null = null;
 	projection?: Metadata['projection'];
+	root!: OctreeGeometryNode;
+	scale!: [number, number, number];
+	spacing: number = 0;
+	url: string | null = null;
 
 	constructor(
 		public loader: NodeLoader,
@@ -36,7 +26,7 @@ export class OctreeGeometry {
 	) {
 		this.tightBoundingBox = this.boundingBox.clone();
 		this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
-		this.tightBoundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
+		this.tightBoundingSphere = this.boundingSphere.clone();
 	}
 
 	dispose(): void {

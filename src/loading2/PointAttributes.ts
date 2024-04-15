@@ -36,7 +36,6 @@ export {PointAttributeTypes};
 
 type RangeType = number[] | [number[], number[]];
 
-// Class that represents a certain point attribute
 class PointAttribute {
 	byteSize: number;
 
@@ -57,7 +56,6 @@ class PointAttribute {
 
 export {PointAttribute};
 
-// Map that represents all point attributes, these were previoiusly properties of the PointAttribute class
 export const POINT_ATTRIBUTES: {[key: string]: PointAttribute} = {
 	POSITION_CARTESIAN: new PointAttribute('POSITION_CARTESIAN', PointAttributeTypes.DATA_TYPE_FLOAT, 3),
 	RGBA_PACKED: new PointAttribute('COLOR_PACKED', PointAttributeTypes.DATA_TYPE_INT8, 4),
@@ -82,10 +80,8 @@ type PAVectorType = {
 	attributes: string[];
 };
 
-// Instantiated during loading
 export class PointAttributes {
 
-	// pointAttributes will be a list of strings
 	constructor(pointAttributes?: string[],
 				public attributes: PointAttribute[] = [],
 				public byteSize: number = 0,
@@ -104,7 +100,6 @@ export class PointAttributes {
 		}
 	}
 
-	// I hate these argument names that are so similar to each other but have completely different types
 	add(pointAttribute: PointAttribute) {
 		this.attributes.push(pointAttribute);
 		this.byteSize += pointAttribute.byteSize;
