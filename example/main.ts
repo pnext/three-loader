@@ -37,16 +37,20 @@ loadBtn.addEventListener('click', () => {
 
   viewer
     .load(
-      'cloud.js',
-      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+      'metadata.json',
+      'http://127.0.0.1:8080/pump/',
     )
+    // .load(
+    //   'cloud.js',
+    //   'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+    // )
     .then(pco => {
       pointCloud = pco;
       pointCloud.rotateX(-Math.PI / 2);
       pointCloud.material.size = 1.0;
 
       pointCloud.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
-      pointCloud.material.clipExtent = [0.0, 0.0, 0.5, 1.0];
+      pointCloud.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
 
       const camera = viewer.camera;
       camera.far = 1000;

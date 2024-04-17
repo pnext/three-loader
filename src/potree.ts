@@ -19,7 +19,7 @@ import {
 import { FEATURES } from './features';
 import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
 import { loadOctree } from './loading2/load-octree';
-import { OctreeGeometry } from './loading2/OctreeGeometry';
+import { OctreeGeometry } from './loading2/octree-geometry';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';

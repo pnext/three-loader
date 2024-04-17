@@ -1,5 +1,5 @@
 import {GetUrlFn, XhrRequest} from '../loading/types';
-import {OctreeLoader} from './OctreeLoader';
+import {OctreeLoader} from './octree-loader';
 
 export async function loadOctree(
 	url: string,

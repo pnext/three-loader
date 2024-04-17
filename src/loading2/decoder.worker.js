@@ -1,4 +1,4 @@
-import {PointAttribute, PointAttributeTypes} from './PointAttributes.ts';
+import {PointAttribute, PointAttributeTypes} from './point-attributes.ts';
 
 const typedArrayMapping = {
 	'int8':   Int8Array,
