@@ -30,10 +30,6 @@ onmessage = function (event) {
 	let gridSize = 32;
 	let grid = new Uint32Array(gridSize ** 3);
 	let toIndex = (x, y, z) => {
-		// let dx = gridSize * (x - min.x) / size.x;
-		// let dy = gridSize * (y - min.y) / size.y;
-		// let dz = gridSize * (z - min.z) / size.z;
-
 		// min is already subtracted
 		let dx = gridSize * x / size.x;
 		let dy = gridSize * y / size.y;
