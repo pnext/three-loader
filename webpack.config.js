@@ -10,6 +10,7 @@ module.exports = {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
+  devtool: 'eval-cheap-source-map',
   stats: 'errors-only',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
