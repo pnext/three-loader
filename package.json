@@ -38,7 +38,7 @@
     "babel-loader": "^8.2.4",
     "babel-preset-env": "^1.7.0",
     "circular-dependency-plugin": "^5.2.2",
-    "css-loader": "6.7.3",
+    "css-loader": "^6.7.3",
     "html-loader": "4.2.0",
     "html-webpack-plugin": "5.5.0",
     "install": "^0.13.0",
