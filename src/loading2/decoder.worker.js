@@ -13,8 +13,6 @@ const typedArrayMapping = {
 	'double': Float64Array,
 };
 
-// Potree = {};
-
 onmessage = function (event) {
 
 	let {buffer, pointAttributes, scale, name, min, max, size, offset, numPoints} = event.data;
