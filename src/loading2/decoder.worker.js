@@ -210,7 +210,6 @@ onmessage = function (event) {
 		transferables.push(message.attributeBuffers[property].buffer);
 	}
 	transferables.push(buffer);
-	// console.log('new', message)
 
 	postMessage(message, transferables);
 };
