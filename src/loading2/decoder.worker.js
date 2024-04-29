@@ -17,8 +17,6 @@ onmessage = function (event) {
 
 	let {buffer, pointAttributes, scale, name, min, max, size, offset, numPoints} = event.data;
 
-	let tStart = performance.now();
-
 	let view = new DataView(buffer);
 	
 	let attributeBuffers = {};
