@@ -36,7 +36,7 @@ export class QueueItem {
     public weight: number,
     public node: IPointCloudTreeNode,
     public parent?: IPointCloudTreeNode | null,
-  ) {}
+  ) { }
 }
 
 type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>) => Promise<PCOGeometry>
@@ -59,7 +59,7 @@ export class Potree implements IPotree {
 
   private readonly loadGeometry: GeometryLoader
 
-  constructor(version: PotreeVersion ="v1"){
+  constructor(version: PotreeVersion = "v1") {
     this.loadGeometry = GEOMETRY_LOADERS[version]
   }
 
