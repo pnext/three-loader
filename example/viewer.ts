@@ -27,7 +27,7 @@ export class Viewer {
   /**
    * Out potree instance which handles updating point clouds, keeps track of loaded nodes, etc.
    */
-  private potree = new Potree();
+  private potree = new Potree('v2');
   /**
    * Array of point clouds which are in the scene and need to be updated.
    */
