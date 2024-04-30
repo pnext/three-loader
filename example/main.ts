@@ -4,83 +4,105 @@ import { Viewer } from './viewer';
 
 require('./main.css');
 
-const targetEl = document.createElement('div');
+const targetEl: HTMLDivElement = document.createElement('div');
 targetEl.className = 'container';
 document.body.appendChild(targetEl);
 
-const viewer = new Viewer();
+const viewer: Viewer = new Viewer();
 viewer.initialize(targetEl);
 
-let pointCloud: PointCloudOctree | undefined;
-let loaded: boolean = false;
+interface PointClouds {
+    [key: string]: PointCloudOctree | undefined;
+}
 
-const unloadBtn = document.createElement('button');
-unloadBtn.textContent = 'Unload';
-unloadBtn.addEventListener('click', () => {
-  if (!loaded) {
-    return;
-  }
+interface LoadedState {
+    [key: string]: boolean;
+}
 
-  viewer.unload();
-  loaded = false;
-  pointCloud = undefined;
-});
+const pointClouds: PointClouds = {
+    v1: undefined,
+    v2: undefined
+};
 
-const loadBtn = document.createElement('button');
-loadBtn.textContent = 'Load';
-loadBtn.addEventListener('click', () => {
-  if (loaded) {
-    return;
-  }
+const loaded: LoadedState = {
+    v1: false,
+    v2: false
+};
 
-  loaded = true;
+function createButton(text: string, onClick: () => void): HTMLButtonElement {
+    const button: HTMLButtonElement = document.createElement('button');
+    button.textContent = text;
+    button.addEventListener('click', onClick);
+    return button;
+}
 
-  viewer
-    .load(
-      'metadata.json',
-      'http://127.0.0.1:8080/pump/',
-    )
-    // .load(
-    //   'cloud.js',
-    //   'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    // )
-    .then(pco => {
-      pointCloud = pco;
-      pointCloud.rotateX(-Math.PI / 2);
-      pointCloud.material.size = 1.0;
+function createSlider(version: string): HTMLInputElement {
+    const slider: HTMLInputElement = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '10000';
+    slider.max = '500000';
+    slider.className = 'budget-slider';
+    slider.addEventListener('change', () => {
+        const cloud = pointClouds[version];
+        if (!cloud) {
+            return;
+        }
+        cloud.potree.pointBudget = parseInt(slider.value, 10);
+        console.log(cloud.potree.pointBudget);
+    });
+    return slider;
+}
 
-      pointCloud.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
-      pointCloud.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
+function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
+    if (loaded[version]) {
+        return;
+    }
+    loaded[version] = true;
 
-      const camera = viewer.camera;
-      camera.far = 1000;
-      camera.updateProjectionMatrix();
-      camera.position.set(0, 0, 10);
-      camera.lookAt(new Vector3());
+    viewer.load(file, url, version)
+        .then(pco => {
+            pointClouds[version] = pco;
+            pco.rotateX(-Math.PI / 2);
+            pco.material.size = 1.0;
+            pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
+            pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
 
-      viewer.add(pco);
-    })
-    .catch(err => console.error(err));
-});
+            const camera = viewer.camera;
+            camera.far = 1000;
+            camera.updateProjectionMatrix();
+            camera.position.set(0, 0, 10);
+            camera.lookAt(new Vector3());
 
-const slider = document.createElement('input');
-slider.type = 'range';
-slider.min = String(10_000);
-slider.max = String(500_000);
-slider.className = 'budget-slider';
+            viewer.add(pco);
+        })
+        .catch(err => console.error(err));
+}
 
-slider.addEventListener('change', () => {
-  if (!pointCloud) {
-    return;
-  }
+function setupUI(version: 'v1' | 'v2'): void {
+    const unloadBtn = createButton('Unload', () => {
+        if (!loaded[version]) {
+            return;
+        }
+        viewer.unload();
+        loaded[version] = false;
+        pointClouds[version] = undefined;
+    });
 
-  pointCloud.potree.pointBudget = parseInt(slider.value, 10);
-  console.log(pointCloud.potree.pointBudget);
-});
+    const loadBtn = createButton('Load', () => setupPointCloud(version,
+        version === 'v1' ? 'cloud.js' : 'metadata.json',
+        version === 'v1' ? 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/' :
+        'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/'
+    ));
 
-const btnContainer = document.createElement('div');
-btnContainer.className = 'btn-container';
-document.body.appendChild(btnContainer);
-btnContainer.appendChild(unloadBtn);
-btnContainer.appendChild(loadBtn);
-btnContainer.appendChild(slider);
+    const slider = createSlider(version);
+
+    const btnContainer: HTMLDivElement = document.createElement('div');
+    btnContainer.className = 'btn-container-' + version;
+    document.body.appendChild(btnContainer);
+    btnContainer.appendChild(unloadBtn);
+    btnContainer.appendChild(loadBtn);
+    btnContainer.appendChild(slider);
+}
+
+setupUI('v1');
+setupUI('v2');

@@ -8,12 +8,22 @@ body,
   overflow: hidden;
 }
 
-.btn-container {
+.btn-container-v1 {
   position: absolute;
   bottom: 20px;
   left: 20px;
 }
 
-.btn-container button {
+.btn-container-v2 {
+  position: absolute;
+  bottom: 50px;
+  left: 20px;
+}
+
+.btn-container-v1 button {
+  margin-right: 10px;
+}
+
+.btn-container-v2 button {
   margin-right: 10px;
 }
