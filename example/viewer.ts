@@ -1,7 +1,8 @@
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import { PointCloudOctree, Potree, PotreeVersion } from '../src';
+import { PointCloudOctree, PointCloudOctreeGeometry, Potree, PotreeVersion } from '../src';
+import { OctreeGeometry } from '../src/loading2/octree-geometry';
 
 export class Viewer {
   /**
@@ -105,13 +106,21 @@ export class Viewer {
     this.pointClouds.push(pco);
   }
 
-  unload(): void {
+  unload(version: PotreeVersion = "v1"): void {
     this.pointClouds.forEach(pco => {
-      this.scene.remove(pco);
-      pco.dispose();
+      if (version === 'v1' && pco.pcoGeometry instanceof PointCloudOctreeGeometry) {
+        this.disposePointCloud(pco);
+      }
+      else if (version === 'v2' && pco.pcoGeometry instanceof OctreeGeometry) {
+        this.disposePointCloud(pco);
+      }
     });
+  }
 
-    this.pointClouds = [];
+  disposePointCloud(target: PointCloudOctree): void {
+    this.scene.remove(target);
+    target.dispose();
+    this.pointClouds = this.pointClouds.filter(pco => pco !== target);
   }
 
   /**

@@ -83,7 +83,7 @@ function setupUI(version: 'v1' | 'v2'): void {
         if (!loaded[version]) {
             return;
         }
-        viewer.unload();
+        viewer.unload(version);
         loaded[version] = false;
         pointClouds[version] = undefined;
     });
