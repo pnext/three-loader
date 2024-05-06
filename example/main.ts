@@ -11,6 +11,24 @@ document.body.appendChild(targetEl);
 const viewer: Viewer = new Viewer();
 viewer.initialize(targetEl);
 
+interface PointCloudsConfig {
+    file: string;
+    url: string;
+    version: 'v1' | 'v2';
+}
+
+const examplePointClouds: PointCloudsConfig[] = [
+    {
+        file: 'cloud.js',
+        url: 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+        version: 'v1'
+    }, {
+        file: 'metadata.json',
+        url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        version: 'v2'
+    }
+];
+
 interface PointClouds {
     [key: string]: PointCloudOctree | undefined;
 }
@@ -78,31 +96,31 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
         .catch(err => console.error(err));
 }
 
-function setupUI(version: 'v1' | 'v2'): void {
+function setupUI(cfg: PointCloudsConfig): void {
     const unloadBtn = createButton('Unload', () => {
-        if (!loaded[version]) {
+        if (!loaded[cfg.version]) {
             return;
         }
-        viewer.unload(version);
-        loaded[version] = false;
-        pointClouds[version] = undefined;
+
+        const pointCloud = pointClouds[cfg.version];
+        if (!pointCloud) {
+            return;
+        }
+        viewer.disposePointCloud(pointCloud);
+        loaded[cfg.version] = false;
+        pointClouds[cfg.version] = undefined;
     });
 
-    const loadBtn = createButton('Load', () => setupPointCloud(version,
-        version === 'v1' ? 'cloud.js' : 'metadata.json',
-        version === 'v1' ? 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/' :
-        'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/'
-    ));
+    const loadBtn = createButton('Load', () => setupPointCloud(cfg.version, cfg.file, cfg.url));
 
-    const slider = createSlider(version);
+    const slider = createSlider(cfg.version);
 
     const btnContainer: HTMLDivElement = document.createElement('div');
-    btnContainer.className = 'btn-container-' + version;
+    btnContainer.className = 'btn-container-' + cfg.version;
     document.body.appendChild(btnContainer);
     btnContainer.appendChild(unloadBtn);
     btnContainer.appendChild(loadBtn);
     btnContainer.appendChild(slider);
 }
 
-setupUI('v1');
-setupUI('v2');
+examplePointClouds.forEach(setupUI);
