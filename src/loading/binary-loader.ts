@@ -3,9 +3,9 @@
 // -------------------------------------------------------------------------------------------------
 
 import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
-import { handleFailedRequest, handleEmptyBuffer } from '../utils/utils';
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
+import { handleEmptyBuffer, handleFailedRequest } from '../utils/utils';
 import { WorkerPool } from '../utils/worker-pool';
 import { Version } from '../version';
 import { GetUrlFn, XhrRequest } from './types';
@@ -50,7 +50,7 @@ export class BinaryLoader {
 
   public static readonly WORKER_POOL = new WorkerPool(
     32,
-    require('../workers/binary-decoder.worker.js'),
+    require('../workers/binary-decoder.worker.js').default,
   );
 
   constructor({

@@ -1,7 +1,7 @@
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import { PointCloudOctree, Potree } from '../src';
+import { PointCloudOctree, Potree, PotreeVersion } from '../src';
 
 export class Viewer {
   /**
@@ -27,7 +27,8 @@ export class Viewer {
   /**
    * Out potree instance which handles updating point clouds, keeps track of loaded nodes, etc.
    */
-  private potree = new Potree();
+  private potree_v1 = new Potree('v1');
+  private potree_v2 = new Potree('v2');
   /**
    * Array of point clouds which are in the scene and need to be updated.
    */
@@ -89,8 +90,9 @@ export class Viewer {
    * @param baseUrl
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
-  load(fileName: string, baseUrl: string): Promise<PointCloudOctree> {
-    return this.potree.loadPointCloud(
+  load(fileName: string, baseUrl: string, version: PotreeVersion = "v1"): Promise<PointCloudOctree> {
+    const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
+    return loader.loadPointCloud(
       // The file name of the point cloud which is to be loaded.
       fileName,
       // Given the relative URL of a file, should return a full URL.
@@ -103,13 +105,10 @@ export class Viewer {
     this.pointClouds.push(pco);
   }
 
-  unload(): void {
-    this.pointClouds.forEach(pco => {
-      this.scene.remove(pco);
-      pco.dispose();
-    });
-
-    this.pointClouds = [];
+  disposePointCloud(pointCloud: PointCloudOctree): void {
+    this.scene.remove(pointCloud);
+    pointCloud.dispose();
+    this.pointClouds = this.pointClouds.filter(pco => pco !== pointCloud);
   }
 
   /**
@@ -127,7 +126,8 @@ export class Viewer {
     // visiblily of the octree nodes based on the camera frustum and it
     // triggers any loads/unloads which are necessary to keep the number
     // of visible points in check.
-    this.potree.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
   }
 
   /**

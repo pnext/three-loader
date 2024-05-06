@@ -1,6 +1,8 @@
 import { Box3, Camera, Sphere, Vector3, WebGLRenderer } from 'three';
 import { GetUrlFn, XhrRequest } from './loading/types';
+import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudOctree } from './point-cloud-octree';
+import { PointCloudOctreeGeometry } from './point-cloud-octree-geometry';
 import { LRU } from './utils/lru';
 
 export interface IPointCloudTreeNode {
@@ -64,3 +66,5 @@ export interface PointCloudHit {
   pIndex: number;
   pcIndex: number;
 }
+
+export type PCOGeometry = PointCloudOctreeGeometry | OctreeGeometry;

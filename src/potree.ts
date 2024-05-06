@@ -18,13 +18,14 @@ import {
 } from './constants';
 import { FEATURES } from './features';
 import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
+import { loadOctree } from './loading2/load-octree';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { isGeometryNode, isTreeNode } from './type-predicates';
-import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PickPoint } from './types';
+import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PCOGeometry, PickPoint } from './types';
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
@@ -35,8 +36,17 @@ export class QueueItem {
     public weight: number,
     public node: IPointCloudTreeNode,
     public parent?: IPointCloudTreeNode | null,
-  ) {}
+  ) { }
 }
+
+type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>) => Promise<PCOGeometry>
+
+const GEOMETRY_LOADERS = {
+  v1: loadPOC,
+  v2: loadOctree
+} satisfies Record<string, GeometryLoader>;
+
+export type PotreeVersion = keyof typeof GEOMETRY_LOADERS;
 
 export class Potree implements IPotree {
   private static picker: PointCloudOctreePicker | undefined;
@@ -47,12 +57,18 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
+  private readonly loadGeometry: GeometryLoader
+
+  constructor(version: PotreeVersion = "v1") {
+    this.loadGeometry = GEOMETRY_LOADERS[version]
+  }
+
   loadPointCloud(
     url: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
   ): Promise<PointCloudOctree> {
-    return loadPOC(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    return this.loadGeometry(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
   }
 
   updatePointClouds(

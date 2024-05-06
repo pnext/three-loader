@@ -11,9 +11,8 @@ module.exports = {
     filename: 'example.bundle.js',
     path: buildPath,
   },
-  devtool: 'source-map',
+  devtool: 'eval-cheap-source-map',
   devServer: {
-    contentBase: buildPath,
     compress: true,
     port: 5000,
   },
@@ -26,7 +25,7 @@ module.exports = {
       {
         test: /\.worker\.js$/,
         loader: 'worker-loader',
-        options: { inline: true, fallback: false },
+        options: { inline: 'no-fallback' },
       },
       {
         test: /\.js$/,

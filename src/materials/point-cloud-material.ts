@@ -52,6 +52,7 @@ export interface IPointCloudMaterialParameters {
   minSize: number;
   maxSize: number;
   treeType: TreeType;
+  colorRgba: boolean;
 }
 
 export interface IPointCloudMaterialUniforms {
@@ -172,6 +173,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   useDrawingBufferSize = false;
   lights = false;
   fog = false;
+  colorRgba = false;
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
   visibleNodesTexture: Texture | undefined;
@@ -330,6 +332,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.minSize = getValid(parameters.minSize, 2.0);
     this.maxSize = getValid(parameters.maxSize, 50.0);
 
+    this.colorRgba = Boolean(parameters.colorRgba);
+
     this.classification = DEFAULT_CLASSIFICATION;
 
     this.defaultAttributeValues.normal = [0, 0, 0];
@@ -454,6 +458,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     if (this.usePointCloudMixing) {
       define('use_point_cloud_mixing');
+    }
+
+    if (this.colorRgba) {
+      define('color_rgba');
     }
 
     define('MAX_POINT_LIGHTS 0');
@@ -625,7 +633,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
       this.updateVisibilityTextureData(visibleNodes);
     }
   }
-
 
   private updateVisibilityTextureData(nodes: PointCloudOctreeNode[]) {
     nodes.sort(byLevelAndIndex);

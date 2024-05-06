@@ -10,7 +10,7 @@ module.exports = {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
-  devtool: 'cheap-eval-source-map',
+  devtool: 'eval-cheap-source-map',
   stats: 'errors-only',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
@@ -21,7 +21,7 @@ module.exports = {
       {
         test: /\.worker\.js$/,
         loader: 'worker-loader',
-        options: { inline: true, fallback: false },
+        options: { inline: 'no-fallback' },
       },
       {
         test: /\.js$/,

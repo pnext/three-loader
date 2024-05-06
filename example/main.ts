@@ -4,79 +4,123 @@ import { Viewer } from './viewer';
 
 require('./main.css');
 
-const targetEl = document.createElement('div');
+const targetEl: HTMLDivElement = document.createElement('div');
 targetEl.className = 'container';
 document.body.appendChild(targetEl);
 
-const viewer = new Viewer();
+const viewer: Viewer = new Viewer();
 viewer.initialize(targetEl);
 
-let pointCloud: PointCloudOctree | undefined;
-let loaded: boolean = false;
+interface PointCloudsConfig {
+    file: string;
+    url: string;
+    version: 'v1' | 'v2';
+}
 
-const unloadBtn = document.createElement('button');
-unloadBtn.textContent = 'Unload';
-unloadBtn.addEventListener('click', () => {
-  if (!loaded) {
-    return;
-  }
+const examplePointClouds: PointCloudsConfig[] = [
+    {
+        file: 'cloud.js',
+        url: 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
+        version: 'v1'
+    }, {
+        file: 'metadata.json',
+        url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        version: 'v2'
+    }
+];
 
-  viewer.unload();
-  loaded = false;
-  pointCloud = undefined;
-});
+interface PointClouds {
+    [key: string]: PointCloudOctree | undefined;
+}
 
-const loadBtn = document.createElement('button');
-loadBtn.textContent = 'Load';
-loadBtn.addEventListener('click', () => {
-  if (loaded) {
-    return;
-  }
+interface LoadedState {
+    [key: string]: boolean;
+}
 
-  loaded = true;
+const pointClouds: PointClouds = {
+    v1: undefined,
+    v2: undefined
+};
 
-  viewer
-    .load(
-      'cloud.js',
-      'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    )
-    .then(pco => {
-      pointCloud = pco;
-      pointCloud.rotateX(-Math.PI / 2);
-      pointCloud.material.size = 1.0;
+const loaded: LoadedState = {
+    v1: false,
+    v2: false
+};
 
-      pointCloud.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
-      pointCloud.material.clipExtent = [0.0, 0.0, 0.5, 1.0];
+function createButton(text: string, onClick: () => void): HTMLButtonElement {
+    const button: HTMLButtonElement = document.createElement('button');
+    button.textContent = text;
+    button.addEventListener('click', onClick);
+    return button;
+}
 
-      const camera = viewer.camera;
-      camera.far = 1000;
-      camera.updateProjectionMatrix();
-      camera.position.set(0, 0, 10);
-      camera.lookAt(new Vector3());
+function createSlider(version: string): HTMLInputElement {
+    const slider: HTMLInputElement = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '10000';
+    slider.max = '500000';
+    slider.className = 'budget-slider';
+    slider.addEventListener('change', () => {
+        const cloud = pointClouds[version];
+        if (!cloud) {
+            return;
+        }
+        cloud.potree.pointBudget = parseInt(slider.value, 10);
+        console.log(cloud.potree.pointBudget);
+    });
+    return slider;
+}
 
-      viewer.add(pco);
-    })
-    .catch(err => console.error(err));
-});
+function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
+    if (loaded[version]) {
+        return;
+    }
+    loaded[version] = true;
 
-const slider = document.createElement('input');
-slider.type = 'range';
-slider.min = String(10_000);
-slider.max = String(500_000);
-slider.className = 'budget-slider';
+    viewer.load(file, url, version)
+        .then(pco => {
+            pointClouds[version] = pco;
+            pco.rotateX(-Math.PI / 2);
+            pco.material.size = 1.0;
+            pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
+            pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
 
-slider.addEventListener('change', () => {
-  if (!pointCloud) {
-    return;
-  }
+            const camera = viewer.camera;
+            camera.far = 1000;
+            camera.updateProjectionMatrix();
+            camera.position.set(0, 0, 10);
+            camera.lookAt(new Vector3());
 
-  pointCloud.potree.pointBudget = parseInt(slider.value, 10);
-  console.log(pointCloud.potree.pointBudget);
-});
+            viewer.add(pco);
+        })
+        .catch(err => console.error(err));
+}
 
-const btnContainer = document.createElement('div');
-btnContainer.className = 'btn-container';
-document.body.appendChild(btnContainer);
-btnContainer.appendChild(unloadBtn);
-btnContainer.appendChild(loadBtn);
-btnContainer.appendChild(slider);
+function setupUI(cfg: PointCloudsConfig): void {
+    const unloadBtn = createButton('Unload', () => {
+        if (!loaded[cfg.version]) {
+            return;
+        }
+
+        const pointCloud = pointClouds[cfg.version];
+        if (!pointCloud) {
+            return;
+        }
+        viewer.disposePointCloud(pointCloud);
+        loaded[cfg.version] = false;
+        pointClouds[cfg.version] = undefined;
+    });
+
+    const loadBtn = createButton('Load', () => setupPointCloud(cfg.version, cfg.file, cfg.url));
+
+    const slider = createSlider(cfg.version);
+
+    const btnContainer: HTMLDivElement = document.createElement('div');
+    btnContainer.className = 'btn-container-' + cfg.version;
+    document.body.appendChild(btnContainer);
+    btnContainer.appendChild(unloadBtn);
+    btnContainer.appendChild(loadBtn);
+    btnContainer.appendChild(slider);
+}
+
+examplePointClouds.forEach(setupUI);
