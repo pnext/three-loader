@@ -11,7 +11,7 @@ module.exports = {
     filename: 'example.bundle.js',
     path: buildPath,
   },
-  devtool: 'source-map',
+  devtool: 'eval-cheap-source-map',
   devServer: {
     compress: true,
     port: 5000,
