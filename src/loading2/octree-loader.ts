@@ -1,10 +1,17 @@
-import {BufferAttribute, BufferGeometry, Vector3} from 'three';
-import {Box3, Sphere} from 'three';
-import {XhrRequest} from '../loading/types';
-import {OctreeGeometry} from './octree-geometry';
-import {OctreeGeometryNode} from './octree-geometry-node';
-import {PointAttribute, PointAttributes, PointAttributeTypes} from './point-attributes';
-import {WorkerPool, WorkerType} from './worker-pool';
+import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
+import { Box3, Sphere } from 'three';
+import { XhrRequest } from '../loading/types';
+import { OctreeGeometry } from './octree-geometry';
+import { OctreeGeometryNode } from './octree-geometry-node';
+import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
+import { WorkerPool, WorkerType } from './worker-pool';
+
+var _appendBuffer = function(buffer1: any, buffer2: any) {
+  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+  tmp.set(new Uint8Array(buffer1), 0);
+  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+  return tmp.buffer;
+}
 
 export class NodeLoader {
 
@@ -35,28 +42,61 @@ export class NodeLoader {
 				throw new Error('byteOffset and byteSize are required');
 			}
 
-			const urlOctree = this.url.replace('/metadata.json', '/octree.bin');
-
-			const first = byteOffset;
-			const last = byteOffset + byteSize - BigInt(1);
-
 			let buffer;
 
-			if (byteSize === BigInt(0)) {
-				buffer = new ArrayBuffer(0);
-				console.warn(`loaded node with 0 bytes: ${node.name}`);
-			} else {
-				const response = await fetch(urlOctree, {
-					headers: {
-						'content-type': 'multipart/byteranges',
-						Range: `bytes=${first}-${last}`
-					}
-				});
+			if (this.metadata.encoding === "GLTF") {
+				let urlPositions = `${this.url}/../positions.glbin`;
+				let urlColors = `${this.url}/../colors.glbin`;
 
-				buffer = await response.arrayBuffer();
+				if (byteSize === BigInt(0)) {
+					buffer = new ArrayBuffer(0);
+					console.warn(`loaded node with 0 bytes: ${node.name}`);
+				} else {
+					//buffer = new Uint8Array(Number(byteSize * 4n * 3n + byteSize * 4n * 1n));
+					let firstPositions = byteOffset * 4n * 3n;
+					let lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
+					let responsePositions = await fetch(urlPositions, {
+						headers: {
+							'content-type': 'multipart/byteranges',
+							'Range': `bytes=${firstPositions}-${lastPositions}`,
+						},
+					});
+					let pos_buffer = await responsePositions.arrayBuffer();
+
+					let firstColors = byteOffset * 4n;
+					let lastColors = byteOffset * 4n + byteSize * 4n - 1n;
+					let responseColors = await fetch(urlColors, {
+						headers: {
+							'content-type': 'multipart/byteranges',
+							'Range': `bytes=${firstColors}-${lastColors}`,
+						},
+					});
+					let rgba_buffer = await responseColors.arrayBuffer();
+					buffer = _appendBuffer(pos_buffer, rgba_buffer);
+				}
+			}
+			else {
+				const urlOctree = this.url.replace('/metadata.json', '/octree.bin');
+
+				const first = byteOffset;
+				const last = byteOffset + byteSize - BigInt(1);				
+				if (byteSize === BigInt(0)) {
+					buffer = new ArrayBuffer(0);
+					console.warn(`loaded node with 0 bytes: ${node.name}`);
+				} else {
+					const response = await fetch(urlOctree, {
+						headers: {
+							'content-type': 'multipart/byteranges',
+							Range: `bytes=${first}-${last}`
+						}
+					});
+	
+					buffer = await response.arrayBuffer();
+				}
 			}
 
-			const workerType = WorkerType.DECODER_WORKER;
+			const workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
+			// const workerType = WorkerType.DECODER_WORKER;
 			const worker = this.workerPool.getWorker(workerType);
 
 			worker.onmessage = (e) => {
@@ -206,7 +246,7 @@ export class NodeLoader {
 
 	async loadHierarchy(node: OctreeGeometryNode) {
 
-		const {hierarchyByteOffset, hierarchyByteSize} = node;
+		const { hierarchyByteOffset, hierarchyByteSize } = node;
 
 		if (hierarchyByteOffset === undefined || hierarchyByteSize === undefined) {
 			throw new Error(`hierarchyByteOffset and hierarchyByteSize are undefined for node ${node.name}`);
@@ -316,12 +356,12 @@ export class OctreeLoader {
 
 		const attributes = new PointAttributes();
 
-		const replacements: {[key: string]: string} = {rgb: 'rgba'};
+		const replacements: { [key: string]: string } = { rgb: 'rgba' };
 
 		for (const jsonAttribute of jsonAttributes) {
-			const {name, numElements, min, max} = jsonAttribute;
+			const { name, numElements, min, max } = jsonAttribute;
 
-			const type = typenameTypeattributeMap[jsonAttribute.type]; 
+			const type = typenameTypeattributeMap[jsonAttribute.type];
 
 			const potreeAttributeName = replacements[name] ? replacements[name] : name;
 
@@ -362,7 +402,7 @@ export class OctreeLoader {
 		return attributes;
 	}
 
-	async load(url: string, xhrRequest: XhrRequest) { 
+	async load(url: string, xhrRequest: XhrRequest) {
 
 		const response = await xhrRequest(url);
 		const metadata: Metadata = await response.json();
@@ -407,7 +447,7 @@ export class OctreeLoader {
 
 		loader.load(root);
 
-		const result = {geometry: octree};
+		const result = { geometry: octree };
 
 		return result;
 	}
