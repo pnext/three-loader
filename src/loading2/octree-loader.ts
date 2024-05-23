@@ -6,13 +6,6 @@ import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
 import { WorkerPool, WorkerType } from './worker-pool';
 
-var _appendBuffer = function(buffer1: any, buffer2: any) {
-  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-  tmp.set(new Uint8Array(buffer1), 0);
-  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-  return tmp.buffer;
-}
-
 export class NodeLoader {
 
 	attributes?: PointAttributes;
@@ -36,7 +29,7 @@ export class NodeLoader {
 				await this.loadHierarchy(node);
 			}
 
-			const {byteOffset, byteSize} = node;
+			const { byteOffset, byteSize } = node;
 
 			if (byteOffset === undefined || byteSize === undefined) {
 				throw new Error('byteOffset and byteSize are required');
@@ -45,41 +38,39 @@ export class NodeLoader {
 			let buffer;
 
 			if (this.metadata.encoding === "GLTF") {
-				let urlPositions = `${this.url}/../positions.glbin`;
-				let urlColors = `${this.url}/../colors.glbin`;
+				const urlPositions = `${this.url}/../positions.glbin`;
+				const urlColors = `${this.url}/../colors.glbin`;
 
 				if (byteSize === BigInt(0)) {
 					buffer = new ArrayBuffer(0);
 					console.warn(`loaded node with 0 bytes: ${node.name}`);
 				} else {
-					//buffer = new Uint8Array(Number(byteSize * 4n * 3n + byteSize * 4n * 1n));
-					let firstPositions = byteOffset * 4n * 3n;
-					let lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
-					let responsePositions = await fetch(urlPositions, {
+					const firstPositions = byteOffset * 4n * 3n;
+					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
+					const responsePositions = await fetch(urlPositions, {
 						headers: {
 							'content-type': 'multipart/byteranges',
 							'Range': `bytes=${firstPositions}-${lastPositions}`,
 						},
 					});
-					let pos_buffer = await responsePositions.arrayBuffer();
-
-					let firstColors = byteOffset * 4n;
-					let lastColors = byteOffset * 4n + byteSize * 4n - 1n;
-					let responseColors = await fetch(urlColors, {
+					const posBuffer = await responsePositions.arrayBuffer();
+					const firstColors = byteOffset * 4n;
+					const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
+					const responseColors = await fetch(urlColors, {
 						headers: {
 							'content-type': 'multipart/byteranges',
 							'Range': `bytes=${firstColors}-${lastColors}`,
 						},
 					});
-					let rgba_buffer = await responseColors.arrayBuffer();
-					buffer = _appendBuffer(pos_buffer, rgba_buffer);
+					const rgbaBuffer = await responseColors.arrayBuffer();
+					buffer = appendBuffer(posBuffer, rgbaBuffer);
 				}
 			}
 			else {
 				const urlOctree = this.url.replace('/metadata.json', '/octree.bin');
 
 				const first = byteOffset;
-				const last = byteOffset + byteSize - BigInt(1);				
+				const last = byteOffset + byteSize - BigInt(1);
 				if (byteSize === BigInt(0)) {
 					buffer = new ArrayBuffer(0);
 					console.warn(`loaded node with 0 bytes: ${node.name}`);
@@ -90,13 +81,12 @@ export class NodeLoader {
 							Range: `bytes=${first}-${last}`
 						}
 					});
-	
+
 					buffer = await response.arrayBuffer();
 				}
 			}
 
 			const workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
-			// const workerType = WorkerType.DECODER_WORKER;
 			const worker = this.workerPool.getWorker(workerType);
 
 			worker.onmessage = (e) => {
@@ -137,7 +127,6 @@ export class NodeLoader {
 
 						geometry.setAttribute(property, bufferAttribute);
 					}
-
 				}
 				node.density = data.density;
 				node.geometry = geometry;
@@ -296,6 +285,13 @@ function createChildAABB(aabb: Box3, index: number) {
 	}
 
 	return new Box3(min, max);
+}
+
+function appendBuffer(buffer1: any, buffer2: any) {
+	var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+	tmp.set(new Uint8Array(buffer1), 0);
+	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+	return tmp.buffer;
 }
 
 const typenameTypeattributeMap = {

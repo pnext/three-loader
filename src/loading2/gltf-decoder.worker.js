@@ -71,7 +71,6 @@ onmessage = function (event) {
 	}
 
 	let occupancy = parseInt(numPoints / numOccupiedCells);
-	// console.log(`${name}: #points: ${numPoints}: #occupiedCells: ${numOccupiedCells}, occupancy: ${occupancy} points/cell`);
 
 	{ // add indices
 		let buff = new ArrayBuffer(numPoints * 4);
