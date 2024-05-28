@@ -7,10 +7,9 @@ export class OctreeGeometry {
 	boundingSphere: Sphere;
 	tightBoundingBox: Box3;
 	tightBoundingSphere: Sphere;
-
 	maxNumNodesLoading: number = 3;
 	numNodesLoading: number = 0;
-
+    needsUpdate: boolean = false;
 	disposed: boolean = false;
 	offset!: Vector3;
 	pointAttributes: PointAttributes | null = null;
