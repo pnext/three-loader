@@ -18,7 +18,7 @@ function createWorker(type: WorkerType): Worker {
 	}
 	case WorkerType.DECODER_WORKER_GLTF: {
 		return new DecoderWorker_GLTF();
-	}	
+	}
 	default:
 		throw new Error('Unknown worker type');
 	}
