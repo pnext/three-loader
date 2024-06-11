@@ -1,5 +1,3 @@
-const DecoderWorker = require('./decoder.worker.js').default;
-const DecoderWorker_GLTF = require('./gltf-decoder.worker.js').default;
 
 // Create enums for different types of workers
 export enum WorkerType {
@@ -14,9 +12,11 @@ function createWorker(type: WorkerType): Worker {
 	// console.log(type)
 	switch (type) {
 	case WorkerType.DECODER_WORKER: {
+		const DecoderWorker = require('./decoder.worker.js').default;
 		return new DecoderWorker();
 	}
 	case WorkerType.DECODER_WORKER_GLTF: {
+		const DecoderWorker_GLTF = require('./gltf-decoder.worker.js').default;
 		return new DecoderWorker_GLTF();
 	}
 	default:
