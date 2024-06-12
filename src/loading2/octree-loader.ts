@@ -14,6 +14,8 @@ export class NodeLoader {
 
 	hierarchyPath = '';
 	octreePath = '';
+	gltfColorsPath = '';
+	gltfPositionsPath = '';
 
 	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata) {
 	}
@@ -38,24 +40,52 @@ export class NodeLoader {
 				throw new Error('byteOffset and byteSize are required');
 			}
 
-			const octreeUrl = await this.getUrl(this.octreePath);
-
-			const first = byteOffset;
-			const last = byteOffset + byteSize - BigInt(1);
-
 			let buffer;
 
-			if (byteSize === BigInt(0)) {
-				buffer = new ArrayBuffer(0);
-				console.warn(`loaded node with 0 bytes: ${node.name}`);
-			} else {
-				const headers = { Range: `bytes=${first}-${last}` };
-				const response = await fetch(octreeUrl, { headers });
-	
-				buffer = await response.arrayBuffer();
+			if (this.metadata.encoding === "GLTF") {
+				const urlColors = await this.getUrl('colors.glbin');
+				const urlPositions = await this.getUrl('positions.glbin');
+
+				if (byteSize === BigInt(0)) {
+					buffer = new ArrayBuffer(0);
+					console.warn(`loaded node with 0 bytes: ${node.name}`);
+				} else {
+					const firstPositions = byteOffset * 4n * 3n;
+					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
+
+					const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
+					const responsePositions = await fetch(urlPositions, { headers: headersPositions });
+
+					const bufferPositions = await responsePositions.arrayBuffer();
+
+					const firstColors = byteOffset * 4n;
+					const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
+
+					const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
+					const responseColors = await fetch(urlColors, { headers: headersColors });
+					const bufferColors = await responseColors.arrayBuffer();
+
+					buffer = appendBuffer(bufferPositions, bufferColors);
+				}
+			}
+			else {
+				const urlOctree = await this.getUrl(this.octreePath);
+
+				const first = byteOffset;
+				const last = byteOffset + byteSize - BigInt(1);
+
+				if (byteSize === BigInt(0)) {
+					buffer = new ArrayBuffer(0);
+					console.warn(`loaded node with 0 bytes: ${node.name}`);
+				} else {
+					const headers = { Range: `bytes=${first}-${last}` };
+					const response = await fetch(urlOctree, { headers });
+
+					buffer = await response.arrayBuffer();
+				}
 			}
 
-			const workerType = WorkerType.DECODER_WORKER;
+			const workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
 			const worker = this.workerPool.getWorker(workerType);
 
 			worker.onmessage = (e) => {
@@ -96,7 +126,6 @@ export class NodeLoader {
 
 						geometry.setAttribute(property, bufferAttribute);
 					}
-
 				}
 				node.density = data.density;
 				node.geometry = geometry;
@@ -253,6 +282,13 @@ function createChildAABB(aabb: Box3, index: number) {
 	return new Box3(min, max);
 }
 
+function appendBuffer(buffer1: any, buffer2: any) {
+	var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+	tmp.set(new Uint8Array(buffer1), 0);
+	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+	return tmp.buffer;
+}
+
 const typenameTypeattributeMap = {
 	double: PointAttributeTypes.DATA_TYPE_DOUBLE,
 	float: PointAttributeTypes.DATA_TYPE_FLOAT,
@@ -306,6 +342,8 @@ export class OctreeLoader {
 
 	hierarchyPath = '';
 	octreePath = '';
+	gltfColorsPath = '';
+	gltfPositionsPath = '';
 
 	getUrl: GetUrlFn;
 
@@ -313,6 +351,8 @@ export class OctreeLoader {
 		this.getUrl = getUrl;
 		this.hierarchyPath = url.replace('metadata.json', 'hierarchy.bin');
 		this.octreePath = this.hierarchyPath.replace('hierarchy.bin', 'octree.bin');
+		this.gltfColorsPath = this.octreePath.replace('octree.bin', 'colors.glbin');
+		this.gltfPositionsPath = this.octreePath.replace('colors.glbin', 'positions.glbin');
 	}
 
 	static parseAttributes(jsonAttributes: Attribute[]) {
@@ -379,6 +419,8 @@ export class OctreeLoader {
 
 		loader.hierarchyPath = this.hierarchyPath;
 		loader.octreePath = this.octreePath;
+		loader.gltfColorsPath = this.gltfColorsPath;
+		loader.gltfPositionsPath = this.gltfPositionsPath;		
 
 		const octree = new OctreeGeometry(loader, new Box3(new Vector3(...metadata.boundingBox.min), new Vector3(...metadata.boundingBox.max)));
 		octree.url = url;
