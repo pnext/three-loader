@@ -132,6 +132,7 @@ export class NodeLoader {
 				node.loaded = true;
 				node.loading = false;
 				node.octreeGeometry.numNodesLoading--;
+				node.octreeGeometry.needsUpdate = true;
 			};
 
 			const pointAttributes = node.octreeGeometry.pointAttributes;
