@@ -46,7 +46,6 @@ onmessage = function (event) {
 
     let numOccupiedCells = 0;
 
-    // Initialize tight bounding box
     let tightBoxMin = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
     let tightBoxMax = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
 
@@ -64,7 +63,6 @@ onmessage = function (event) {
                 let y = (view.getInt32(pointOffset + attributeOffset + 4, true) * scale[1]) + offset[1] - min.y;
                 let z = (view.getInt32(pointOffset + attributeOffset + 8, true) * scale[2]) + offset[2] - min.z;
 
-                // Update tight bounding box
                 tightBoxMin[0] = Math.min(tightBoxMin[0], x);
                 tightBoxMin[1] = Math.min(tightBoxMin[1], y);
                 tightBoxMin[2] = Math.min(tightBoxMin[2], z);
