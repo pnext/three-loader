@@ -45,6 +45,10 @@ onmessage = function (event) {
     };
 
     let numOccupiedCells = 0;
+
+    let tightBoxMin = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+    let tightBoxMax = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+
     for (let pointAttribute of pointAttributes.attributes) {
         
         if(['POSITION_CARTESIAN', 'position'].includes(pointAttribute.name)){
@@ -58,6 +62,14 @@ onmessage = function (event) {
                 let x = (view.getInt32(pointOffset + attributeOffset + 0, true) * scale[0]) + offset[0] - min.x;
                 let y = (view.getInt32(pointOffset + attributeOffset + 4, true) * scale[1]) + offset[1] - min.y;
                 let z = (view.getInt32(pointOffset + attributeOffset + 8, true) * scale[2]) + offset[2] - min.z;
+
+                tightBoxMin[0] = Math.min(tightBoxMin[0], x);
+                tightBoxMin[1] = Math.min(tightBoxMin[1], y);
+                tightBoxMin[2] = Math.min(tightBoxMin[2], z);
+
+                tightBoxMax[0] = Math.max(tightBoxMax[0], x);
+                tightBoxMax[1] = Math.max(tightBoxMax[1], y);
+                tightBoxMax[2] = Math.max(tightBoxMax[2], z);
 
                 let index = toIndex(x, y, z);
                 let count = grid[index]++;
@@ -196,6 +208,7 @@ onmessage = function (event) {
         buffer: buffer,
         attributeBuffers: attributeBuffers,
         density: occupancy,
+        tightBoundingBox: { min: tightBoxMin, max: tightBoxMax },
     };
 
     let transferables = [];
