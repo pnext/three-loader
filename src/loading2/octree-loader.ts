@@ -446,7 +446,6 @@ export class OctreeLoader {
 
 		octree.projection = metadata.projection;
 		octree.boundingBox = boundingBox;
-		octree.tightBoundingBox = boundingBox.clone();
 		octree.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
 		octree.tightBoundingSphere = boundingBox.getBoundingSphere(new Sphere());
 		octree.offset = offset;
