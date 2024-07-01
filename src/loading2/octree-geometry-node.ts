@@ -8,6 +8,7 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 		this.id = OctreeGeometryNode.IDCount++;
 		this.index = parseInt(name.charAt(name.length - 1));
 		this.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
+		this.tightBoundingBox = boundingBox.clone();
 		this.numPoints = 0;
 		this.oneTimeDisposeHandlers = [];
 	}
@@ -45,6 +46,7 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 	id: number;
 	index: number;
 	boundingSphere: Sphere;
+	tightBoundingBox: Box3;
 	numPoints: number;
 	level!: number;
 	oneTimeDisposeHandlers: Function[];

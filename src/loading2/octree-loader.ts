@@ -133,6 +133,7 @@ export class NodeLoader {
 				node.loading = false;
 				node.octreeGeometry.numNodesLoading--;
 				node.octreeGeometry.needsUpdate = true;
+				node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
 			};
 
 			const pointAttributes = node.octreeGeometry.pointAttributes;
@@ -254,6 +255,13 @@ export class NodeLoader {
 		this.parseHierarchy(node, buffer);
 	}
 
+	private getTightBoundingBox({ min, max }: { min: number[]; max: number[] }): Box3 {
+		const box = new Box3(new Vector3().fromArray(min), new Vector3().fromArray(max));
+		box.max.sub(box.min);
+		box.min.set(0, 0, 0);
+	
+		return box;
+	  }
 }
 
 const tmpVec3 = new Vector3();
