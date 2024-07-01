@@ -429,8 +429,7 @@ export class OctreeLoader {
 		loader.hierarchyPath = this.hierarchyPath;
 		loader.octreePath = this.octreePath;
 		loader.gltfColorsPath = this.gltfColorsPath;
-		loader.gltfPositionsPath = this.gltfPositionsPath;		
-
+		loader.gltfPositionsPath = this.gltfPositionsPath;
 		const octree = new OctreeGeometry(loader, new Box3(new Vector3(...metadata.boundingBox.min), new Vector3(...metadata.boundingBox.max)));
 		octree.url = url;
 		octree.spacing = metadata.spacing;
@@ -449,6 +448,7 @@ export class OctreeLoader {
 		octree.tightBoundingBox = boundingBox.clone();
 		octree.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
 		octree.tightBoundingSphere = boundingBox.getBoundingSphere(new Sphere());
+		octree.tightBoundingBox = this.getTightBoundingBox(metadata);
 		octree.offset = offset;
 		octree.pointAttributes = OctreeLoader.parseAttributes(metadata.attributes);
 
@@ -467,5 +467,33 @@ export class OctreeLoader {
 		const result = { geometry: octree };
 
 		return result;
+	}
+
+	getTightBoundingBox(metadata: Metadata): Box3 {
+		const positionAttribute = metadata.attributes.find((attr) => attr.name === 'position');
+
+		if (!positionAttribute || !positionAttribute.min || !positionAttribute.max) {
+			console.warn('Position attribute (min, max) not found. Falling back to boundingBox for tightBoundingBox');
+			return new Box3(
+				new Vector3(...metadata.boundingBox.min),
+				new Vector3(...metadata.boundingBox.max)
+			);
+		}
+
+		const offset = metadata.offset;
+		const tightBoundingBox = new Box3(
+			new Vector3(
+				positionAttribute.min[0] - offset[0],
+				positionAttribute.min[1] - offset[1],
+				positionAttribute.min[2] - offset[2]
+			),
+			new Vector3(
+				positionAttribute.max[0] - offset[0],
+				positionAttribute.max[1] - offset[1],
+				positionAttribute.max[2] - offset[2]
+			)
+		);
+
+		return tightBoundingBox;
 	}
 }
