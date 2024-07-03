@@ -479,7 +479,7 @@ export class OctreeLoader {
 			);
 		}
 
-		const offset = metadata.offset;
+		const offset = metadata.boundingBox.min;
 		const tightBoundingBox = new Box3(
 			new Vector3(
 				positionAttribute.min[0] - offset[0],
