@@ -445,7 +445,6 @@ export class OctreeLoader {
 
 		octree.projection = metadata.projection;
 		octree.boundingBox = boundingBox;
-		octree.tightBoundingBox = boundingBox.clone();
 		octree.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
 		octree.tightBoundingSphere = boundingBox.getBoundingSphere(new Sphere());
 		octree.tightBoundingBox = this.getTightBoundingBox(metadata);
@@ -480,7 +479,7 @@ export class OctreeLoader {
 			);
 		}
 
-		const offset = metadata.offset;
+		const offset = metadata.boundingBox.min;
 		const tightBoundingBox = new Box3(
 			new Vector3(
 				positionAttribute.min[0] - offset[0],
