@@ -2,11 +2,10 @@ import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, WebGLRenderer } f
 import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudMaterial, PointSizeType } from './materials';
-import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
+import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 
 export class PointCloudOctree extends PointCloudTree {
@@ -25,7 +24,7 @@ export class PointCloudOctree extends PointCloudTree {
   root: IPointCloudTreeNode | null = null;
   boundingBoxNodes: Object3D[] = [];
   visibleNodes: PointCloudOctreeNode[] = [];
-  visibleGeometry: PointCloudOctreeGeometryNode[] = [];
+  visibleGeometry: IPointCloudGeometryNode[] = [];
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
   private visibleBounds: Box3 = new Box3();
@@ -48,7 +47,10 @@ export class PointCloudOctree extends PointCloudTree {
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
 
-    this.material = material || pcoGeometry instanceof OctreeGeometry ? new PointCloudMaterial({ colorRgba: true }) : new PointCloudMaterial();
+    this.material =
+      material || pcoGeometry instanceof OctreeGeometry
+        ? new PointCloudMaterial({ colorRgba: true })
+        : new PointCloudMaterial();
 
     this.initMaterial(this.material);
   }
@@ -95,7 +97,7 @@ export class PointCloudOctree extends PointCloudTree {
   }
 
   toTreeNode(
-    geometryNode: PointCloudOctreeGeometryNode,
+    geometryNode: IPointCloudGeometryNode,
     parent?: PointCloudOctreeNode | null,
   ): PointCloudOctreeNode {
     const points = new Points(geometryNode.geometry, this.material);
