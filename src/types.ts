@@ -1,4 +1,4 @@
-import { Box3, Camera, Sphere, Vector3, WebGLRenderer } from 'three';
+import { Box3, BufferGeometry, Camera, Sphere, Vector3, WebGLRenderer } from 'three';
 import { GetUrlFn, XhrRequest } from './loading/types';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudOctree } from './point-cloud-octree';
@@ -21,6 +21,17 @@ export interface IPointCloudTreeNode {
   dispose(): void;
 
   traverse(cb: (node: IPointCloudTreeNode) => void, includeSelf?: boolean): void;
+}
+
+export interface IPointCloudGeometryNode extends IPointCloudTreeNode {
+  geometry: BufferGeometry | undefined;
+  oneTimeDisposeHandlers: Function[];
+
+  loading: boolean;
+  loaded: boolean;
+  failed: boolean;
+
+  load(): Promise<void>;
 }
 
 export interface IVisibilityUpdateResult {
