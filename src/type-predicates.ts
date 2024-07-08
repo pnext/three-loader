@@ -1,7 +1,7 @@
-import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
+import { IPointCloudGeometryNode } from './types';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 
-export function isGeometryNode(node?: any): node is PointCloudOctreeGeometryNode {
+export function isGeometryNode(node?: any): node is IPointCloudGeometryNode {
   return node !== undefined && node !== null && node.isGeometryNode;
 }
 
