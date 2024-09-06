@@ -47,7 +47,8 @@ class PointAttribute {
 		public name: string,
 		public type: PointAttributeTypeType,
 		public numElements: number,
-		public range: RangeType = [Infinity, -Infinity]
+		public range: RangeType = [Infinity, -Infinity],
+		public uri: string = ""
 	) {
 		this.byteSize = this.numElements * this.type.size;
 		this.description = '';

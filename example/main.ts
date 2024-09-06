@@ -24,7 +24,8 @@ const examplePointClouds: PointCloudsConfig[] = [
         version: 'v1'
     }, {
         file: 'metadata.json',
-        url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        // url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        url: 'http://127.0.0.1:8080/opf/attributes/',
         version: 'v2'
     }
 ];
@@ -84,6 +85,8 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
             pco.material.size = 1.0;
             pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
+
+            pco.position.set(0, 0, 0);
 
             const camera = viewer.camera;
             camera.far = 1000;
