@@ -3,11 +3,19 @@ import { Box3, Sphere } from 'three';
 import { GetUrlFn, XhrRequest } from '../loading/types';
 import { OctreeGeometry } from './octree-geometry';
 import { OctreeGeometryNode } from './octree-geometry-node';
-import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
+import { PointAttributes } from './point-attributes';
 import { WorkerPool, WorkerType } from './worker-pool';
+import { Metadata } from './metadata';
+
+// Buffer files for DEFAULT encoding
+export const HIERARCHY_FILE = 'hierarchy.bin';
+export const OCTREE_FILE = 'octree.bin';
+
+// Default buffer files for GLTF encoding
+export const GLTF_COLORS_FILE = 'colors.glbin';
+export const GLTF_POSITIONS_FILE = 'positions.glbin';
 
 export class NodeLoader {
-
 	attributes?: PointAttributes;
 	scale?: [number, number, number];
 	offset?: [number, number, number];
@@ -298,62 +306,9 @@ function appendBuffer(buffer1: any, buffer2: any) {
 	return tmp.buffer;
 }
 
-const typenameTypeattributeMap = {
-	double: PointAttributeTypes.DATA_TYPE_DOUBLE,
-	float: PointAttributeTypes.DATA_TYPE_FLOAT,
-	int8: PointAttributeTypes.DATA_TYPE_INT8,
-	uint8: PointAttributeTypes.DATA_TYPE_UINT8,
-	int16: PointAttributeTypes.DATA_TYPE_INT16,
-	uint16: PointAttributeTypes.DATA_TYPE_UINT16,
-	int32: PointAttributeTypes.DATA_TYPE_INT32,
-	uint32: PointAttributeTypes.DATA_TYPE_UINT32,
-	int64: PointAttributeTypes.DATA_TYPE_INT64,
-	uint64: PointAttributeTypes.DATA_TYPE_UINT64
-};
-
-type AttributeType = keyof typeof typenameTypeattributeMap;
-
-export interface Attribute {
-	name: string;
-	description: string;
-	size: number;
-	numElements: number;
-	type: AttributeType;
-	min: number[];
-	max: number[];
-	uri: string;
-}
-
-export interface Metadata {
-	version: string;
-	name: string;
-	description: string;
-	points: number;
-	projection: string;
-	hierarchy: {
-		firstChunkSize: number;
-		stepSize: number;
-		depth: number;
-	};
-	offset: [number, number, number];
-	scale: [number, number, number];
-	spacing: number;
-	boundingBox: {
-		min: [number, number, number],
-		max: [number, number, number],
-	};
-	encoding: string;
-	attributes: Attribute[];
-}
-
 export class OctreeLoader {
 
-	workerPool: WorkerPool = new WorkerPool();
-
-	private readonly HIERARCHY_FILE = 'hierarchy.bin';
-	private readonly OCTREE_FILE = 'octree.bin';
-	private readonly GLTF_COLORS_FILE = 'colors.glbin';
-	private readonly GLTF_POSITIONS_FILE = 'positions.glbin';
+	private workerPool: WorkerPool = new WorkerPool();
 
 	private basePath: string;
 	private hierarchyPath: string;
@@ -361,81 +316,21 @@ export class OctreeLoader {
 	private gltfColorsPath: string;
 	private gltfPositionsPath: string;
 
-	getUrl: GetUrlFn;
+	private getUrl: GetUrlFn;
 
 	constructor(getUrl: GetUrlFn, url: string) {
 		this.getUrl = getUrl;
 
 		this.basePath = this.extractBasePath(url);
-		this.hierarchyPath = this.buildUrl(this.HIERARCHY_FILE);
-		this.octreePath = this.buildUrl(this.OCTREE_FILE);
+		this.hierarchyPath = this.buildUrl(HIERARCHY_FILE);
+		this.octreePath = this.buildUrl(OCTREE_FILE);
 
 		// We default to the known naming convention for glTF datasets
-		this.gltfColorsPath = this.buildUrl(this.GLTF_COLORS_FILE);
-		this.gltfPositionsPath = this.buildUrl(this.GLTF_POSITIONS_FILE);
+		this.gltfColorsPath = this.buildUrl(GLTF_COLORS_FILE);
+		this.gltfPositionsPath = this.buildUrl(GLTF_POSITIONS_FILE);
 	}
 
-	private extractBasePath(url: string): string {
-		return url.substring(0, url.lastIndexOf('/') + 1);
-	}
 
-	private buildUrl(fileName: string): string {
-		return `${this.basePath}${fileName}`;
-	}
-
-	static parseAttributes(jsonAttributes: Attribute[]) {
-
-		const attributes = new PointAttributes();
-
-		const replacements: { [key: string]: string } = { rgb: 'rgba' };
-
-		for (const jsonAttribute of jsonAttributes) {
-			const { name, numElements, min, max, uri } = jsonAttribute;
-
-			const type = typenameTypeattributeMap[jsonAttribute.type];
-
-			const potreeAttributeName = replacements[name] ? replacements[name] : name;
-
-			const attribute = new PointAttribute(potreeAttributeName, type, numElements);
-
-			if (uri) {
-				attribute.uri = uri;
-			}
-
-			if (numElements === 1) {
-				attribute.range = [min[0], max[0]];
-			} else {
-				attribute.range = [min, max];
-			}
-
-			if (name === 'gps-time') { // HACK: Guard against bad gpsTime range in metadata, see potree/potree#909
-				if (typeof attribute.range[0] === 'number' && attribute.range[0] === attribute.range[1]) {
-					attribute.range[1] += 1;
-				}
-			}
-
-			attribute.initialRange = attribute.range;
-
-			attributes.add(attribute);
-		}
-
-		{
-			const hasNormals =
-				attributes.attributes.find((a) => a.name === 'NormalX') !== undefined &&
-				attributes.attributes.find((a) => a.name === 'NormalY') !== undefined &&
-				attributes.attributes.find((a) => a.name === 'NormalZ') !== undefined;
-
-			if (hasNormals) {
-				const vector = {
-					name: 'NORMAL',
-					attributes: ['NormalX', 'NormalY', 'NormalZ']
-				};
-				attributes.addVector(vector);
-			}
-		}
-
-		return attributes;
-	}
 
 	private getBufferUri(attributesObj: any, attributeName: string): string | null {
 		const attribute = attributesObj.attributes.find((attr: any) => attr.name === attributeName);
@@ -447,7 +342,7 @@ export class OctreeLoader {
 
 	async load(url: string, xhrRequest: XhrRequest) {
 		const metadata = await this.fetchMetadata(url, xhrRequest);
-		const attributes = OctreeLoader.parseAttributes(metadata.attributes);
+		const attributes = PointAttributes.parseAttributes(metadata.attributes);
 	
 		this.handleGltfEncoding(metadata.encoding, attributes);
 	
@@ -553,5 +448,13 @@ export class OctreeLoader {
 		);
 
 		return tightBoundingBox;
+	}
+
+	private extractBasePath(url: string): string {
+		return url.substring(0, url.lastIndexOf('/') + 1);
+	}
+
+	private buildUrl(fileName: string): string {
+		return `${this.basePath}${fileName}`;
 	}
 }

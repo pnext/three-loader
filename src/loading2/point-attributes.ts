@@ -81,6 +81,32 @@ type PAVectorType = {
 	attributes: string[];
 };
 
+export const typenameTypeattributeMap = {
+	double: PointAttributeTypes.DATA_TYPE_DOUBLE,
+	float: PointAttributeTypes.DATA_TYPE_FLOAT,
+	int8: PointAttributeTypes.DATA_TYPE_INT8,
+	uint8: PointAttributeTypes.DATA_TYPE_UINT8,
+	int16: PointAttributeTypes.DATA_TYPE_INT16,
+	uint16: PointAttributeTypes.DATA_TYPE_UINT16,
+	int32: PointAttributeTypes.DATA_TYPE_INT32,
+	uint32: PointAttributeTypes.DATA_TYPE_UINT32,
+	int64: PointAttributeTypes.DATA_TYPE_INT64,
+	uint64: PointAttributeTypes.DATA_TYPE_UINT64
+};
+
+export type AttributeType = keyof typeof typenameTypeattributeMap;
+
+export interface Attribute {
+	name: string;
+	description: string;
+	size: number;
+	numElements: number;
+	type: AttributeType;
+	min: number[];
+	max: number[];
+	uri: string;
+}
+
 export class PointAttributes {
 
 	constructor(pointAttributes?: string[],
@@ -124,6 +150,59 @@ export class PointAttributes {
 		}
 
 		return false;
+	}
+
+	static parseAttributes(jsonAttributes: Attribute[]) {
+
+		const attributes = new PointAttributes();
+		const replacements: { [key: string]: string } = { rgb: 'rgba' };
+
+		for (const jsonAttribute of jsonAttributes) {
+			const { name, numElements, min, max, uri } = jsonAttribute;
+
+			const type = typenameTypeattributeMap[jsonAttribute.type];
+
+			const potreeAttributeName = replacements[name] ? replacements[name] : name;
+
+			const attribute = new PointAttribute(potreeAttributeName, type, numElements);
+
+			if (uri) {
+				attribute.uri = uri;
+			}
+
+			if (numElements === 1) {
+				attribute.range = [min[0], max[0]];
+			} else {
+				attribute.range = [min, max];
+			}
+
+			if (name === 'gps-time') { // HACK: Guard against bad gpsTime range in metadata, see potree/potree#909
+				if (typeof attribute.range[0] === 'number' && attribute.range[0] === attribute.range[1]) {
+					attribute.range[1] += 1;
+				}
+			}
+
+			attribute.initialRange = attribute.range;
+
+			attributes.add(attribute);
+		}
+
+		{
+			const hasNormals =
+				attributes.attributes.find((a) => a.name === 'NormalX') !== undefined &&
+				attributes.attributes.find((a) => a.name === 'NormalY') !== undefined &&
+				attributes.attributes.find((a) => a.name === 'NormalZ') !== undefined;
+
+			if (hasNormals) {
+				const vector = {
+					name: 'NORMAL',
+					attributes: ['NormalX', 'NormalY', 'NormalZ']
+				};
+				attributes.addVector(vector);
+			}
+		}
+
+		return attributes;
 	}
 
 }

@@ -1,7 +1,8 @@
-import {Box3, Sphere, Vector3} from 'three';
-import {OctreeGeometryNode} from './octree-geometry-node';
-import {Metadata, NodeLoader} from './octree-loader';
-import {PointAttributes} from './point-attributes';
+import { Box3, Sphere, Vector3 } from 'three';
+import { OctreeGeometryNode } from './octree-geometry-node';
+import { NodeLoader } from './octree-loader';
+import { PointAttributes } from './point-attributes';
+import { Metadata } from './metadata';
 
 export class OctreeGeometry {
 	boundingSphere: Sphere;
@@ -9,7 +10,7 @@ export class OctreeGeometry {
 	tightBoundingSphere: Sphere;
 	maxNumNodesLoading: number = 3;
 	numNodesLoading: number = 0;
-    needsUpdate: boolean = true;
+	needsUpdate: boolean = true;
 	disposed: boolean = false;
 	offset!: Vector3;
 	pointAttributes: PointAttributes | null = null;
