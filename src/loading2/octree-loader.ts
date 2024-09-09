@@ -344,13 +344,13 @@ export class OctreeLoader {
 		const metadata = await this.fetchMetadata(url, xhrRequest);
 		const attributes = PointAttributes.parseAttributes(metadata.attributes);
 	
-		this.handleGltfEncoding(metadata.encoding, attributes);
+		this.applyCustomBufferURI(metadata.encoding, attributes);
 	
 		const boundingBox = this.createBoundingBox(metadata);
 		const offset = this.getOffset(boundingBox);
 		const loader = this.createLoader(url, metadata, attributes);
 		const octree = this.initializeOctree(loader, url, metadata, boundingBox, offset, attributes);
-	    const root = this.initializeRootNode(octree, boundingBox, metadata);
+		const root = this.initializeRootNode(octree, boundingBox, metadata);
 		octree.root = root;
 	
 		loader.load(root);
@@ -363,7 +363,7 @@ export class OctreeLoader {
 		return response.json();
 	}
 	
-	private handleGltfEncoding(encoding: string, attributes: any) {
+	private applyCustomBufferURI(encoding: string, attributes: any) {
 		if (encoding === 'GLTF') {
 			this.gltfPositionsPath = this.getBufferUri(attributes, "position") ?? this.gltfPositionsPath;
 			this.gltfColorsPath = this.getBufferUri(attributes, "rgba") ?? this.gltfColorsPath;
