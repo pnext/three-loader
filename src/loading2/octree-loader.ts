@@ -446,44 +446,66 @@ export class OctreeLoader {
 	}
 
 	async load(url: string, xhrRequest: XhrRequest) {
-
-		const response = await xhrRequest(url);
-		const metadata: Metadata = await response.json();
-
+		const metadata = await this.fetchMetadata(url, xhrRequest);
 		const attributes = OctreeLoader.parseAttributes(metadata.attributes);
-
-		if (metadata.encoding === 'GLTF') {
-			// we need to check if custom buffer uri entry is present and use that instead of the default
-			const positionBuffer = this.getBufferUri(attributes, "position");
-			const rgbaBuffer = this.getBufferUri(attributes, "rgba");
-
-			this.gltfColorsPath = rgbaBuffer ?? this.gltfColorsPath;
-			this.gltfPositionsPath = positionBuffer ?? this.gltfPositionsPath;
+	
+		this.handleGltfEncoding(metadata.encoding, attributes);
+	
+		const boundingBox = this.createBoundingBox(metadata);
+		const offset = this.getOffset(boundingBox);
+		const loader = this.createLoader(url, metadata, attributes);
+		const octree = this.initializeOctree(loader, url, metadata, boundingBox, offset, attributes);
+	    const root = this.initializeRootNode(octree, boundingBox, metadata);
+		octree.root = root;
+	
+		loader.load(root);
+	
+		return { geometry: octree };
+	}
+	
+	private async fetchMetadata(url: string, xhrRequest: XhrRequest): Promise<Metadata> {
+		const response = await xhrRequest(url);
+		return response.json();
+	}
+	
+	private handleGltfEncoding(encoding: string, attributes: any) {
+		if (encoding === 'GLTF') {
+			this.gltfPositionsPath = this.getBufferUri(attributes, "position") ?? this.gltfPositionsPath;
+			this.gltfColorsPath = this.getBufferUri(attributes, "rgba") ?? this.gltfColorsPath;
 		}
-
+	}
+	
+	private createLoader(url: string, metadata: Metadata, attributes: any): NodeLoader {
 		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata);
 		loader.attributes = attributes;
 		loader.scale = metadata.scale;
 		loader.offset = metadata.offset;
-
 		loader.hierarchyPath = this.hierarchyPath;
 		loader.octreePath = this.octreePath;
 		loader.gltfColorsPath = this.gltfColorsPath;
 		loader.gltfPositionsPath = this.gltfPositionsPath;
-
+		return loader;
+	}
+	
+	private createBoundingBox(metadata: Metadata): Box3 {
 		const min = new Vector3(...metadata.boundingBox.min);
 		const max = new Vector3(...metadata.boundingBox.max);
 		const boundingBox = new Box3(min, max);
-
-		const offset = min.clone();
+		return boundingBox;
+	}
+	
+	private getOffset(boundingBox: Box3): Vector3 {
+		const offset = boundingBox.min.clone();
 		boundingBox.min.sub(offset);
 		boundingBox.max.sub(offset);
-
+		return offset;
+	}
+	
+	private initializeOctree(loader: NodeLoader, url: string, metadata: Metadata, boundingBox: Box3, offset: Vector3, attributes: any): OctreeGeometry {
 		const octree = new OctreeGeometry(loader, boundingBox);
 		octree.url = url;
 		octree.spacing = metadata.spacing;
 		octree.scale = metadata.scale;
-
 		octree.projection = metadata.projection;
 		octree.boundingBox = boundingBox;
 		octree.boundingSphere = boundingBox.getBoundingSphere(new Sphere());
@@ -491,7 +513,10 @@ export class OctreeLoader {
 		octree.tightBoundingBox = this.getTightBoundingBox(metadata);
 		octree.offset = offset;
 		octree.pointAttributes = attributes;
-
+		return octree;
+	}
+	
+	private initializeRootNode(octree: OctreeGeometry, boundingBox: Box3, metadata: Metadata): OctreeGeometryNode {
 		const root = new OctreeGeometryNode('r', octree, boundingBox);
 		root.level = 0;
 		root.nodeType = 2;
@@ -499,17 +524,10 @@ export class OctreeLoader {
 		root.hierarchyByteSize = BigInt(metadata.hierarchy.firstChunkSize);
 		root.spacing = octree.spacing;
 		root.byteOffset = BigInt(0);
-
-		octree.root = root;
-
-		loader.load(root);
-
-		const result = { geometry: octree };
-
-		return result;
+		return root;
 	}
 
-	getTightBoundingBox(metadata: Metadata): Box3 {
+	private getTightBoundingBox(metadata: Metadata): Box3 {
 		const positionAttribute = metadata.attributes.find((attr) => attr.name === 'position');
 
 		if (!positionAttribute || !positionAttribute.min || !positionAttribute.max) {
