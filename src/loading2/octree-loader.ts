@@ -6,7 +6,7 @@ import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttributes } from './point-attributes';
 import { WorkerPool, WorkerType } from './worker-pool';
 import { Metadata } from './metadata';
-import { appendBuffer, createChildAABB } from './utils';
+import { appendBuffer, buildUrl, createChildAABB, extractBasePath } from './utils';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
@@ -293,13 +293,13 @@ export class OctreeLoader {
 	constructor(getUrl: GetUrlFn, url: string) {
 		this.getUrl = getUrl;
 
-		this.basePath = this.extractBasePath(url);
-		this.hierarchyPath = this.buildUrl(HIERARCHY_FILE);
-		this.octreePath = this.buildUrl(OCTREE_FILE);
+		this.basePath = extractBasePath(url);
+		this.hierarchyPath = buildUrl(this.basePath, HIERARCHY_FILE);
+		this.octreePath = buildUrl(this.basePath, OCTREE_FILE);
 
 		// We default to the known naming convention for glTF datasets
-		this.gltfColorsPath = this.buildUrl(GLTF_COLORS_FILE);
-		this.gltfPositionsPath = this.buildUrl(GLTF_POSITIONS_FILE);
+		this.gltfColorsPath = buildUrl(this.basePath, GLTF_COLORS_FILE);
+		this.gltfPositionsPath = buildUrl(this.basePath, GLTF_POSITIONS_FILE);
 	}
 
 	private getBufferUri(attributesObj: any, attributeName: string): string | null {
@@ -427,13 +427,5 @@ export class OctreeLoader {
 		);
 
 		return tightBoundingBox;
-	}
-
-	private extractBasePath(url: string): string {
-		return url.substring(0, url.lastIndexOf('/') + 1);
-	}
-
-	private buildUrl(fileName: string): string {
-		return `${this.basePath}${fileName}`;
 	}
 }
