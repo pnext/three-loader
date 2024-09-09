@@ -6,6 +6,7 @@ import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttributes } from './point-attributes';
 import { WorkerPool, WorkerType } from './worker-pool';
 import { Metadata } from './metadata';
+import { appendBuffer, createChildAABB } from './utils';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
@@ -14,6 +15,8 @@ export const OCTREE_FILE = 'octree.bin';
 // Default buffer files for GLTF encoding
 export const GLTF_COLORS_FILE = 'colors.glbin';
 export const GLTF_POSITIONS_FILE = 'positions.glbin';
+
+export const BYTES_PER_NODE = 22;
 
 export class NodeLoader {
 	attributes?: PointAttributes;
@@ -25,7 +28,10 @@ export class NodeLoader {
 	gltfColorsPath = '';
 	gltfPositionsPath = '';
 
-	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata) {
+	constructor(public getUrl: GetUrlFn, 
+				public url: string, 
+				public workerPool: WorkerPool, 
+				public metadata: Metadata) {
 	}
 
 	async load(node: OctreeGeometryNode) {
@@ -178,7 +184,7 @@ export class NodeLoader {
 	parseHierarchy(node: OctreeGeometryNode, buffer: ArrayBuffer) {
 		const view = new DataView(buffer);
 
-		const bytesPerNode = 22;
+		const bytesPerNode = BYTES_PER_NODE;
 		const numNodes = buffer.byteLength / bytesPerNode;
 
 		const octree = node.octreeGeometry;
@@ -272,40 +278,6 @@ export class NodeLoader {
 	}
 }
 
-const tmpVec3 = new Vector3();
-function createChildAABB(aabb: Box3, index: number) {
-	const min = aabb.min.clone();
-	const max = aabb.max.clone();
-	const size = tmpVec3.subVectors(max, min);
-
-	if ((index & 0b0001) > 0) {
-		min.z += size.z / 2;
-	} else {
-		max.z -= size.z / 2;
-	}
-
-	if ((index & 0b0010) > 0) {
-		min.y += size.y / 2;
-	} else {
-		max.y -= size.y / 2;
-	}
-
-	if ((index & 0b0100) > 0) {
-		min.x += size.x / 2;
-	} else {
-		max.x -= size.x / 2;
-	}
-
-	return new Box3(min, max);
-}
-
-function appendBuffer(buffer1: any, buffer2: any) {
-	var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-	tmp.set(new Uint8Array(buffer1), 0);
-	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-	return tmp.buffer;
-}
-
 export class OctreeLoader {
 
 	private workerPool: WorkerPool = new WorkerPool();
@@ -329,8 +301,6 @@ export class OctreeLoader {
 		this.gltfColorsPath = this.buildUrl(GLTF_COLORS_FILE);
 		this.gltfPositionsPath = this.buildUrl(GLTF_POSITIONS_FILE);
 	}
-
-
 
 	private getBufferUri(attributesObj: any, attributeName: string): string | null {
 		const attribute = attributesObj.attributes.find((attr: any) => attr.name === attributeName);
@@ -364,6 +334,8 @@ export class OctreeLoader {
 	}
 	
 	private applyCustomBufferURI(encoding: string, attributes: any) {
+		// Only datasets with GLTF encoding support custom buffer URIs -
+		// as opposed to datasets with DEFAULT encoding coming from PotreeConverter
 		if (encoding === 'GLTF') {
 			this.gltfPositionsPath = this.getBufferUri(attributes, "position") ?? this.gltfPositionsPath;
 			this.gltfColorsPath = this.getBufferUri(attributes, "rgba") ?? this.gltfColorsPath;
@@ -396,7 +368,12 @@ export class OctreeLoader {
 		return offset;
 	}
 	
-	private initializeOctree(loader: NodeLoader, url: string, metadata: Metadata, boundingBox: Box3, offset: Vector3, attributes: any): OctreeGeometry {
+	private initializeOctree(	loader: NodeLoader, 
+						 		url: string, 
+								metadata: Metadata, 
+								boundingBox: Box3, 
+								offset: Vector3, 
+								attributes: any): OctreeGeometry {
 		const octree = new OctreeGeometry(loader, boundingBox);
 		octree.url = url;
 		octree.spacing = metadata.spacing;
@@ -411,7 +388,9 @@ export class OctreeLoader {
 		return octree;
 	}
 	
-	private initializeRootNode(octree: OctreeGeometry, boundingBox: Box3, metadata: Metadata): OctreeGeometryNode {
+	private initializeRootNode(	octree: OctreeGeometry, 
+								boundingBox: Box3, 
+								metadata: Metadata): OctreeGeometryNode {
 		const root = new OctreeGeometryNode('r', octree, boundingBox);
 		root.level = 0;
 		root.nodeType = 2;
