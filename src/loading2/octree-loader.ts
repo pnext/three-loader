@@ -464,7 +464,7 @@ export class OctreeLoader {
 	
 	private getBufferUri(attributesObj: any, attributeName: string): string | null {
 		const attribute = attributesObj.attributes.find((attr: any) => attr.name === attributeName);
-		if (attribute) {
+		if (attribute && attribute.uri !== '' ) {
 			return attribute.uri;
 		}
 		return null;
