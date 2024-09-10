@@ -5,6 +5,7 @@ import { OctreeGeometry } from './octree-geometry';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
 import { WorkerPool, WorkerType } from './worker-pool';
+import { buildUrl, extractBasePath } from './utils';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
@@ -53,7 +54,7 @@ export class NodeLoader {
 			if (this.metadata.encoding === "GLTF") {
 				const urlColors = await this.getUrl(this.gltfColorsPath);
 				const urlPositions = await this.getUrl(this.gltfPositionsPath);
-				
+
 				if (byteSize === BigInt(0)) {
 					buffer = new ArrayBuffer(0);
 					console.warn(`loaded node with 0 bytes: ${node.name}`);
@@ -364,6 +365,7 @@ export class OctreeLoader {
 
 	workerPool: WorkerPool = new WorkerPool();
 
+	basePath = '';
 	hierarchyPath = '';
 	octreePath = '';
 	gltfColorsPath = '';
@@ -373,10 +375,13 @@ export class OctreeLoader {
 
 	constructor(getUrl: GetUrlFn, url: string) {
 		this.getUrl = getUrl;
-		this.hierarchyPath = url.replace('metadata.json', 'hierarchy.bin');
-		this.octreePath = this.hierarchyPath.replace('hierarchy.bin', 'octree.bin');
-		this.gltfColorsPath = this.octreePath.replace('octree.bin', 'colors.glbin');
-		this.gltfPositionsPath = this.octreePath.replace('colors.glbin', 'positions.glbin');
+		this.basePath = extractBasePath(url);
+		this.hierarchyPath = buildUrl(this.basePath, HIERARCHY_FILE);
+		this.octreePath = buildUrl(this.basePath, OCTREE_FILE);
+
+		// We default to the known naming convention for glTF datasets
+		this.gltfColorsPath = buildUrl(this.basePath, GLTF_COLORS_FILE);
+		this.gltfPositionsPath = buildUrl(this.basePath, GLTF_POSITIONS_FILE);
 	}
 
 	static parseAttributes(jsonAttributes: Attribute[]) {
