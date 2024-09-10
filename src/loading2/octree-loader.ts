@@ -302,14 +302,6 @@ export class OctreeLoader {
 		this.gltfPositionsPath = buildUrl(this.basePath, GLTF_POSITIONS_FILE);
 	}
 
-	private getBufferUri(attributesObj: any, attributeName: string): string | null {
-		const attribute = attributesObj.attributes.find((attr: any) => attr.name === attributeName);
-		if (attribute) {
-			return attribute.uri;
-		}
-		return null;
-	}
-
 	async load(url: string, xhrRequest: XhrRequest) {
 		const metadata = await this.fetchMetadata(url, xhrRequest);
 		const attributes = PointAttributes.parseAttributes(metadata.attributes);
@@ -331,6 +323,14 @@ export class OctreeLoader {
 	private async fetchMetadata(url: string, xhrRequest: XhrRequest): Promise<Metadata> {
 		const response = await xhrRequest(url);
 		return response.json();
+	}
+
+	private getBufferUri(attributesObj: any, attributeName: string): string | null {
+		const attribute = attributesObj.attributes.find((attr: any) => attr.name === attributeName);
+		if (attribute) {
+			return attribute.uri;
+		}
+		return null;
 	}
 	
 	private applyCustomBufferURI(encoding: string, attributes: any) {

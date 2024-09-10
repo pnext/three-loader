@@ -96,6 +96,12 @@ export const typenameTypeattributeMap = {
 
 export type AttributeType = keyof typeof typenameTypeattributeMap;
 
+type BufferView = {
+	byteLength: number,
+	byteOffset: number,
+	uri: string,
+};
+
 export interface Attribute {
 	name: string;
 	description: string;
@@ -104,7 +110,7 @@ export interface Attribute {
 	type: AttributeType;
 	min: number[];
 	max: number[];
-	uri: string;
+	bufferView: BufferView;
 }
 
 export class PointAttributes {
@@ -158,7 +164,7 @@ export class PointAttributes {
 		const replacements: { [key: string]: string } = { rgb: 'rgba' };
 
 		for (const jsonAttribute of jsonAttributes) {
-			const { name, numElements, min, max, uri } = jsonAttribute;
+			const { name, numElements, min, max, bufferView } = jsonAttribute;
 
 			const type = typenameTypeattributeMap[jsonAttribute.type];
 
@@ -166,8 +172,8 @@ export class PointAttributes {
 
 			const attribute = new PointAttribute(potreeAttributeName, type, numElements);
 
-			if (uri) {
-				attribute.uri = uri;
+			if (bufferView) {
+				attribute.uri = bufferView.uri;
 			}
 
 			if (numElements === 1) {
