@@ -322,9 +322,17 @@ const typenameTypeattributeMap = {
 
 type AttributeType = keyof typeof typenameTypeattributeMap;
 
+// A buffer view carries information on how to extract attribute data from a binary buffer.
+// For the majority of cases byteLength and byteOffset will not be needed because matic will 
+// always upload single attribute buffer files. However, to be prepared for potential future 
+// support of combined buffers byteLength and byteOffset are present to understand where to 
+// find the data inside the buffer.  
 type BufferView = {
 	byteLength: number,
 	byteOffset: number,
+	// The uri points to the particular source file and allows for arbitrary buffernames
+	// when using metadata with gltf encoding. When using PotreeConverter 2 to generate the metadata 
+	// the uri can be ignored. It will default to the naming convention of the potree v2 format.
 	uri: string,
 };
 
@@ -402,8 +410,8 @@ export class OctreeLoader {
 			if (bufferView) {
 				attribute.uri = bufferView.uri;
 			}
-
-			if (numElements === 1) {
+			
+			if (numElements === 1  && min && max) {
 				attribute.range = [min[0], max[0]];
 			} else {
 				attribute.range = [min, max];
