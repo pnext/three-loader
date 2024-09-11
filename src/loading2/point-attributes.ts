@@ -126,4 +126,7 @@ export class PointAttributes {
 		return false;
 	}
 
+	getAttribute(attributeName: string): PointAttribute | undefined {
+		return this.attributes.find(attr => attr.name === attributeName);
+	}
 }

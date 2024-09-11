@@ -470,20 +470,12 @@ export class OctreeLoader {
 		return response.json();
 	}
 	
-	private getBufferUri(attributesObj: any, attributeName: string): string | null {
-		const attribute = attributesObj.attributes.find((attr: any) => attr.name === attributeName);
-		if (attribute) {
-			return attribute.uri;
-		}
-		return null;
-	}
-
 	private applyCustomBufferURI(encoding: string, attributes: any) {
 		// Only datasets with GLTF encoding support custom buffer URIs -
 		// as opposed to datasets with DEFAULT encoding coming from PotreeConverter
 		if (encoding === 'GLTF') {
-			this.gltfPositionsPath = this.getBufferUri(attributes, "position") ?? this.gltfPositionsPath;
-			this.gltfColorsPath = this.getBufferUri(attributes, "rgba") ?? this.gltfColorsPath;
+			this.gltfPositionsPath = attributes.getAttribute("position")?.uri ?? this.gltfPositionsPath;
+			this.gltfColorsPath = attributes.getAttribute("rgba")?.uri ?? this.gltfColorsPath;
 		}
 	}
 
