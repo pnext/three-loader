@@ -1,7 +1,7 @@
 {
   "name": "@pnext/three-loader",
   "private": false,
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": [
     "Hugo Campos <hugo.campos@pix4d.com>"

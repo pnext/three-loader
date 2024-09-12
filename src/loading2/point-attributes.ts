@@ -47,7 +47,8 @@ class PointAttribute {
 		public name: string,
 		public type: PointAttributeTypeType,
 		public numElements: number,
-		public range: RangeType = [Infinity, -Infinity]
+		public range: RangeType = [Infinity, -Infinity],
+		public uri: string | undefined = undefined
 	) {
 		this.byteSize = this.numElements * this.type.size;
 		this.description = '';
@@ -125,4 +126,7 @@ export class PointAttributes {
 		return false;
 	}
 
+	getAttribute(attributeName: string): PointAttribute | undefined {
+		return this.attributes.find(attr => attr.name === attributeName);
+	}
 }
