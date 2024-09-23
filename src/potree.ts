@@ -21,11 +21,10 @@ import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
 import { loadOctree } from './loading2/load-octree';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
-import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { isGeometryNode, isTreeNode } from './type-predicates';
-import { IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PCOGeometry, PickPoint } from './types';
+import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PCOGeometry, PickPoint } from './types';
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
@@ -133,7 +132,7 @@ export class Potree implements IPotree {
     let numVisiblePoints = 0;
 
     const visibleNodes: PointCloudOctreeNode[] = [];
-    const unloadedGeometry: PointCloudOctreeGeometryNode[] = [];
+    const unloadedGeometry: IPointCloudGeometryNode[] = [];
 
     // calculate object space frustum and cam pos and setup priority queue
     const { frustums, cameraPositions, priorityQueue } = this.updateVisibilityStructures(

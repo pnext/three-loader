@@ -1,8 +1,8 @@
 import {Box3, BufferGeometry, Sphere} from 'three';
-import {IPointCloudTreeNode} from '../types';
+import {IPointCloudGeometryNode} from '../types';
 import {OctreeGeometry} from './octree-geometry';
 
-export class OctreeGeometryNode implements IPointCloudTreeNode {
+export class OctreeGeometryNode implements IPointCloudGeometryNode {
 
 	constructor(public name: string, public octreeGeometry: OctreeGeometry, public boundingBox: Box3) {
 		this.id = OctreeGeometryNode.IDCount++;
@@ -15,8 +15,9 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 
 	loaded: boolean = false;
 	loading: boolean = false;
+	failed: boolean = false;
 	parent: OctreeGeometryNode | null = null;
-	geometry: BufferGeometry | null = null;
+	geometry: BufferGeometry | undefined;
 	nodeType?: number;
 	byteOffset?: bigint ;
 	byteSize?: bigint;
@@ -67,15 +68,18 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 		return this.boundingBox;
 	}
 
-	load() {
-
+	load(): Promise<void> {
 		if (this.octreeGeometry.numNodesLoading >= this.octreeGeometry.maxNumNodesLoading) {
-			return;
+			return Promise.resolve();
 		}
 
-		if (this.octreeGeometry.loader) {
-			this.octreeGeometry.loader.load(this);
+		if (!this.octreeGeometry.loader) {
+			this.loading = false;
+			this.failed = true;
+			return Promise.reject(`Loader not initialized for ${this.name}`);
 		}
+
+		return this.octreeGeometry.loader.load(this);
 	}
 
 	getNumPoints() {
@@ -85,7 +89,7 @@ export class OctreeGeometryNode implements IPointCloudTreeNode {
 	dispose(): void {
 		if (this.geometry && this.parent != null) {
 			this.geometry.dispose();
-			this.geometry = null;
+			this.geometry = undefined;
 			this.loaded = false;
 
 			for (let i = 0; i < this.oneTimeDisposeHandlers.length; i++) {
