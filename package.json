@@ -30,13 +30,11 @@
     "three": "~0.160.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.8",
-    "@babel/preset-env": "^7.16.11",
+    "@babel/core": "^7.23.2",
+    "@babel/preset-env": "^7.23.2",
     "@types/node": "^17.0.23",
     "@types/three": "~0.160.0",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^8.2.4",
-    "babel-preset-env": "^1.7.0",
+    "babel-loader": "^8.3.0",
     "circular-dependency-plugin": "^5.2.2",
     "css-loader": "^6.7.3",
     "html-loader": "^4.2.0",
