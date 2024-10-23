@@ -267,6 +267,7 @@ export class PointCloudOctreePicker {
     pickMaterial.maxSize = nodeMaterial.maxSize;
     pickMaterial.classification = nodeMaterial.classification;
     pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
+    pickMaterial.useFilterByClassification = nodeMaterial.useFilterByClassification;
     pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
 
     if (params.pickOutsideClipRegion) {

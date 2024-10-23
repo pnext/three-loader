@@ -100,6 +100,10 @@ uniform sampler2D depthMap;
 	uniform int normalFilteringMode;
 #endif
 
+#ifdef use_filter_by_classification
+	uniform bool classificationFilter[256];
+#endif
+
 out vec3 vColor;
 
 #if !defined(color_type_point_index)
@@ -509,6 +513,20 @@ void main() {
 		{
 			gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
 		}
+	#endif
+
+	#ifdef use_filter_by_classification
+	
+		int classIndex = int(classification);
+		bool discardPoint = !classificationFilter[classIndex];
+
+		if (discardPoint) {
+			gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+			return;
+		}
+
+
+
 	#endif
 
 	// ---------------------
