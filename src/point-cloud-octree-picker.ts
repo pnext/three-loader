@@ -267,12 +267,14 @@ export class PointCloudOctreePicker {
     pickMaterial.maxSize = nodeMaterial.maxSize;
     pickMaterial.classification = nodeMaterial.classification;
     pickMaterial.useFilterByNormal = nodeMaterial.useFilterByNormal;
+    pickMaterial.useFilterByClassification = nodeMaterial.useFilterByClassification;
     pickMaterial.filterByNormalThreshold = nodeMaterial.filterByNormalThreshold;
 
     if (params.pickOutsideClipRegion) {
       pickMaterial.clipMode = ClipMode.DISABLED;
     } else {
       pickMaterial.clipMode = nodeMaterial.clipMode;
+      pickMaterial.clipExtent = nodeMaterial.clipExtent;
       pickMaterial.setClipBoxes(
         nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
       );
