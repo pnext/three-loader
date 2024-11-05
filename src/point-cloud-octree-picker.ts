@@ -273,6 +273,7 @@ export class PointCloudOctreePicker {
       pickMaterial.clipMode = ClipMode.DISABLED;
     } else {
       pickMaterial.clipMode = nodeMaterial.clipMode;
+      pickMaterial.clipExtent = nodeMaterial.clipExtent;
       pickMaterial.setClipBoxes(
         nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
       );
