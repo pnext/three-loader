@@ -24,7 +24,8 @@ const examplePointClouds: PointCloudsConfig[] = [
         version: 'v1'
     }, {
         file: 'metadata.json',
-        url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        // url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        url: 'http://localhost:8080/gaussian/gltf/converted/',
         version: 'v2'
     }
 ];
@@ -79,19 +80,26 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
 
     viewer.load(file, url, version)
         .then(pco => {
+            console.log(pco);
             pointClouds[version] = pco;
             pco.rotateX(-Math.PI / 2);
             pco.material.size = 1.0;
+
+            pco.material.pointColorType = 0;
+            
             pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
+            pco.position.set(0, 0, 0);
 
             const camera = viewer.camera;
             camera.far = 1000;
             camera.updateProjectionMatrix();
-            camera.position.set(0, 0, 10);
+            camera.position.set(20, 9, -11);
             camera.lookAt(new Vector3());
 
             viewer.add(pco);
+
+            console.log(camera);
         })
         .catch(err => console.error(err));
 }

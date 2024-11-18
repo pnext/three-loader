@@ -22,6 +22,7 @@ onmessage = function (event) {
 	let attributeBuffers = {};
 
 	let bytesPerPointPosition = 4 * 3;
+	let bytesPerPointColor = 4 * 3;
 
 	let gridSize = 32;
 	let grid = new Uint32Array(gridSize ** 3);
@@ -76,9 +77,40 @@ onmessage = function (event) {
 			}
 
 			attributeBuffers[pointAttribute.name] = { buffer: buff, attribute: pointAttribute };
-		}else if(["RGBA", "rgba"].includes(pointAttribute.name)){
-			attributeBuffers[pointAttribute.name] = {
-				buffer: buffer.slice(numPoints * bytesPerPointPosition), attribute: pointAttribute};
+		}else if(["RGBA", "rgba", "sh_band_0"].includes(pointAttribute.name)){
+
+			const SH_C0 = 0.28209479177387814;
+
+			let bufferColors = new ArrayBuffer(numPoints * 4);
+			let colors = new Uint8Array(bufferColors);
+			for (let j = 0; j < numPoints; j++) {
+				const c0 = 4 * j + 0;
+				const c1 = 4 * j + 1;
+				const c2 = 4 * j + 2;
+				const c3 = 4 * j + 3;
+
+				let pointOffset = j * bytesPerPointColor + numPoints * bytesPerPointPosition;
+
+				let r = view.getFloat32(pointOffset + 0, true);
+				let g = view.getFloat32(pointOffset + 4, true);
+				let b = view.getFloat32(pointOffset + 8, true);
+
+				colors[c0] = (0.5 + SH_C0 * r) * 255;
+				colors[c1] = (0.5 + SH_C0 * g) * 255;
+				colors[c2] = (0.5 + SH_C0 * b) * 255;
+
+				const clamp = function(val, min, max) {
+					return Math.max(Math.min(val, max), min);
+				};
+
+				colors[c0] = clamp(Math.floor(colors[c0]), 0, 255);
+				colors[c1] = clamp(Math.floor(colors[c1]), 0, 255);
+				colors[c2] = clamp(Math.floor(colors[c2]), 0, 255);
+				colors[c3] = 255;
+			}
+
+			attributeBuffers['rgba'] = {
+				buffer: bufferColors, attribute: pointAttribute};
 		}
 	}
 

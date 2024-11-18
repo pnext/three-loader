@@ -52,13 +52,16 @@ export class NodeLoader {
 			let buffer;
 
 			if (this.metadata.encoding === "GLTF") {
-				const urlColors = await this.getUrl(this.gltfColorsPath);
+				// const urlColors = await this.getUrl(this.gltfColorsPath);
+				const urlColors = await this.getUrl('sh_band_0.glbin');
+				// const urlOpacities = await this.getUrl('opacities.glbin');
 				const urlPositions = await this.getUrl(this.gltfPositionsPath);
 
 				if (byteSize === BigInt(0)) {
 					buffer = new ArrayBuffer(0);
 					console.warn(`loaded node with 0 bytes: ${node.name}`);
 				} else {
+					// position
 					const firstPositions = byteOffset * 4n * 3n;
 					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
@@ -67,14 +70,25 @@ export class NodeLoader {
 
 					const bufferPositions = await responsePositions.arrayBuffer();
 
-					const firstColors = byteOffset * 4n;
-					const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
+					// colors
+					const firstColors = byteOffset * 4n * 3n;
+					const lastColors = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
 					const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
 					const responseColors = await fetch(urlColors, { headers: headersColors });
 					const bufferColors = await responseColors.arrayBuffer();
 
+					// opacities
+					// const firstOpacities = byteOffset * 4n * 1n;
+					// const lastOpacities = byteOffset * 4n * 1n + byteSize * 4n * 1n - 1n;
+
+					// const headersOpacities = { Range: `bytes=${firstOpacities}-${lastOpacities}` };
+					// const responseOpacities = await fetch(urlOpacities, { headers: headersOpacities });
+
+					// const bufferOpacities = await responseOpacities.arrayBuffer();
+
 					buffer = appendBuffer(bufferPositions, bufferColors);
+					// buffer = appendBuffer(buffer, bufferOpacities);
 				}
 			}
 			else {
@@ -107,12 +121,11 @@ export class NodeLoader {
 				const geometry = new BufferGeometry();
 
 				for (const property in buffers) {
-
 					const buffer = buffers[property].buffer;
 
 					if (property === 'position') {
 						geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
-					} else if (property === 'rgba') {
+					} else if (property === 'rgba' || property === 'sh_band_0') {
 						geometry.setAttribute('rgba', new BufferAttribute(new Uint8Array(buffer), 4, true));
 					} else if (property === 'NORMAL') {
 						geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
