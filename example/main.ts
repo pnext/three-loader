@@ -86,6 +86,7 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
             pco.material.size = 1.0;
 
             pco.material.pointColorType = 0;
+            pco.material.opacity = 0.999;
             
             pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];

@@ -54,7 +54,7 @@ export class NodeLoader {
 			if (this.metadata.encoding === "GLTF") {
 				// const urlColors = await this.getUrl(this.gltfColorsPath);
 				const urlColors = await this.getUrl('sh_band_0.glbin');
-				// const urlOpacities = await this.getUrl('opacities.glbin');
+				const urlOpacities = await this.getUrl('opacities.glbin');
 				const urlPositions = await this.getUrl(this.gltfPositionsPath);
 
 				if (byteSize === BigInt(0)) {
@@ -79,16 +79,16 @@ export class NodeLoader {
 					const bufferColors = await responseColors.arrayBuffer();
 
 					// opacities
-					// const firstOpacities = byteOffset * 4n * 1n;
-					// const lastOpacities = byteOffset * 4n * 1n + byteSize * 4n * 1n - 1n;
+					const firstOpacities = byteOffset * 4n * 1n;
+					const lastOpacities = byteOffset * 4n * 1n + byteSize * 4n * 1n - 1n;
 
-					// const headersOpacities = { Range: `bytes=${firstOpacities}-${lastOpacities}` };
-					// const responseOpacities = await fetch(urlOpacities, { headers: headersOpacities });
+					const headersOpacities = { Range: `bytes=${firstOpacities}-${lastOpacities}` };
+					const responseOpacities = await fetch(urlOpacities, { headers: headersOpacities });
 
-					// const bufferOpacities = await responseOpacities.arrayBuffer();
+					const bufferOpacities = await responseOpacities.arrayBuffer();
 
 					buffer = appendBuffer(bufferPositions, bufferColors);
-					// buffer = appendBuffer(buffer, bufferOpacities);
+					buffer = appendBuffer(buffer, bufferOpacities);
 				}
 			}
 			else {

@@ -480,7 +480,7 @@ void main() {
 		#ifdef attenuated_opacity
 			vOpacity = opacity * exp(-length(-mvPosition.xyz) / opacityAttenuation);
 		#else
-			vOpacity = opacity;
+			vOpacity = opacity * rgba.a;
 		#endif
 	#endif
 
