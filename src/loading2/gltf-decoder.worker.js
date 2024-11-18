@@ -15,48 +15,52 @@ const typedArrayMapping = {
 
 onmessage = function (event) {
 
-	let { buffer, pointAttributes, scale, name, min, max, size, offset, numPoints } = event.data;
+	const { buffer, pointAttributes, scale, name, min, max, size, offset, numPoints } = event.data;
 
-	let view = new DataView(buffer);
+	const view = new DataView(buffer);
 
-	let attributeBuffers = {};
+	const attributeBuffers = {};
 
-	let bytesPerPointPosition = 4 * 3;
-	let bytesPerPointColor = 4 * 3;
-	let bytesPerPointOpacity = 4;
+	const bytesPerPointPosition = 4 * 3;
+	const bytesPerPointColor = 4 * 3;
+	const bytesPerPointOpacity = 4;
 
-	let gridSize = 32;
-	let grid = new Uint32Array(gridSize ** 3);
-	let toIndex = (x, y, z) => {
+	const gridSize = 32;
+	const grid = new Uint32Array(gridSize ** 3);
+	const toIndex = (x, y, z) => {
 		// min is already subtracted
-		let dx = gridSize * x / size.x;
-		let dy = gridSize * y / size.y;
-		let dz = gridSize * z / size.z;
+		const dx = gridSize * x / size.x;
+		const dy = gridSize * y / size.y;
+		const dz = gridSize * z / size.z;
 
-		let ix = Math.min(parseInt(dx), gridSize - 1);
-		let iy = Math.min(parseInt(dy), gridSize - 1);
-		let iz = Math.min(parseInt(dz), gridSize - 1);
+		const ix = Math.min(parseInt(dx), gridSize - 1);
+		const iy = Math.min(parseInt(dy), gridSize - 1);
+		const iz = Math.min(parseInt(dz), gridSize - 1);
 
-		let index = ix + iy * gridSize + iz * gridSize * gridSize;
+		const index = ix + iy * gridSize + iz * gridSize * gridSize;
 
 		return index;
 	};
 
+	const clamp = function (val, min, max) {
+		return Math.max(Math.min(val, max), min);
+	};
+
 	let numOccupiedCells = 0;
 
-	let tightBoxMin = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
-	let tightBoxMax = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+	const tightBoxMin = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+	const tightBoxMax = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
 
-	for (let pointAttribute of pointAttributes.attributes) {
+	for (const pointAttribute of pointAttributes.attributes) {
 		if (["POSITION_CARTESIAN", "position"].includes(pointAttribute.name)) {
-			let buff = new ArrayBuffer(numPoints * 4 * 3);
-			let positions = new Float32Array(buff);
+			const buff = new ArrayBuffer(numPoints * 4 * 3);
+			const positions = new Float32Array(buff);
 			for (let j = 0; j < numPoints; j++) {
-				let pointOffset = j * bytesPerPointPosition;
+				const pointOffset = j * bytesPerPointPosition;
 
-				let x = view.getFloat32(pointOffset + 0, true) + offset[0] - min.x;
-				let y = view.getFloat32(pointOffset + 4, true) + offset[1] - min.y;
-				let z = view.getFloat32(pointOffset + 8, true) + offset[2] - min.z;
+				const x = view.getFloat32(pointOffset + 0, true) + offset[0] - min.x;
+				const y = view.getFloat32(pointOffset + 4, true) + offset[1] - min.y;
+				const z = view.getFloat32(pointOffset + 8, true) + offset[2] - min.z;
 
 				tightBoxMin[0] = Math.min(tightBoxMin[0], x);
 				tightBoxMin[1] = Math.min(tightBoxMin[1], y);
@@ -66,8 +70,8 @@ onmessage = function (event) {
 				tightBoxMax[1] = Math.max(tightBoxMax[1], y);
 				tightBoxMax[2] = Math.max(tightBoxMax[2], z);
 
-				let index = toIndex(x, y, z);
-				let count = grid[index]++;
+				const index = toIndex(x, y, z);
+				const count = grid[index]++;
 				if (count === 0) {
 					numOccupiedCells++;
 				}
@@ -82,8 +86,8 @@ onmessage = function (event) {
 
 			const SH_C0 = 0.28209479177387814;
 
-			let bufferColors = new ArrayBuffer(numPoints * 4);
-			let colors = new Uint8Array(bufferColors);
+			const bufferColors = new ArrayBuffer(numPoints * 4);
+			const colors = new Uint8Array(bufferColors);
 
 			for (let j = 0; j < numPoints; j++) {
 				const c0 = 4 * j + 0;
@@ -91,21 +95,17 @@ onmessage = function (event) {
 				const c2 = 4 * j + 2;
 				const c3 = 4 * j + 3;
 
-				const pointOffset = j * bytesPerPointColor + numPoints * bytesPerPointPosition;
+				const colorOffset = j * bytesPerPointColor + numPoints * bytesPerPointPosition;
 				const opacityOffset = j * bytesPerPointOpacity + (numPoints * bytesPerPointPosition + numPoints * bytesPerPointColor);
 
 				// rgb 
-				const r = view.getFloat32(pointOffset + 0, true);
-				const g = view.getFloat32(pointOffset + 4, true);
-				const b = view.getFloat32(pointOffset + 8, true);
+				const r = view.getFloat32(colorOffset + 0, true);
+				const g = view.getFloat32(colorOffset + 4, true);
+				const b = view.getFloat32(colorOffset + 8, true);
 
 				colors[c0] = (0.5 + SH_C0 * r) * 255;
 				colors[c1] = (0.5 + SH_C0 * g) * 255;
 				colors[c2] = (0.5 + SH_C0 * b) * 255;
-
-				const clamp = function (val, min, max) {
-					return Math.max(Math.min(val, max), min);
-				};
 
 				colors[c0] = clamp(Math.floor(colors[c0]), 0, 255);
 				colors[c1] = clamp(Math.floor(colors[c1]), 0, 255);
@@ -115,7 +115,7 @@ onmessage = function (event) {
 				let a = view.getFloat32(opacityOffset, true);
 				a = (1 / (1 + Math.exp(-a))) * 255;
 				colors[c3] = clamp(Math.floor(a), 0, 255);
-				}
+			}
 
 			attributeBuffers['rgba'] = {
 				buffer: bufferColors, attribute: pointAttribute
@@ -123,11 +123,11 @@ onmessage = function (event) {
 		}
 	}
 
-	let occupancy = parseInt(numPoints / numOccupiedCells);
+	const occupancy = parseInt(numPoints / numOccupiedCells);
 
 	{ // add indices
-		let buff = new ArrayBuffer(numPoints * 4);
-		let indices = new Uint32Array(buff);
+		const buff = new ArrayBuffer(numPoints * 4);
+		const indices = new Uint32Array(buff);
 
 		for (let i = 0; i < numPoints; i++) {
 			indices[i] = i;
@@ -137,25 +137,25 @@ onmessage = function (event) {
 
 
 	{ // handle attribute vectors
-		let vectors = pointAttributes.vectors;
+		const vectors = pointAttributes.vectors;
 
 		for (let vector of vectors) {
 
-			let { name, attributes } = vector;
-			let numVectorElements = attributes.length;
-			let buffer = new ArrayBuffer(numVectorElements * numPoints * 4);
-			let f32 = new Float32Array(buffer);
+			const { name, attributes } = vector;
+			const numVectorElements = attributes.length;
+			const buffer = new ArrayBuffer(numVectorElements * numPoints * 4);
+			const f32 = new Float32Array(buffer);
 
-			let iElement = 0;
+			const iElement = 0;
 			for (let sourceName of attributes) {
-				let sourceBuffer = attributeBuffers[sourceName];
-				let { offset, scale } = sourceBuffer;
-				let view = new DataView(sourceBuffer.buffer);
+				const sourceBuffer = attributeBuffers[sourceName];
+				const { offset, scale } = sourceBuffer;
+				const view = new DataView(sourceBuffer.buffer);
 
 				const getter = view.getFloat32.bind(view);
 
 				for (let j = 0; j < numPoints; j++) {
-					let value = getter(j * 4, true);
+					const value = getter(j * 4, true);
 
 					f32[j * numVectorElements + iElement] = (value / scale) + offset;
 				}
@@ -163,7 +163,7 @@ onmessage = function (event) {
 				iElement++;
 			}
 
-			let vecAttribute = new PointAttribute(name, PointAttributeTypes.DATA_TYPE_FLOAT, 3);
+			const vecAttribute = new PointAttribute(name, PointAttributeTypes.DATA_TYPE_FLOAT, 3);
 
 			attributeBuffers[name] = {
 				buffer: buffer,
@@ -174,14 +174,14 @@ onmessage = function (event) {
 
 	}
 
-	let message = {
+	const message = {
 		buffer: buffer,
 		attributeBuffers: attributeBuffers,
 		density: occupancy,
 		tightBoundingBox: { min: tightBoxMin, max: tightBoxMax },
 	};
 
-	let transferables = [];
+	const transferables = [];
 	for (let property in message.attributeBuffers) {
 		transferables.push(message.attributeBuffers[property].buffer);
 	}
