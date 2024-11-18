@@ -52,45 +52,55 @@ export class NodeLoader {
 			let buffer;
 
 			if (this.metadata.encoding === "GLTF") {
-				// const urlColors = await this.getUrl(this.gltfColorsPath);
-				const urlColors = await this.getUrl('sh_band_0.glbin');
-				const urlOpacities = await this.getUrl('opacities.glbin');
-				const urlPositions = await this.getUrl(this.gltfPositionsPath);
 
+				const urls: Record<string, string> = {
+					positions: await this.getUrl(this.gltfPositionsPath),
+					colors: await this.getUrl('sh_band_0.glbin'),
+					opacities: await this.getUrl('opacities.glbin'),
+					scales: await this.getUrl('scales.glbin'),
+					rotations: await this.getUrl('rotations.glbin'),
+				};
+			
+				const offsets: Record<string, bigint> = {
+					positions: 3n,
+					colors: 3n,
+					opacities: 1n,
+					scales: 3n,
+					rotations: 4n,
+				};
+			
 				if (byteSize === BigInt(0)) {
 					buffer = new ArrayBuffer(0);
-					console.warn(`loaded node with 0 bytes: ${node.name}`);
+					console.warn(`Loaded node with 0 bytes: ${node.name}`);
 				} else {
-					// position
-					const firstPositions = byteOffset * 4n * 3n;
-					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
-					const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
-					const responsePositions = await fetch(urlPositions, { headers: headersPositions });
-
-					const bufferPositions = await responsePositions.arrayBuffer();
-
-					// colors
-					const firstColors = byteOffset * 4n * 3n;
-					const lastColors = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
-
-					const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
-					const responseColors = await fetch(urlColors, { headers: headersColors });
-					const bufferColors = await responseColors.arrayBuffer();
-
-					// opacities
-					const firstOpacities = byteOffset * 4n * 1n;
-					const lastOpacities = byteOffset * 4n * 1n + byteSize * 4n * 1n - 1n;
-
-					const headersOpacities = { Range: `bytes=${firstOpacities}-${lastOpacities}` };
-					const responseOpacities = await fetch(urlOpacities, { headers: headersOpacities });
-
-					const bufferOpacities = await responseOpacities.arrayBuffer();
-
-					buffer = appendBuffer(bufferPositions, bufferColors);
-					buffer = appendBuffer(buffer, bufferOpacities);
+					const fetchBuffer = async (url: string, offsetMultiplier: bigint): Promise<ArrayBuffer> => {
+						const firstByte = byteOffset * 4n * offsetMultiplier;
+						const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
+						const headers: Record<string, string> = { Range: `bytes=${firstByte}-${lastByte}` };
+						const response = await fetch(url, { headers });
+						return response.arrayBuffer();
+					};
+			
+					const fetchPromises: Promise<ArrayBuffer>[] = Object.entries(urls).map(([key, url]) =>
+						fetchBuffer(url, offsets[key])
+					);
+			
+					const [
+						positions,
+						colors,
+						opacities,
+						scales,
+						rotations
+					]: ArrayBuffer[] = await Promise.all(fetchPromises);
+			
+					buffer = appendBuffer(positions, colors);
+					buffer = appendBuffer(buffer, opacities);
+					buffer = appendBuffer(buffer, scales);
+					buffer = appendBuffer(buffer, rotations);
 				}
 			}
+			
 			else {
 				const urlOctree = await this.getUrl(this.octreePath);
 
