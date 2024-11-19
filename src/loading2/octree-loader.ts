@@ -130,10 +130,10 @@ export class NodeLoader {
 
 				const geometry = new InstancedBufferGeometry();
 				const quadVertices = new Float32Array([
-					-0.01, -0.01, 0.0, 
-					0.01, -0.01, 0.0, 
-					-0.01,  0.01, 0.0, 
-					0.01,  0.01, 0.0  
+					-1, -1, 0.0, 
+					1, -1, 0.0, 
+					-1,  1, 0.0, 
+					1,  1, 0.0  
 				]);
 				const quadIndices = new Uint16Array([
 					0, 1, 2, 
@@ -149,11 +149,20 @@ export class NodeLoader {
 
 					if (property === 'position') {
 						const instancePosition = new Float32Array(buffer);
-						geometry.setAttribute(
-							'instancePosition',
-							new InstancedBufferAttribute(instancePosition, 3, false)
-						);
+						geometry.setAttribute('instancePosition',new InstancedBufferAttribute(instancePosition, 3, false));
 					}
+					else if (property === 'scale') {
+						const instanceScale = new Float32Array(buffer);
+						geometry.setAttribute('instanceScale',new InstancedBufferAttribute(instanceScale, 3, false));
+					}					
+					else if (property === 'rotation') {
+						const instanceRotation = new Float32Array(buffer);
+						geometry.setAttribute('instanceRotation',new InstancedBufferAttribute(instanceRotation, 4, false));
+					}					
+					else if (property === 'rgba' || property === 'sh_band_0') {
+						const instanceColor = new Uint8Array(buffer);
+						geometry.setAttribute('instanceColor',new InstancedBufferAttribute(instanceColor, 4, false));
+					}	
 				}
 
 				node.density = data.density;

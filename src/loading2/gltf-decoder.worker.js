@@ -1,4 +1,5 @@
 import { PointAttribute, PointAttributeTypes } from './point-attributes.ts';
+import { Quaternion } from 'three';
 
 const typedArrayMapping = {
 	'int8': Int8Array,
@@ -145,9 +146,33 @@ onmessage = function (event) {
 				buffer: bufferScales, attribute: pointAttribute
 			};
 		} else if (["rotation"].includes(pointAttribute.name)) {
+			const bufferRotations = new ArrayBuffer(numPoints * 4 * 4);
+			const rotations = new Float32Array(bufferRotations);
 
+			const tempRotation = new Quaternion();
+
+			for (let j = 0; j < numPoints; j++) {
+
+				const rotationOffset = j * bytesPerPointRotation + numPoints * (bytesPerPointPosition + bytesPerPointColor + bytesPerPointOpacity + bytesPerPointScale);
+
+				const rx = view.getFloat32(rotationOffset + 0, true);
+				const ry = view.getFloat32(rotationOffset + 4, true);
+				const rz = view.getFloat32(rotationOffset + 8, true);
+				const rw = view.getFloat32(rotationOffset + 12, true);
+
+				tempRotation.set(rx, ry, rz, rw);
+				tempRotation.normalize();
+	
+				rotations[4 * j + 0] = tempRotation.x;
+				rotations[4 * j + 1] = tempRotation.y;
+				rotations[4 * j + 2] = tempRotation.z;
+				rotations[4 * j + 3] = tempRotation.w;
+			}
+
+			attributeBuffers['rotation'] = {
+				buffer: bufferRotations, attribute: pointAttribute
+			};
 		}
-
 	}
 
 	const occupancy = parseInt(numPoints / numOccupiedCells);
