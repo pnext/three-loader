@@ -11,7 +11,6 @@ import {
   Scene,
   Sphere,
   Vector3,
-  Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
@@ -354,9 +353,9 @@ export class PointCloudOctreePicker {
 
       // tslint:disable-next-line:prefer-switch
       if (property === 'position') {
-        PointCloudOctreePicker.addPositionToPickPoint(point, hit, values, points);
+        // PointCloudOctreePicker.addPositionToPickPoint(point, hit, values, points);
       } else if (property === 'normal') {
-        PointCloudOctreePicker.addNormalToPickPoint(point, hit, values, points);
+        // PointCloudOctreePicker.addNormalToPickPoint(point, hit, values, points);
       } else if (property === 'indices') {
         // TODO
       } else {
@@ -375,29 +374,29 @@ export class PointCloudOctreePicker {
     return point;
   }
 
-  private static addPositionToPickPoint(
-    point: PickPoint,
-    hit: PointCloudHit,
-    values: BufferAttribute,
-    points: Points,
-  ): void {
-    point.position = new Vector3()
-      .fromBufferAttribute(values, hit.pIndex)
-      .applyMatrix4(points.matrixWorld);
-  }
+  // private static addPositionToPickPoint(
+  //   point: PickPoint,
+  //   hit: PointCloudHit,
+  //   values: BufferAttribute,
+  //   points: Points,
+  // ): void {
+  //   point.position = new Vector3()
+  //     .fromBufferAttribute(values, hit.pIndex)
+  //     .applyMatrix4(points.matrixWorld);
+  // }
 
-  private static addNormalToPickPoint(
-    point: PickPoint,
-    hit: PointCloudHit,
-    values: BufferAttribute,
-    points: Points,
-  ): void {
-    const normal = new Vector3().fromBufferAttribute(values, hit.pIndex);
-    const normal4 = new Vector4(normal.x, normal.y, normal.z, 0).applyMatrix4(points.matrixWorld);
-    normal.set(normal4.x, normal4.y, normal4.z);
+  // private static addNormalToPickPoint(
+  //   point: PickPoint,
+  //   hit: PointCloudHit,
+  //   values: BufferAttribute,
+  //   points: Points,
+  // ): void {
+  //   const normal = new Vector3().fromBufferAttribute(values, hit.pIndex);
+  //   const normal4 = new Vector4(normal.x, normal.y, normal.z, 0).applyMatrix4(points.matrixWorld);
+  //   normal.set(normal4.x, normal4.y, normal4.z);
 
-    point.normal = normal;
-  }
+  //   point.normal = normal;
+  // }
 
   private static getPickState() {
     const scene = new Scene();

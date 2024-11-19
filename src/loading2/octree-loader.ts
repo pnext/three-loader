@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
+import { BufferAttribute, InstancedBufferAttribute, InstancedBufferGeometry, Vector3 } from 'three';
 import { Box3, Sphere } from 'three';
 import { GetUrlFn, XhrRequest } from '../loading/types';
 import { OctreeGeometry } from './octree-geometry';
@@ -128,39 +128,34 @@ export class NodeLoader {
 
 				this.workerPool.returnWorker(workerType, worker);
 
-				const geometry = new BufferGeometry();
+				const geometry = new InstancedBufferGeometry();
+				const quadVertices = new Float32Array([
+					-0.01, -0.01, 0.0, 
+					0.01, -0.01, 0.0, 
+					-0.01,  0.01, 0.0, 
+					0.01,  0.01, 0.0  
+				]);
+				const quadIndices = new Uint16Array([
+					0, 1, 2, 
+					2, 1, 3  
+				]);
+				
+				geometry.setAttribute('position', new BufferAttribute(quadVertices, 3));
+				geometry.setIndex(new BufferAttribute(quadIndices, 1));
+				geometry.instanceCount = node.numPoints;
 
 				for (const property in buffers) {
 					const buffer = buffers[property].buffer;
 
 					if (property === 'position') {
-						geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
-					} else if (property === 'scale') {
-						geometry.setAttribute('scale', new BufferAttribute(new Float32Array(buffer), 3));
-					} else if (property === 'rgba' || property === 'sh_band_0') {
-						geometry.setAttribute('rgba', new BufferAttribute(new Uint8Array(buffer), 4, true));
-					} else if (property === 'NORMAL') {
-						geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
-					} else if (property === 'INDICES') {
-						const bufferAttribute = new BufferAttribute(new Uint8Array(buffer), 4);
-						bufferAttribute.normalized = true;
-						geometry.setAttribute('indices', bufferAttribute);
-					} else {
-						const bufferAttribute: BufferAttribute & {
-							potree?: object
-						} = new BufferAttribute(new Float32Array(buffer), 1);
-
-						const batchAttribute = buffers[property].attribute;
-						bufferAttribute.potree = {
-							offset: buffers[property].offset,
-							scale: buffers[property].scale,
-							preciseBuffer: buffers[property].preciseBuffer,
-							range: batchAttribute.range
-						};
-
-						geometry.setAttribute(property, bufferAttribute);
+						const instancePosition = new Float32Array(buffer);
+						geometry.setAttribute(
+							'instancePosition',
+							new InstancedBufferAttribute(instancePosition, 3, false)
+						);
 					}
 				}
+
 				node.density = data.density;
 				node.geometry = geometry;
 				node.loaded = true;

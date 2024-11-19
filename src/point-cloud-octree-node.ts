@@ -1,9 +1,9 @@
-import { Box3, BufferGeometry, EventDispatcher, Object3D, Points, Sphere } from 'three';
+import { Box3, BufferGeometry, EventDispatcher, Mesh, Object3D, Points, Sphere } from 'three';
 import { IPointCloudGeometryNode, IPointCloudTreeNode } from './types';
 
 export class PointCloudOctreeNode extends EventDispatcher implements IPointCloudTreeNode {
   geometryNode: IPointCloudGeometryNode;
-  sceneNode: Points;
+  sceneNode: Points | Mesh;
   pcIndex: number | undefined = undefined;
   boundingBoxNode: Object3D | null = null;
   readonly children: (IPointCloudTreeNode | null)[];
@@ -11,7 +11,7 @@ export class PointCloudOctreeNode extends EventDispatcher implements IPointCloud
   readonly isTreeNode: boolean = true;
   readonly isGeometryNode: boolean = false;
 
-  constructor(geometryNode: IPointCloudGeometryNode, sceneNode: Points) {
+  constructor(geometryNode: IPointCloudGeometryNode, sceneNode: Points | Mesh) {
     super();
 
     this.geometryNode = geometryNode;

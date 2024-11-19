@@ -1,4 +1,4 @@
-import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, WebGLRenderer } from 'three';
+import { Box3, Camera, Mesh, Object3D, Ray, Sphere, Vector3, WebGLRenderer } from 'three';
 import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudMaterial, PointSizeType } from './materials';
@@ -100,7 +100,7 @@ export class PointCloudOctree extends PointCloudTree {
     geometryNode: IPointCloudGeometryNode,
     parent?: PointCloudOctreeNode | null,
   ): PointCloudOctreeNode {
-    const points = new Points(geometryNode.geometry, this.material);
+    const points = new Mesh(geometryNode.geometry, this.material);
     const node = new PointCloudOctreeNode(geometryNode, points);
     points.name = geometryNode.name;
     points.position.copy(geometryNode.boundingBox.min);

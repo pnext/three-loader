@@ -25,7 +25,7 @@ const examplePointClouds: PointCloudsConfig[] = [
     }, {
         file: 'metadata.json',
         // url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
-        url: 'http://localhost:8080/gaussian/gltf/converted/',
+        url: 'http://localhost:8081/gaussian/gltf/converted/',
         version: 'v2'
     }
 ];
