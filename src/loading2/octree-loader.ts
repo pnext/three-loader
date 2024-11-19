@@ -60,7 +60,7 @@ export class NodeLoader {
 					scales: await this.getUrl('scales.glbin'),
 					rotations: await this.getUrl('rotations.glbin'),
 				};
-			
+
 				const offsets: Record<string, bigint> = {
 					positions: 3n,
 					colors: 3n,
@@ -68,7 +68,7 @@ export class NodeLoader {
 					scales: 3n,
 					rotations: 4n,
 				};
-			
+
 				if (byteSize === BigInt(0)) {
 					buffer = new ArrayBuffer(0);
 					console.warn(`Loaded node with 0 bytes: ${node.name}`);
@@ -81,11 +81,11 @@ export class NodeLoader {
 						const response = await fetch(url, { headers });
 						return response.arrayBuffer();
 					};
-			
+
 					const fetchPromises: Promise<ArrayBuffer>[] = Object.entries(urls).map(([key, url]) =>
 						fetchBuffer(url, offsets[key])
 					);
-			
+
 					const [
 						positions,
 						colors,
@@ -93,14 +93,14 @@ export class NodeLoader {
 						scales,
 						rotations
 					]: ArrayBuffer[] = await Promise.all(fetchPromises);
-			
+
 					buffer = appendBuffer(positions, colors);
 					buffer = appendBuffer(buffer, opacities);
 					buffer = appendBuffer(buffer, scales);
 					buffer = appendBuffer(buffer, rotations);
 				}
 			}
-			
+
 			else {
 				const urlOctree = await this.getUrl(this.octreePath);
 
@@ -135,6 +135,8 @@ export class NodeLoader {
 
 					if (property === 'position') {
 						geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
+					} else if (property === 'scale') {
+						geometry.setAttribute('scale', new BufferAttribute(new Float32Array(buffer), 3));
 					} else if (property === 'rgba' || property === 'sh_band_0') {
 						geometry.setAttribute('rgba', new BufferAttribute(new Uint8Array(buffer), 4, true));
 					} else if (property === 'NORMAL') {
@@ -291,9 +293,9 @@ export class NodeLoader {
 		const box = new Box3(new Vector3().fromArray(min), new Vector3().fromArray(max));
 		box.max.sub(box.min);
 		box.min.set(0, 0, 0);
-	
+
 		return box;
-	  }
+	}
 }
 
 const tmpVec3 = new Vector3();
@@ -433,8 +435,8 @@ export class OctreeLoader {
 			if (bufferView) {
 				attribute.uri = bufferView.uri;
 			}
-			
-			if (numElements === 1  && min && max) {
+
+			if (numElements === 1 && min && max) {
 				attribute.range = [min[0], max[0]];
 			} else {
 				attribute.range = [min, max];
@@ -472,27 +474,27 @@ export class OctreeLoader {
 	async load(url: string, xhrRequest: XhrRequest) {
 		const metadata = await this.fetchMetadata(url, xhrRequest);
 		const attributes = OctreeLoader.parseAttributes(metadata.attributes);
-	
+
 		this.applyCustomBufferURI(metadata.encoding, attributes);
-	
+
 		const loader = this.createLoader(url, metadata, attributes);
-	
+
 		const boundingBox = this.createBoundingBox(metadata);
 		const offset = this.getOffset(boundingBox);
 		const octree = this.initializeOctree(loader, url, metadata, boundingBox, offset, attributes);
 		const root = this.initializeRootNode(octree, boundingBox, metadata);
 		octree.root = root;
-	
+
 		loader.load(root);
-	
+
 		return { geometry: octree };
 	}
-	
+
 	private async fetchMetadata(url: string, xhrRequest: XhrRequest): Promise<Metadata> {
 		const response = await xhrRequest(url);
 		return response.json();
 	}
-	
+
 	private applyCustomBufferURI(encoding: string, attributes: any) {
 		// Only datasets with GLTF encoding support custom buffer URIs -
 		// as opposed to datasets with DEFAULT encoding coming from PotreeConverter
@@ -513,21 +515,21 @@ export class OctreeLoader {
 		loader.gltfPositionsPath = this.gltfPositionsPath;
 		return loader;
 	}
-	
+
 	private createBoundingBox(metadata: Metadata): Box3 {
 		const min = new Vector3(...metadata.boundingBox.min);
 		const max = new Vector3(...metadata.boundingBox.max);
 		const boundingBox = new Box3(min, max);
 		return boundingBox;
 	}
-	
+
 	private getOffset(boundingBox: Box3): Vector3 {
 		const offset = boundingBox.min.clone();
 		boundingBox.min.sub(offset);
 		boundingBox.max.sub(offset);
 		return offset;
 	}
-	
+
 	private initializeOctree(loader: NodeLoader, url: string, metadata: Metadata, boundingBox: Box3, offset: Vector3, attributes: any): OctreeGeometry {
 		const octree = new OctreeGeometry(loader, boundingBox);
 		octree.url = url;
@@ -542,7 +544,7 @@ export class OctreeLoader {
 		octree.pointAttributes = attributes;
 		return octree;
 	}
-	
+
 	private initializeRootNode(octree: OctreeGeometry, boundingBox: Box3, metadata: Metadata): OctreeGeometryNode {
 		const root = new OctreeGeometryNode('r', octree, boundingBox);
 		root.level = 0;

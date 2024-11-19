@@ -22,6 +22,8 @@ onmessage = function (event) {
 	const attributeBuffers = {};
 
 	const bytesPerPointPosition = 4 * 3;
+	const bytesPerPointScale = 4 * 3;
+	const bytesPerPointRotation = 4 * 4;
 	const bytesPerPointColor = 4 * 3;
 	const bytesPerPointOpacity = 4;
 
@@ -51,7 +53,9 @@ onmessage = function (event) {
 	const tightBoxMin = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
 	const tightBoxMax = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
 
+	// positions, colors, opacities, scales, rotations
 	for (const pointAttribute of pointAttributes.attributes) {
+
 		if (["POSITION_CARTESIAN", "position"].includes(pointAttribute.name)) {
 			const buff = new ArrayBuffer(numPoints * 4 * 3);
 			const positions = new Float32Array(buff);
@@ -96,7 +100,7 @@ onmessage = function (event) {
 				const c3 = 4 * j + 3;
 
 				const colorOffset = j * bytesPerPointColor + numPoints * bytesPerPointPosition;
-				const opacityOffset = j * bytesPerPointOpacity + (numPoints * bytesPerPointPosition + numPoints * bytesPerPointColor);
+				const opacityOffset = j * bytesPerPointOpacity + numPoints * (bytesPerPointPosition + bytesPerPointColor);
 
 				// rgb 
 				const r = view.getFloat32(colorOffset + 0, true);
@@ -120,7 +124,30 @@ onmessage = function (event) {
 			attributeBuffers['rgba'] = {
 				buffer: bufferColors, attribute: pointAttribute
 			};
+		} else if (["scale"].includes(pointAttribute.name)) {
+			const bufferScales = new ArrayBuffer(numPoints * 4 * 3);
+			const scales = new Float32Array(bufferScales);
+
+			for (let j = 0; j < numPoints; j++) {
+
+				const scaleOffset = j * bytesPerPointScale + numPoints * (bytesPerPointPosition + bytesPerPointColor + bytesPerPointOpacity);
+
+				const sx = view.getFloat32(scaleOffset + 0, true);
+				const sy = view.getFloat32(scaleOffset + 4, true);
+				const sz = view.getFloat32(scaleOffset + 8, true);
+
+				scales[3 * j + 0] = Math.exp(sx);
+				scales[3 * j + 1] = Math.exp(sy);
+				scales[3 * j + 2] = Math.exp(sz);
+			}
+
+			attributeBuffers['scale'] = {
+				buffer: bufferScales, attribute: pointAttribute
+			};
+		} else if (["rotation"].includes(pointAttribute.name)) {
+
 		}
+
 	}
 
 	const occupancy = parseInt(numPoints / numOccupiedCells);

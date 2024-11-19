@@ -4,6 +4,7 @@ precision highp int;
 #define max_clip_boxes 30
 
 attribute vec3 position;
+attribute vec3 scale;
 attribute vec3 color;
 
 #ifdef color_rgba
@@ -454,7 +455,8 @@ void main() {
 		vRadius = pointSize / projFactor;
 	#endif
 
-	gl_PointSize = pointSize;
+	// gl_PointSize = pointSize;
+	gl_PointSize = length(scale) * size;
 
 	// ---------------------
 	// HIGHLIGHTING

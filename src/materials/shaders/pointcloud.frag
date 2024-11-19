@@ -118,7 +118,14 @@ void main() {
 	#if defined color_type_point_index
 		gl_FragColor = vec4(color, pcIndex / 255.0);
 	#else
-		gl_FragColor = vec4(color, vOpacity);
+
+		float sigma = 0.5;
+
+		vec2 fragCoord = gl_PointCoord * 2.0 - 1.0; // Transform [0,1] to [-1,1]
+		float distanceFromCenter = length(fragCoord);
+		float alpha = exp(-pow(distanceFromCenter, 2.0) / (2.0 * sigma * sigma));
+    
+		gl_FragColor = vec4(color, vOpacity * alpha);
 	#endif
 
 	#ifdef use_point_cloud_mixing

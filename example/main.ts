@@ -83,7 +83,7 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
             console.log(pco);
             pointClouds[version] = pco;
             pco.rotateX(-Math.PI / 2);
-            pco.material.size = 1.0;
+            pco.material.size = 100.0;
 
             pco.material.pointColorType = 0;
             pco.material.opacity = 0.999;
