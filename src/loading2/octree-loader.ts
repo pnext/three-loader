@@ -56,9 +56,9 @@ export class NodeLoader {
 				const urls: Record<string, string> = {
 					positions: await this.getUrl(this.gltfPositionsPath),
 					colors: await this.getUrl('sh_band_0.glbin'),
-					opacities: await this.getUrl('opacities.glbin'),
-					scales: await this.getUrl('scales.glbin'),
-					rotations: await this.getUrl('rotations.glbin'),
+					opacities: await this.getUrl('opacity.glbin'),
+					scales: await this.getUrl('scale.glbin'),
+					rotations: await this.getUrl('rotation.glbin'),
 				};
 
 				const offsets: Record<string, bigint> = {

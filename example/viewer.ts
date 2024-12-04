@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { MathUtils, PerspectiveCamera, Scene, Vector2, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree, PotreeVersion } from '../src';
@@ -166,5 +166,30 @@ export class Viewer {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+
+    const size = new Vector2();
+    this.renderer.getSize(size);
+    const dpr = this.renderer.getPixelRatio();
+    let fov = this.camera.fov;
+    let aspect = size.x / size.y;
+
+
+    const focal = this.computeFocalLengths(size.x, size.y, fov, aspect, dpr);
+    console.log(focal);
   };
+
+  computeFocalLengths = (width: number, height: number, fov: number, aspect: number, dpr: number) => {
+
+    // console.log(width, height, fov, aspect, dpr);
+
+    const fovRad = MathUtils.degToRad(fov);
+    const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
+    const fy = (dpr * height) / (2 * Math.tan(fovRad / 2));
+    const fx = (dpr * width) / (2 * Math.tan(fovXRad / 2));
+
+    // console.log(fovRad, fovXRad, fy, fx);
+
+    return new Vector2(fx, fy);
+  };
+
 }
