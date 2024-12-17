@@ -14,7 +14,8 @@
     "url": "https://github.com/pnext/three-loader/issues"
   },
   "license": "MIT",
-  "main": "build/potree.js",
+  "main": "build/potree.cjs",
+  "module": "build/potree.mjs",
   "typings": "build/declarations/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
@@ -24,6 +25,14 @@
     "lint": "tslint --project tsconfig.json",
     "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\"",
     "prepare-release": "standard-version"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./build/declarations/index.d.ts",
+      "import": "./build/potree.mjs",
+      "default": "./build/potree.cjs"
+    }
   },
   "dependencies": {},
   "peerDependencies": {
