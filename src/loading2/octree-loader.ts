@@ -26,7 +26,7 @@ export class NodeLoader {
 	gltfColorsPath = '';
 	gltfPositionsPath = '';
 
-	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata) {
+	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata, public xhrRequest: XhrRequest) {
 	}
 
 	async load(node: OctreeGeometryNode) {
@@ -63,7 +63,7 @@ export class NodeLoader {
 					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
 					const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
-					const responsePositions = await fetch(urlPositions, { headers: headersPositions });
+					const responsePositions = await this.xhrRequest(urlPositions, { headers: headersPositions });
 
 					const bufferPositions = await responsePositions.arrayBuffer();
 
@@ -71,7 +71,7 @@ export class NodeLoader {
 					const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
 
 					const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
-					const responseColors = await fetch(urlColors, { headers: headersColors });
+					const responseColors = await this.xhrRequest(urlColors, { headers: headersColors });
 					const bufferColors = await responseColors.arrayBuffer();
 
 					buffer = appendBuffer(bufferPositions, bufferColors);
@@ -88,7 +88,7 @@ export class NodeLoader {
 					console.warn(`loaded node with 0 bytes: ${node.name}`);
 				} else {
 					const headers = { Range: `bytes=${first}-${last}` };
-					const response = await fetch(urlOctree, { headers });
+					const response = await this.xhrRequest(urlOctree, { headers });
 
 					buffer = await response.arrayBuffer();
 				}
@@ -257,7 +257,7 @@ export class NodeLoader {
 		const last = first + hierarchyByteSize - BigInt(1);
 
 		const headers = { Range: `bytes=${first}-${last}` };
-		const response = await fetch(hierarchyUrl, { headers });
+		const response = await this.xhrRequest(hierarchyUrl, { headers });
 
 		const buffer = await response.arrayBuffer();
 
@@ -452,7 +452,7 @@ export class OctreeLoader {
 	
 		this.applyCustomBufferURI(metadata.encoding, attributes);
 	
-		const loader = this.createLoader(url, metadata, attributes);
+		const loader = this.createLoader(url, metadata, attributes, xhrRequest);
 	
 		const boundingBox = this.createBoundingBox(metadata);
 		const offset = this.getOffset(boundingBox);
@@ -479,8 +479,8 @@ export class OctreeLoader {
 		}
 	}
 
-	private createLoader(url: string, metadata: Metadata, attributes: any): NodeLoader {
-		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata);
+	private createLoader(url: string, metadata: Metadata, attributes: any, xhrRequest: XhrRequest): NodeLoader {
+		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata, xhrRequest);
 		loader.attributes = attributes;
 		loader.scale = metadata.scale;
 		loader.offset = metadata.offset;
