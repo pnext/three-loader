@@ -7,7 +7,7 @@ module.exports = {
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'potree.cjs',
+    filename: 'index.cjs',
     library: {
       type: 'umd',
       umdNamedDefine: true,
@@ -17,6 +17,10 @@ module.exports = {
   stats: 'errors-only',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
+    fallback: {
+      fs: false,
+      path: false,
+    },
   },
   externals: ['three'],
   module: {

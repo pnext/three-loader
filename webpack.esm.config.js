@@ -8,7 +8,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'potree.mjs',
+    filename: 'index.mjs',
     module: true,
     library: {
       type: 'module',
@@ -17,6 +17,10 @@ module.exports = {
   stats: 'errors-only',
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
+    fallback: {
+      fs: false,
+      path: false,
+    },
   },
   externals: { three: 'three' },
   module: {

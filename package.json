@@ -14,9 +14,9 @@
     "url": "https://github.com/pnext/three-loader/issues"
   },
   "license": "MIT",
-  "main": "build/potree.cjs",
-  "module": "build/potree.mjs",
-  "typings": "build/declarations/index.d.ts",
+  "main": "build/index.cjs",
+  "module": "build/index.mjs",
+  "typings": "build/index.d.ts",
   "scripts": {
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
@@ -29,9 +29,10 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./build/declarations/index.d.ts",
-      "import": "./build/potree.mjs",
-      "default": "./build/potree.cjs"
+      "types": "./build/index.d.ts",
+      "import": "./build/index.mjs",
+      "require": "./build/index.cjs",
+      "default": "./build/index.cjs"
     }
   },
   "dependencies": {},
