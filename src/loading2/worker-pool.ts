@@ -3,6 +3,7 @@
 export enum WorkerType {
 	DECODER_WORKER = 'DECODER_WORKER',
 	DECODER_WORKER_GLTF = 'DECODER_WORKER_GLTF',
+	DECODER_WORKER_BROTLI = 'DECODER_WORKER_BROTLI'
 }
 
 // Worker JS names: 'BinaryDecoderWorker.js', 'DEMWorker.js', 'EptBinaryDecoderWorker.js', 'EptLaszipDecoderWorker.js',
@@ -19,6 +20,10 @@ function createWorker(type: WorkerType): Worker {
 		const DecoderWorker_GLTF = require('./gltf-decoder.worker.js').default;
 		return new DecoderWorker_GLTF();
 	}
+	case WorkerType.DECODER_WORKER_BROTLI: {
+		const DecoderWorker_Brotli = require('./brotli-decoder.worker.js').default;
+		return new DecoderWorker_Brotli();
+	}
 	default:
 		throw new Error('Unknown worker type');
 	}
@@ -26,7 +31,7 @@ function createWorker(type: WorkerType): Worker {
 
 export class WorkerPool {
 	// Workers will be an object that has a key for each worker type and the value is an array of Workers that can be empty
-	private workers: { [key in WorkerType]: Worker[] } = {DECODER_WORKER: [], DECODER_WORKER_GLTF: []};
+	private workers: { [key in WorkerType]: Worker[] } = {DECODER_WORKER: [], DECODER_WORKER_GLTF: [], DECODER_WORKER_BROTLI: []};
 
 	getWorker(workerType: WorkerType): Worker {
 		// Throw error if workerType is not recognized
