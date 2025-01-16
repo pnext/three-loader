@@ -18,7 +18,6 @@ module.exports = [
         failOnError: true,
         cwd: process.cwd(),
       }),
-      new BundleAnalyzerPlugin(),
     ],
   }),
   Object.assign(esmConfig, {
