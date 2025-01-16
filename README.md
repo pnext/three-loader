@@ -54,28 +54,28 @@ You can play with a live example here: https://codesandbox.io/s/yw2p3446j9?autor
 
 # Local Development
 
-To develop and contribute to the project, you need to start by cloning the repositry and then install all the dependencies with yarn:
+To develop and contribute to the project, you need to start by cloning the repositry and then install all the dependencies:
 
 ```bash
-> yarn
+> npm install
 ```
 
 Once that is done you can start a development server by running:
 
 ```bash
-> yarn start
+> npm run start
 ```
 
 You can also start the example application (`/example`) by running:
 
 ```bash
-> yarn start:example
+> npm run start:example
 ```
 
 To create a production-ready build of the library which can be published to NPM, you can run the following command:
 
 ```bash
-> yarn build
+> npm run build
 ```
 
 # Thank You!
