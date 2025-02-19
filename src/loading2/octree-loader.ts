@@ -87,8 +87,11 @@ export class NodeLoader {
 					buffer = new ArrayBuffer(0);
 					console.warn(`loaded node with 0 bytes: ${node.name}`);
 				} else {
-					const headers = { Range: `bytes=${first}-${last}` };
-					const response = await this.xhrRequest(urlOctree, { headers });
+					// Add byte range as query param to enforce unique cacheable URI
+					const urlOctreeCacheable = `${urlOctree}?range=${first}to${last}`;
+
+					const headers = { Range: `bytes=${first}-${last}`, 'content-type': 'multipart/byteranges' };
+					const response = await this.xhrRequest(urlOctreeCacheable, { headers });
 
 					buffer = await response.arrayBuffer();
 				}
