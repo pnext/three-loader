@@ -4,7 +4,7 @@ import { GetUrlFn, XhrRequest } from '../loading/types';
 import { OctreeGeometry } from './octree-geometry';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
-import { WorkerPool, WorkerType } from './worker-pool';
+import { WorkerPool, WorkerType } from '../utils/worker-pool';
 import { buildUrl, extractBasePath } from './utils';
 
 // Buffer files for DEFAULT encoding
@@ -104,14 +104,14 @@ export class NodeLoader {
 					? WorkerType.DECODER_WORKER_BROTLI 
 					: WorkerType.DECODER_WORKER;
 
-			const worker = this.workerPool.getWorker(workerType);
+			const autoTerminatingWorker = await this.workerPool.getWorker(workerType);
 
-			worker.onmessage = (e) => {
+			autoTerminatingWorker.worker.onmessage = (e) => {
 
 				const data = e.data;
 				const buffers = data.attributeBuffers;
 
-				this.workerPool.returnWorker(workerType, worker);
+				this.workerPool.releaseWorker(workerType, autoTerminatingWorker);
 
 				const geometry = new BufferGeometry();
 
@@ -177,7 +177,7 @@ export class NodeLoader {
 				numPoints: numPoints
 			};
 
-			worker.postMessage(message, [message.buffer]);
+			autoTerminatingWorker.worker.postMessage(message, [message.buffer]);
 		} catch (e) {
 			node.loaded = false;
 			node.loading = false;
@@ -380,7 +380,7 @@ export interface Metadata {
 
 export class OctreeLoader {
 
-	workerPool: WorkerPool = new WorkerPool();
+	workerPool: WorkerPool = WorkerPool.getInstance();
 
 	basePath = '';
 	hierarchyPath = '';
