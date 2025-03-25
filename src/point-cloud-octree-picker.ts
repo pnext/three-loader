@@ -94,7 +94,7 @@ export class PointCloudOctreePicker {
     if (params.pixelPosition) {
       pixelPosition.copy(params.pixelPosition);
     } else {
-      pixelPosition.addVectors(camera.position, ray.direction).project(camera);
+      pixelPosition.addVectors(ray.origin, ray.direction).project(camera);
       pixelPosition.x = (pixelPosition.x + 1) * width * 0.5;
       pixelPosition.y = (pixelPosition.y + 1) * height * 0.5;
     }
