@@ -162,6 +162,7 @@ const CLIP_MODE_DEFS = {
   [ClipMode.HIGHLIGHT_INSIDE]: 'clip_highlight_inside',
   [ClipMode.CLIP_HORIZONTALLY]: 'clip_horizontally',
   [ClipMode.CLIP_VERTICALLY]: 'clip_vertically',
+  [ClipMode.CLIP_INSIDE]: 'clip_inside',
 };
 
 export class PointCloudMaterial extends RawShaderMaterial {
