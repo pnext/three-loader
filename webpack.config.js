@@ -14,6 +14,10 @@ module.exports = {
   stats: 'errors-only',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
+    fallback: {
+      fs: false,
+      path: false,
+    },
   },
   externals: ['three'],
   module: {

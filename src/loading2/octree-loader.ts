@@ -94,7 +94,13 @@ export class NodeLoader {
 				}
 			}
 
-			const workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
+			const workerType =
+				this.metadata.encoding === 'GLTF' 
+					? WorkerType.DECODER_WORKER_GLTF 
+					: this.metadata.encoding === 'BROTLI' 
+					? WorkerType.DECODER_WORKER_BROTLI 
+					: WorkerType.DECODER_WORKER;
+
 			const worker = this.workerPool.getWorker(workerType);
 
 			worker.onmessage = (e) => {
