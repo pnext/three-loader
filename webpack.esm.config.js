@@ -1,28 +1,28 @@
 const path = require('path');
 
-const SizePlugin = require('size-plugin');
-
 module.exports = {
-  name: 'umd',
+  name: 'module',
   entry: './src/index.ts',
+  experiments: {
+    outputModule: true,
+  },
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'index.cjs',
+    filename: 'index.mjs',
+    module: true,
     library: {
-      type: 'umd',
-      umdNamedDefine: true,
+      type: 'module',
     },
   },
-  devtool: 'eval-cheap-source-map',
   stats: 'errors-only',
   resolve: {
-    extensions: ['.ts', '.tsx', '.js'],
+    extensions: ['.tsx', '.ts', '.js'],
     fallback: {
       fs: false,
       path: false,
     },
   },
-  externals: ['three'],
+  externals: { three: 'three' },
   module: {
     rules: [
       {
@@ -44,5 +44,5 @@ module.exports = {
       { test: /\.(vs|fs|glsl|vert|frag)$/, loader: 'raw-loader' },
     ],
   },
-  plugins: [new SizePlugin()],
+  plugins: [],
 };
