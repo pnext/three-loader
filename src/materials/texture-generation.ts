@@ -1,11 +1,14 @@
 import {
   CanvasTexture,
+  ClampToEdgeWrapping,
   Color,
   DataTexture,
+  FloatType,
   LinearFilter,
   NearestFilter,
   RGBAFormat,
   Texture,
+  UVMapping,
 } from 'three';
 import { IClassification, IGradient } from '../materials/types';
 
@@ -88,6 +91,19 @@ export function generateClassificationTexture(classification: IClassification): 
 
   const texture = new DataTexture(data, width, height, RGBAFormat);
   texture.magFilter = NearestFilter;
+  texture.needsUpdate = true;
+
+  return texture;
+}
+
+export function generateClipboxTexture(): DataTexture {
+  const width = 256;
+  const height = 256;
+  const size = width * height;
+
+  const data = new Float32Array(size * 4);
+
+  const texture = new DataTexture(data, width, height, RGBAFormat, FloatType, UVMapping, ClampToEdgeWrapping, ClampToEdgeWrapping, NearestFilter, NearestFilter);
   texture.needsUpdate = true;
 
   return texture;
