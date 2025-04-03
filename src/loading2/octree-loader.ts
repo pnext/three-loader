@@ -371,7 +371,7 @@ export interface Metadata {
 
 export class OctreeLoader {
 
-	workerPool: WorkerPool = new WorkerPool();
+	static workerPool: WorkerPool = new WorkerPool();
 
 	basePath = '';
 	hierarchyPath = '';
@@ -480,7 +480,7 @@ export class OctreeLoader {
 	}
 
 	private createLoader(url: string, metadata: Metadata, attributes: any): NodeLoader {
-		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata);
+		const loader = new NodeLoader(this.getUrl, url, OctreeLoader.workerPool, metadata);
 		loader.attributes = attributes;
 		loader.scale = metadata.scale;
 		loader.offset = metadata.offset;
