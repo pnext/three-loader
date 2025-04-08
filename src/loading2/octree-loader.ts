@@ -26,7 +26,12 @@ export class NodeLoader {
 	gltfColorsPath = '';
 	gltfPositionsPath = '';
 
+	isSplats: boolean = false;
+
 	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata) {
+		metadata.attributes.map(attr => {
+			if(attr.name == "sh_band_0") this.isSplats = true;
+		})
 	}
 
 	async load(node: OctreeGeometryNode) {
@@ -52,30 +57,159 @@ export class NodeLoader {
 			let buffer;
 
 			if (this.metadata.encoding === "GLTF") {
-				const urlColors = await this.getUrl(this.gltfColorsPath);
-				const urlPositions = await this.getUrl(this.gltfPositionsPath);
 
-				if (byteSize === BigInt(0)) {
-					buffer = new ArrayBuffer(0);
-					console.warn(`loaded node with 0 bytes: ${node.name}`);
+				if(!this.isSplats) {
+
+					const urlColors = await this.getUrl(this.gltfColorsPath);
+					const urlPositions = await this.getUrl(this.gltfPositionsPath);
+	
+					if (byteSize === BigInt(0)) {
+						buffer = new ArrayBuffer(0);
+						console.warn(`loaded node with 0 bytes: ${node.name}`);
+					} else {
+						const firstPositions = byteOffset * 4n * 3n;
+						const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
+	
+						const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
+						const responsePositions = await fetch(urlPositions, { headers: headersPositions });
+	
+						const bufferPositions = await responsePositions.arrayBuffer();
+	
+						const firstColors = byteOffset * 4n;
+						const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
+	
+						const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
+						const responseColors = await fetch(urlColors, { headers: headersColors });
+						const bufferColors = await responseColors.arrayBuffer();
+	
+						buffer = appendBuffer(bufferPositions, bufferColors);
+					}
+
 				} else {
-					const firstPositions = byteOffset * 4n * 3n;
-					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
-					const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
-					const responsePositions = await fetch(urlPositions, { headers: headersPositions });
-
-					const bufferPositions = await responsePositions.arrayBuffer();
-
-					const firstColors = byteOffset * 4n;
-					const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
-
-					const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
-					const responseColors = await fetch(urlColors, { headers: headersColors });
-					const bufferColors = await responseColors.arrayBuffer();
-
-					buffer = appendBuffer(bufferPositions, bufferColors);
+					const urls: Record<string, string> = {
+						positions: await this.getUrl(this.gltfPositionsPath),
+						colors: await this.getUrl('sh_band_0.glbin'),
+						opacities: await this.getUrl('opacity.glbin'),
+						scales: await this.getUrl('scale.glbin'),
+						rotations: await this.getUrl('rotation.glbin'),
+	
+						//For the spherical harmonics
+						shBand1_0: await this.getUrl('sh_band_1_triplet_0.glbin'),
+						shBand1_1: await this.getUrl('sh_band_1_triplet_1.glbin'),
+						shBand1_2: await this.getUrl('sh_band_1_triplet_2.glbin'),
+	
+						shBand2_0: await this.getUrl('sh_band_2_triplet_0.glbin'),
+						shBand2_1: await this.getUrl('sh_band_2_triplet_1.glbin'),
+						shBand2_2: await this.getUrl('sh_band_2_triplet_2.glbin'),
+						shBand2_3: await this.getUrl('sh_band_2_triplet_3.glbin'),
+						shBand2_4: await this.getUrl('sh_band_2_triplet_4.glbin'),
+	
+						shBand3_0: await this.getUrl('sh_band_3_triplet_0.glbin'),
+						shBand3_1: await this.getUrl('sh_band_3_triplet_1.glbin'),
+						shBand3_2: await this.getUrl('sh_band_3_triplet_2.glbin'),
+						shBand3_3: await this.getUrl('sh_band_3_triplet_3.glbin'),
+						shBand3_4: await this.getUrl('sh_band_3_triplet_4.glbin'),
+						shBand3_5: await this.getUrl('sh_band_3_triplet_5.glbin'),
+						shBand3_6: await this.getUrl('sh_band_3_triplet_6.glbin'),
+					};
+	
+					const offsets: Record<string, bigint> = {
+						positions: 3n,
+						colors: 3n,
+						opacities: 1n,
+						scales: 3n,
+						rotations: 4n,
+	
+						shBand1_0: 3n,
+						shBand1_1: 3n,
+						shBand1_2: 3n,
+	
+						shBand2_0: 3n,
+						shBand2_1: 3n,
+						shBand2_2: 3n,
+						shBand2_3: 3n,
+						shBand2_4: 3n,
+	
+						shBand3_0: 3n,
+						shBand3_1: 3n,
+						shBand3_2: 3n,
+						shBand3_3: 3n,
+						shBand3_4: 3n,
+						shBand3_5: 3n,
+						shBand3_6: 3n,
+		
+					};
+	
+					if (byteSize === BigInt(0)) {
+						buffer = new ArrayBuffer(0);
+						console.warn(`Loaded node with 0 bytes: ${node.name}`);
+					} else {
+	
+						const fetchBuffer = async (url: string, offsetMultiplier: bigint): Promise<ArrayBuffer> => {
+							const firstByte = byteOffset * 4n * offsetMultiplier;
+							const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
+							const headers: Record<string, string> = { Range: `bytes=${firstByte}-${lastByte}` };
+							const response = await fetch(url, { headers });
+							return response.arrayBuffer();
+						};
+	
+						const fetchPromises: Promise<ArrayBuffer>[] = Object.entries(urls).map(([key, url]) =>
+							fetchBuffer(url, offsets[key])
+						);
+	
+						const [
+							positions,
+							colors,
+							opacities,
+							scales,
+							rotations,
+	
+							shBand1_0,
+							shBand1_1,
+							shBand1_2,
+	
+							shBand2_0,
+							shBand2_1,
+							shBand2_2,
+							shBand2_3,
+							shBand2_4,
+	
+							shBand3_0,
+							shBand3_1,
+							shBand3_2,
+							shBand3_3,
+							shBand3_4,
+							shBand3_5,
+							shBand3_6,
+	
+						]: ArrayBuffer[] = await Promise.all(fetchPromises);
+	
+						buffer = appendBuffer(positions, colors);
+						buffer = appendBuffer(buffer, opacities);
+						buffer = appendBuffer(buffer, scales);
+						buffer = appendBuffer(buffer, rotations);
+	
+						buffer = appendBuffer(buffer, shBand1_0);
+						buffer = appendBuffer(buffer, shBand1_1);
+						buffer = appendBuffer(buffer, shBand1_2);
+	
+						buffer = appendBuffer(buffer, shBand2_0);
+						buffer = appendBuffer(buffer, shBand2_1);
+						buffer = appendBuffer(buffer, shBand2_2);
+						buffer = appendBuffer(buffer, shBand2_3);
+						buffer = appendBuffer(buffer, shBand2_4);
+	
+						buffer = appendBuffer(buffer, shBand3_0);
+						buffer = appendBuffer(buffer, shBand3_1);
+						buffer = appendBuffer(buffer, shBand3_2);
+						buffer = appendBuffer(buffer, shBand3_3);
+						buffer = appendBuffer(buffer, shBand3_4);
+						buffer = appendBuffer(buffer, shBand3_5);
+						buffer = appendBuffer(buffer, shBand3_6);
+					}
 				}
+
 			}
 			else {
 				const urlOctree = await this.getUrl(this.octreePath);
@@ -94,48 +228,103 @@ export class NodeLoader {
 				}
 			}
 
-			const workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
+			let workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
+
+			//The splats use a different method to decode them
+			if(this.isSplats) workerType = WorkerType.DECODER_WORKER_SPLATS;
+
 			const worker = this.workerPool.getWorker(workerType);
 
 			worker.onmessage = (e) => {
 
 				const data = e.data;
 				const buffers = data.attributeBuffers;
-
 				this.workerPool.returnWorker(workerType, worker);
-
 				const geometry = new BufferGeometry();
 
-				for (const property in buffers) {
+				if(!this.isSplats) {
+	
+					for (const property in buffers) {
 
-					const buffer = buffers[property].buffer;
+						const buffer = buffers[property].buffer;
 
-					if (property === 'position') {
-						geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
-					} else if (property === 'rgba') {
-						geometry.setAttribute('rgba', new BufferAttribute(new Uint8Array(buffer), 4, true));
-					} else if (property === 'NORMAL') {
-						geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
-					} else if (property === 'INDICES') {
-						const bufferAttribute = new BufferAttribute(new Uint8Array(buffer), 4);
-						bufferAttribute.normalized = true;
-						geometry.setAttribute('indices', bufferAttribute);
-					} else {
-						const bufferAttribute: BufferAttribute & {
-							potree?: object
-						} = new BufferAttribute(new Float32Array(buffer), 1);
+						if (property === 'position') {
+							geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
+						} else if (property === 'rgba') {
+							geometry.setAttribute('rgba', new BufferAttribute(new Uint8Array(buffer), 4, true));
+						} else if (property === 'NORMAL') {
+							geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
+						} else if (property === 'INDICES') {
+							const bufferAttribute = new BufferAttribute(new Uint8Array(buffer), 4);
+							bufferAttribute.normalized = true;
+							geometry.setAttribute('indices', bufferAttribute);
+						} else {
+							const bufferAttribute: BufferAttribute & {
+								potree?: object
+							} = new BufferAttribute(new Float32Array(buffer), 1);
 
-						const batchAttribute = buffers[property].attribute;
-						bufferAttribute.potree = {
-							offset: buffers[property].offset,
-							scale: buffers[property].scale,
-							preciseBuffer: buffers[property].preciseBuffer,
-							range: batchAttribute.range
-						};
+							const batchAttribute = buffers[property].attribute;
+							bufferAttribute.potree = {
+								offset: buffers[property].offset,
+								scale: buffers[property].scale,
+								preciseBuffer: buffers[property].preciseBuffer,
+								range: batchAttribute.range
+							};
 
-						geometry.setAttribute(property, bufferAttribute);
+							geometry.setAttribute(property, bufferAttribute);
+						}
 					}
+				} else {
+
+					geometry.drawRange.count = node.numPoints;
+
+					for (const property in buffers) {
+
+						const buffer = buffers[property].buffer;
+
+						if(property === "position") {
+							geometry.setAttribute('centers', new BufferAttribute(new Float32Array(buffer), 4));
+						}
+
+						if(property === "scale") {
+							geometry.setAttribute('scale', new BufferAttribute(new Float32Array(buffer), 3));
+						}
+
+						if(property === "orientation") {
+							geometry.setAttribute('orientation', new BufferAttribute(new Float32Array(buffer), 4));
+						}
+
+						if(property === "raw_position") {
+							geometry.setAttribute('raw_position', new BufferAttribute(new Float32Array(buffer), 4));
+						}
+						
+						else if (property === 'COVARIANCE0') {
+							geometry.setAttribute('COVARIANCE0', new BufferAttribute(new Float32Array(buffer), 4));
+						}	
+
+						else if (property === 'COVARIANCE1') {
+							geometry.setAttribute('COVARIANCE1', new BufferAttribute(new Float32Array(buffer), 2));
+						}	
+
+						else if (property === 'POS_COLOR') {
+							geometry.setAttribute('POS_COLOR', new BufferAttribute(new Uint32Array(buffer), 4));
+						}	
+
+						else if (property === "HARMONICS1") {
+							geometry.setAttribute('HARMONICS1', new BufferAttribute(new Uint32Array(buffer), 3));
+						}
+
+						else if (property === "HARMONICS2") {
+							geometry.setAttribute('HARMONICS2', new BufferAttribute(new Uint32Array(buffer), 5));
+						}
+
+						else if (property === "HARMONICS3") {
+							geometry.setAttribute('HARMONICS3', new BufferAttribute(new Uint32Array(buffer), 7));
+						}
+					}
+
 				}
+
 				node.density = data.density;
 				node.geometry = geometry;
 				node.loaded = true;

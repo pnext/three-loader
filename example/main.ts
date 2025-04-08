@@ -15,17 +15,25 @@ interface PointCloudsConfig {
     file: string;
     url: string;
     version: 'v1' | 'v2';
+    splats: boolean
 }
 
 const examplePointClouds: PointCloudsConfig[] = [
     {
-        file: 'cloud.js',
-        url: 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-        version: 'v1'
-    }, {
         file: 'metadata.json',
         url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
-        version: 'v2'
+        // url: 'http://localhost:8080/gaussian/gltf/converted/',
+        //url: 'http://localhost:8081/alamedilla/',
+        version: 'v1',
+        splats: false
+    },
+    {
+        file: 'metadata.json',
+        //url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        // url: 'http://localhost:8080/gaussian/gltf/converted/',
+        url: 'http://localhost:8081/alamedilla/',
+        version: 'v2',
+        splats: true
     }
 ];
 
@@ -47,7 +55,7 @@ const loaded: LoadedState = {
     v2: false
 };
 
-function createButton(text: string, onClick: () => void): HTMLButtonElement {
+function createButton(text: string, onClick: (e: MouseEvent) => void): HTMLButtonElement {
     const button: HTMLButtonElement = document.createElement('button');
     button.textContent = text;
     button.addEventListener('click', onClick);
@@ -58,7 +66,8 @@ function createSlider(version: string): HTMLInputElement {
     const slider: HTMLInputElement = document.createElement('input');
     slider.type = 'range';
     slider.min = '10000';
-    slider.max = '500000';
+    slider.max = '2000000';
+    slider.value = '2000000';
     slider.className = 'budget-slider';
     slider.addEventListener('change', () => {
         const cloud = pointClouds[version];
@@ -66,37 +75,70 @@ function createSlider(version: string): HTMLInputElement {
             return;
         }
         cloud.potree.pointBudget = parseInt(slider.value, 10);
+        viewer.splatsManager.forceSorting = true;
+        viewer.update(0);
         console.log(cloud.potree.pointBudget);
     });
     return slider;
 }
 
-function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
+function createHarmonicsSlider(): HTMLInputElement {
+    const slider: HTMLInputElement = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '3';
+    slider.value = "0";
+    slider.className = 'harmonics-slider';
+    slider.addEventListener('change', () => {
+        viewer.splatsManager.mesh.material.uniforms.harmonicsDegree.value = slider.value;
+    });
+    return slider;
+}
+
+
+function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, splats: boolean): void {
     if (loaded[version]) {
         return;
     }
     loaded[version] = true;
 
-    viewer.load(file, url, version)
+    viewer.load(file, url, 'v2')
         .then(pco => {
             pointClouds[version] = pco;
             pco.rotateX(-Math.PI / 2);
             pco.material.size = 1.0;
+
+            pco.material.pointColorType = 0;
+            
             pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
+            pco.position.set(0, 0, 0);
 
             const camera = viewer.camera;
             camera.far = 1000;
             camera.updateProjectionMatrix();
-            camera.position.set(0, 0, 10);
+            camera.position.set(5, 2, -2.5);
             camera.lookAt(new Vector3());
 
             viewer.add(pco);
-        })
+        }).then(async _ => {if(splats) await viewer.renderAsSplats()}
+        )
         .catch(err => console.error(err));
 }
 
 function setupUI(cfg: PointCloudsConfig): void {
+
+    const updateBtn = createButton("Update", (e: MouseEvent) => {
+        e.stopPropagation();
+        viewer.enableUpdate = !viewer.enableUpdate;
+        updateBtn.style.backgroundColor = viewer.enableUpdate ? "#00ff00" : "#ff0000";
+    })
+
+    updateBtn.style.backgroundColor ="#00ff00";
+
+    const slider = createSlider(cfg.version);
+    const harmonincsSlider = createHarmonicsSlider();
+
     const unloadBtn = createButton('Unload', () => {
         if (!loaded[cfg.version]) {
             return;
@@ -109,18 +151,27 @@ function setupUI(cfg: PointCloudsConfig): void {
         viewer.disposePointCloud(pointCloud);
         loaded[cfg.version] = false;
         pointClouds[cfg.version] = undefined;
+
+        viewer.enableUpdate = true;
+        updateBtn.style.backgroundColor ="#00ff00";
+        harmonincsSlider.value = "0";
     });
 
-    const loadBtn = createButton('Load', () => setupPointCloud(cfg.version, cfg.file, cfg.url));
-
-    const slider = createSlider(cfg.version);
+    const loadBtn = createButton('Load', (e: MouseEvent) => {
+        e.stopPropagation();
+        setupPointCloud(cfg.version, cfg.file, cfg.url, cfg.splats)
+        }
+    );
 
     const btnContainer: HTMLDivElement = document.createElement('div');
     btnContainer.className = 'btn-container-' + cfg.version;
     document.body.appendChild(btnContainer);
     btnContainer.appendChild(unloadBtn);
     btnContainer.appendChild(loadBtn);
+    btnContainer.append(updateBtn);
     btnContainer.appendChild(slider);
+    btnContainer.appendChild(harmonincsSlider);
+
 }
 
 examplePointClouds.forEach(setupUI);

@@ -31,7 +31,7 @@ function createWorker(type: WorkerType): Worker {
 
 export class WorkerPool {
 	// Workers will be an object that has a key for each worker type and the value is an array of Workers that can be empty
-	private workers: { [key in WorkerType]: Worker[] } = {DECODER_WORKER: [], DECODER_WORKER_GLTF: []};
+	private workers: { [key in WorkerType]: Worker[] } = {DECODER_WORKER: [], DECODER_WORKER_GLTF: [], DECODER_WORKER_SPLATS: []};
 
 	getWorker(workerType: WorkerType): Worker {
 		// Throw error if workerType is not recognized

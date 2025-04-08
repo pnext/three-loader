@@ -1,9 +1,31 @@
-import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { MathUtils, 
+  Mesh, 
+  PerspectiveCamera, 
+  Scene, 
+  Vector2, 
+  WebGLRenderer, 
+  Raycaster,
+  WebGLRenderTarget,
+  NearestFilter,
+  SphereGeometry,
+  MeshBasicMaterial,
+  FloatType,
+  RGFormat,
+  Vector3
+ } from 'three';
+
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree, PotreeVersion } from '../src';
+import SplatsManager from "../src/splats-manager"
+
+
 
 export class Viewer {
+
+  public splatsManager = new SplatsManager();
+  public enableUpdate: boolean = true;
+
   /**
    * The element where we will insert our canvas.
    */
@@ -16,6 +38,8 @@ export class Viewer {
    * Our scene which will contain the point cloud.
    */
   scene: Scene = new Scene();
+  globalScene: Scene = new Scene();
+
   /**
    * The camera used to view the scene.
    */
@@ -42,16 +66,47 @@ export class Viewer {
    */
   private reqAnimationFrameHandle: number | undefined;
 
+  private rendererSize: Vector2 = new Vector2();
+
   /**
    * Initializes the viewer into the specified element.
    *
    * @param targetEl
    *    The element into which we should add the canvas where we will render the scene.
    */
-  initialize(targetEl: HTMLElement): void {
+
+  private IDRenderTarget: any;
+  private raycastSplat: any;
+  private elapsedTime: number = 0;
+  private raycaster = new Raycaster();
+
+  //Max amount of points available to render harmonics inside a 4096 x 4096 texture
+  //anything above 2.300.000 particles will require a higher texture and could break.
+  private pointBudget = 2300000;
+
+  async initialize(targetEl: HTMLElement): Promise<void> {
     if (this.targetEl || !targetEl) {
       return;
     }
+
+    this.potree_v2.pointBudget = this.pointBudget;
+
+    //setup the splats manager
+    this.globalScene = new Scene();
+
+    this.IDRenderTarget = new WebGLRenderTarget(1, 1, {
+      minFilter: NearestFilter,
+      magFilter: NearestFilter,
+      format: RGFormat,
+      type: FloatType,
+    });
+
+    const mat = new MeshBasicMaterial({ color: '#ffffff' });
+    mat.transparent = true;
+    const planeGeo = new SphereGeometry(1);
+    this.raycastSplat = new Mesh(planeGeo, mat);
+    this.raycastSplat.renderOrder = 100;
+    
 
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
@@ -61,7 +116,73 @@ export class Viewer {
     this.resize();
     window.addEventListener('resize', this.resize);
 
+    targetEl.addEventListener("mousedown", _=> {
+      this.elapsedTime = Date.now();
+    })
+
+    targetEl.addEventListener("mouseup", this.updateCameraTarget.bind(this));
+
     requestAnimationFrame(this.loop);
+  }
+
+  updateCameraTarget(e: any) {
+
+    if(!this.splatsManager.splatsEnabled) return;
+
+    let clickTime = Date.now();
+    let deltaTime = clickTime - this.elapsedTime;
+
+    if(deltaTime < 200) {
+
+      const rgba = new Float32Array(4);
+      const DPR = this.renderer?.getPixelRatio() || 1;
+      this.renderer?.readRenderTargetPixels(
+        this.IDRenderTarget,
+        e.clientX * DPR,
+        DPR * (window.innerHeight - e.clientY),
+        1,
+        1,
+        rgba,
+      );
+      const globalID = rgba[0];
+      const nodeID = rgba[1];
+
+      const splatData = this.splatsManager.getSplatData(globalID, nodeID);
+
+      if(splatData != null) {
+        let scale = splatData.scale;
+        if (scale.x === 0) scale.x = 0.0001;
+        if (scale.y === 0) scale.y = 0.0001;
+        if (scale.z === 0) scale.z = 0.0001;
+        scale.multiplyScalar(4);
+  
+        this.raycastSplat.position.copy(splatData.position);
+        this.raycastSplat.scale.copy(scale);
+        this.raycastSplat.quaternion.copy(splatData.orientation);
+  
+        this.raycastSplat.updateMatrix();
+        this.raycastSplat.updateMatrixWorld();
+  
+        let mousePosition = new Vector2(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
+        mousePosition.x = 2 * mousePosition.x - 1;
+        mousePosition.y = -2 * mousePosition.y + 1;
+        this.raycaster.setFromCamera(mousePosition, this.camera);
+  
+        const intersects = this.raycaster.intersectObject(this.raycastSplat);
+  
+        let center = new Vector3(Infinity, Infinity, Infinity);
+        if (intersects.length > 0) {
+          center = intersects[0].point;
+          this.cameraControls.target.copy(center);
+        } else {
+          this.cameraControls.target.copy(splatData.position);
+        }
+    
+        deltaTime = clickTime;
+      }
+
+    }
+
   }
 
   /**
@@ -92,6 +213,7 @@ export class Viewer {
    */
   load(fileName: string, baseUrl: string, version: PotreeVersion = "v1"): Promise<PointCloudOctree> {
     const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
+
     return loader.loadPointCloud(
       // The file name of the point cloud which is to be loaded.
       fileName,
@@ -109,6 +231,14 @@ export class Viewer {
     this.scene.remove(pointCloud);
     pointCloud.dispose();
     this.pointClouds = this.pointClouds.filter(pco => pco !== pointCloud);
+    this.globalScene.remove(this.splatsManager.mesh);
+    this.splatsManager.dispose();
+  }
+
+  async renderAsSplats(): Promise<Viewer> {
+    await this.splatsManager.initialize(this.pointBudget);
+    this.globalScene.add(this.splatsManager.mesh);
+    return this;
   }
 
   /**
@@ -122,20 +252,62 @@ export class Viewer {
     // camera control system.
     this.cameraControls.update();
 
-    // This is where most of the potree magic happens. It updates the
-    // visiblily of the octree nodes based on the camera frustum and it
-    // triggers any loads/unloads which are necessary to keep the number
-    // of visible points in check.
-    this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
-    this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    if(this.enableUpdate) {
+
+      // This is where most of the potree magic happens. It updates the
+      // visiblily of the octree nodes based on the camera frustum and it
+      // triggers any loads/unloads which are necessary to keep the number
+      // of visible points in check.
+      this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+      this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+
+      if(this.splatsManager.splatsEnabled && this.scene.children[0]) {
+
+        let mesh = this.scene.children[0].children[0] as Mesh;
+
+        if(mesh) {
+          this.renderer.getSize(this.rendererSize);
+          this.splatsManager.update(mesh, this.camera, this.rendererSize);
+        }
+
+      }
+      
+    }
+
+    if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera);
+
   }
 
   /**
    * Renders the scene into the canvas.
    */
   render(): void {
+
     this.renderer.clear();
+
+    //This is used to setup the different nodes of the Octree from Potree
     this.renderer.render(this.scene, this.camera);
+
+    if(this.splatsManager.splatsEnabled) {
+
+      const h = this.renderer.domElement.height || 1;
+      const w = this.renderer.domElement.width || 1;
+      this.IDRenderTarget.setSize(w, h);
+
+      //Setup the splats to render in ID mode
+      this.splatsManager.renderSplatsIDs(true);
+      this.renderer.setRenderTarget(this.IDRenderTarget);
+      this.renderer.clear();
+      // this.globalScene.remove(this.raycastSplat);
+      this.renderer.render(this.globalScene, this.camera);
+
+      this.splatsManager.renderSplatsIDs(false);
+      this.renderer.setRenderTarget(null);
+
+      this.renderer.render(this.globalScene, this.camera);
+
+    }
+
   }
 
   /**
@@ -166,5 +338,24 @@ export class Viewer {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+
+    const size = new Vector2();
+    this.renderer.getSize(size);
+
   };
+
+  computeFocalLengths = (width: number, height: number, fov: number, aspect: number, dpr: number) => {
+
+    // console.log(width, height, fov, aspect, dpr);
+
+    const fovRad = MathUtils.degToRad(fov);
+    const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
+    const fy = (dpr * height) / (2 * Math.tan(fovRad / 2));
+    const fx = (dpr * width) / (2 * Math.tan(fovXRad / 2));
+
+    // console.log(fovRad, fovXRad, fy, fx);
+
+    return new Vector2(fx, fy);
+  };
+
 }

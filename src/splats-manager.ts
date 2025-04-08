@@ -428,6 +428,8 @@ export default class SplatsManager {
 
     dispose() {
 
+        if(!this.enabled) return;
+
         //Terminate the sorter
         this.sorter.terminate();
         this.sorter = null;
