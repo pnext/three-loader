@@ -3,6 +3,7 @@
 export enum WorkerType {
 	DECODER_WORKER = 'DECODER_WORKER',
 	DECODER_WORKER_GLTF = 'DECODER_WORKER_GLTF',
+	DECODER_WORKER_SPLATS = 'DECODER_WORKER_SPLATS',
 }
 
 // Worker JS names: 'BinaryDecoderWorker.js', 'DEMWorker.js', 'EptBinaryDecoderWorker.js', 'EptLaszipDecoderWorker.js',
@@ -17,6 +18,10 @@ function createWorker(type: WorkerType): Worker {
 	}
 	case WorkerType.DECODER_WORKER_GLTF: {
 		const DecoderWorker_GLTF = require('./gltf-decoder.worker.js').default;
+		return new DecoderWorker_GLTF();
+	}
+	case WorkerType.DECODER_WORKER_SPLATS: {
+		const DecoderWorker_GLTF = require('./gltf-splats-decoder.worker.js').default;
 		return new DecoderWorker_GLTF();
 	}
 	default:

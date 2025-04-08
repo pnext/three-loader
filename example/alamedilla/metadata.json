@@ -1,0 +1,308 @@
+{
+    "attributes": [
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "center.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "max": [
+                350763.4476737976,
+                4507768.384063721,
+                1265.1477208137512
+            ],
+            "min": [
+                350696.8144197464,
+                4507694.835056305,
+                1257.0673818588257
+            ],
+            "name": "position",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 17185736,
+                "byteOffset": 0,
+                "uri": "opacity.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "opacity",
+            "numElements": 1,
+            "size": 4,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 68742944,
+                "byteOffset": 0,
+                "uri": "rotation.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "rotation",
+            "numElements": 4,
+            "size": 16,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "scale.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "scale",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_0.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_0",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_1_triplet_0.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_1_triplet_0",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_1_triplet_1.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_1_triplet_1",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_1_triplet_2.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_1_triplet_2",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_2_triplet_0.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_2_triplet_0",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_2_triplet_1.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_2_triplet_1",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_2_triplet_2.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_2_triplet_2",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_2_triplet_3.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_2_triplet_3",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_2_triplet_4.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_2_triplet_4",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_0.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_0",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_1.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_1",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_2.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_2",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_3.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_3",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_4.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_4",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_5.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_5",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        },
+        {
+            "bufferView": {
+                "byteLength": 51557208,
+                "byteOffset": 0,
+                "uri": "sh_band_3_triplet_6.glbin"
+            },
+            "description": "",
+            "elementSize": 4,
+            "name": "sh_band_3_triplet_6",
+            "numElements": 3,
+            "size": 12,
+            "type": "float"
+        }
+    ],
+    "boundingBox": {
+        "max": [
+            350766.9055557251,
+            4507768.384067535,
+            1330.0597534179688
+        ],
+        "min": [
+            350693.3565425873,
+            4507694.835056305,
+            1256.5107383728027
+        ]
+    },
+    "description": "Generated with OPF glTF converter version 0.0.0-dev",
+    "encoding": "GLTF",
+    "hierarchy": {
+        "depth": 3,
+        "firstChunkSize": 1122,
+        "stepSize": 3
+    },
+    "name": "Pix4D Converted",
+    "offset": [
+        350709.0,
+        4507714.0,
+        1260.0
+    ],
+    "points": 4296434,
+    "projection": "",
+    "scale": [
+        1.0,
+        1.0,
+        1.0
+    ],
+    "spacing": 0.04252832010388374,
+    "version": "2.0"
+}
