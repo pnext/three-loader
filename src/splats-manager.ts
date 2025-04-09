@@ -66,12 +66,13 @@ export default class SplatsManager {
 
     private indexesBuffer: any;
 
-    private timeout: any;
+    // private timeout: any;
     private enableScale = false;
     private dataUpdated = false;
 
     private textures: Array<Texture> = new Array();
     private enabled: boolean = false;
+    private texturesNeedUpdate = false;
     
     rendererSize = new Vector2();
 
@@ -256,7 +257,7 @@ export default class SplatsManager {
         .sub(this.lastSortViewPos)
         .length();
 
-        if(positionDiff < 2.) return;
+        if(positionDiff < 0.) return;
 
         this.lastUpdateViewPos.copy(camera.position);
         this.dataUpdated = true;
@@ -275,15 +276,15 @@ export default class SplatsManager {
 
         this.forceSorting = false;
       
-        if(nodesAsString != this.nodesAsString) {
+        if(nodesAsString != this.nodesAsString && this.enableSorting) {
         
             this.nodesAsString = nodesAsString;
 
             instanceCount = 0;
             nodesCount = 0;
 
-            this.mesh.material.uniforms["splatScale"].value = 0.1;
-            this.enableScale = false;
+            // this.mesh.material.uniforms["splatScale"].value = 0.1;
+            // this.enableScale = false;
 
             mesh.traverseVisible(el => {
 
@@ -314,23 +315,22 @@ export default class SplatsManager {
                 instanceCount += g.drawRange.count;
                 nodesCount ++;
 
+                this.texturesNeedUpdate = true;
+
             })
 
             this.mesh.geometry.instanceCount = instanceCount;
 
-            this.textures.map(text => text.needsUpdate = true);
-
-            clearTimeout(this.timeout);
-            this.timeout = setTimeout(() => {
-                this.enableScale = true;
-                this.forceSorting = true;
-            }, 500);
+            this.enableScale = true;
+            this.forceSorting = true;
 
       }
     
     }
 
     sortSplats(camera: Camera) {
+
+        return;
         
         if(!this.dataUpdated || this.mesh == null || this.mesh.geometry.instanceCount == Infinity) return;
 
@@ -373,8 +373,13 @@ export default class SplatsManager {
 
                 let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
                 indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
-
                 indexAttribute.needsUpdate = true;
+
+                if(this.texturesNeedUpdate) {
+                    this.textures.map(text => text.needsUpdate = true);
+                    this.texturesNeedUpdate = false;
+                }
+                
                 this.enableSorting = true;
             }
 

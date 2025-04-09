@@ -82,7 +82,7 @@ export class Viewer {
 
   //Max amount of points available to render harmonics inside a 4096 x 4096 texture
   //anything above 2.300.000 particles will require a higher texture and could break.
-  private pointBudget = 2300000;
+  private pointBudget = 1000000;
 
   async initialize(targetEl: HTMLElement): Promise<void> {
     if (this.targetEl || !targetEl) {
@@ -91,8 +91,12 @@ export class Viewer {
 
     this.potree_v2.pointBudget = this.pointBudget;
 
+    await this.splatsManager.initialize(this.pointBudget);
+
     //setup the splats manager
     this.globalScene = new Scene();
+    this.globalScene.add(this.splatsManager.mesh);
+
 
     this.IDRenderTarget = new WebGLRenderTarget(1, 1, {
       minFilter: NearestFilter,
@@ -236,8 +240,7 @@ export class Viewer {
   }
 
   async renderAsSplats(): Promise<Viewer> {
-    await this.splatsManager.initialize(this.pointBudget);
-    this.globalScene.add(this.splatsManager.mesh);
+
     return this;
   }
 

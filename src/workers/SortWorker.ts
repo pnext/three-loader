@@ -76,7 +76,7 @@ function sortWorker(self: any) {
 
     }
 
-    function startWasmModule(_splatCount: number) {
+    async function startWasmModule(_splatCount: number) {
 
         splatCount = _splatCount;
 
@@ -123,31 +123,31 @@ function sortWorker(self: any) {
           };
     
         //Setup the loading url for this!  
-        WebAssembly.instantiateStreaming(fetch("http://localhost:8081/sorter_test.wasm"), sorterWasmImport).then(result => {
-            
-            //Save the instance of the WASM to use
-            wasmInstance = result.instance;
+        const response = await fetch("https://mdbm.es/sorter_test.wasm");
+        const buffer = await response.arrayBuffer();
+        const result = await WebAssembly.instantiate(buffer, sorterWasmImport);
 
-            //Retrieve the memory used in the C module.
-            wasmMemory = sorterWasmImport.env.memory.buffer;
+        //Save the instance of the WASM to use
+        wasmInstance = result.instance;
 
-            indices = new Int32Array(splatCount);
-            for(let i = 0; i < splatCount; i++) {
-              indices[i] = i;
-            }
+        //Retrieve the memory used in the C module.
+        wasmMemory = sorterWasmImport.env.memory.buffer;
 
-            //Define the offsets used to allocate the data inside memory.
-            indexesToSortOffset = 0;
-            centersOffset = indexesToSortOffset + memoryRequiredForIndexesToSort;
-            modelViewProjOffset = centersOffset + memoryRequiredForCenters;
-            mappedDistancesOffset = modelViewProjOffset + memoryRequiredForModelViewProjectionMatrix;
-            frequenciesOffset = mappedDistancesOffset + memoryRequiredForMappedDistances;
-            sortedIndexesOffset = frequenciesOffset + memoryRequiredForIntermediateSortBuffers;
-        
-            self.postMessage({
-              sorterReady: true
-            });
+        indices = new Int32Array(splatCount);
+        for(let i = 0; i < splatCount; i++) {
+          indices[i] = i;
+        }
 
+        //Define the offsets used to allocate the data inside memory.
+        indexesToSortOffset = 0;
+        centersOffset = indexesToSortOffset + memoryRequiredForIndexesToSort;
+        modelViewProjOffset = centersOffset + memoryRequiredForCenters;
+        mappedDistancesOffset = modelViewProjOffset + memoryRequiredForModelViewProjectionMatrix;
+        frequenciesOffset = mappedDistancesOffset + memoryRequiredForMappedDistances;
+        sortedIndexesOffset = frequenciesOffset + memoryRequiredForIntermediateSortBuffers;
+    
+        self.postMessage({
+          sorterReady: true
         });
     }
 }

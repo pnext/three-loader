@@ -31,7 +31,7 @@ const examplePointClouds: PointCloudsConfig[] = [
         file: 'metadata.json',
         //url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
         // url: 'http://localhost:8080/gaussian/gltf/converted/',
-        url: 'http://localhost:8081/alamedilla/',
+        url: 'https://www.mdbm.es/cristales_noria/',
         version: 'v2',
         splats: true
     }
@@ -66,8 +66,8 @@ function createSlider(version: string): HTMLInputElement {
     const slider: HTMLInputElement = document.createElement('input');
     slider.type = 'range';
     slider.min = '10000';
-    slider.max = '2000000';
-    slider.value = '2000000';
+    slider.max = '1000000';
+    slider.value = '1000000';
     slider.className = 'budget-slider';
     slider.addEventListener('change', () => {
         const cloud = pointClouds[version];
@@ -117,12 +117,12 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, splats
             const camera = viewer.camera;
             camera.far = 1000;
             camera.updateProjectionMatrix();
-            camera.position.set(5, 2, -2.5);
+            camera.position.set(50, 10, -10);
             camera.lookAt(new Vector3());
 
+            console.log(splats);
             viewer.add(pco);
-        }).then(async _ => {if(splats) await viewer.renderAsSplats()}
-        )
+        })
         .catch(err => console.error(err));
 }
 
