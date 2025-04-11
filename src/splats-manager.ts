@@ -65,10 +65,6 @@ export default class SplatsManager {
 
     private indexesBuffer: any;
 
-    // private timeout: any;
-    private enableScale = false;
-    private dataUpdated = false;
-
     private textures: Array<Texture> = new Array();
     private enabled: boolean = false;
     private texturesNeedUpdate = false;
@@ -251,14 +247,7 @@ export default class SplatsManager {
         material.uniforms.focal.value.set(
             focalLengthX,
             focalLengthY,
-        );
-
-        if(this.mesh.material.uniforms["splatScale"].value <= 1 && this.enableScale) {
-            this.mesh.material.uniforms["splatScale"].value += 0.02;
-        }
-
-        this.dataUpdated = true;
-      
+        );      
 
         let instanceCount = 0;
         let nodesCount = 0;
@@ -290,9 +279,6 @@ export default class SplatsManager {
 
             instanceCount = 0;
             nodesCount = 0;
-
-            // this.mesh.material.uniforms["splatScale"].value = 0.1;
-            // this.enableScale = false;
 
             mesh.traverseVisible(el => {
 
@@ -326,9 +312,8 @@ export default class SplatsManager {
                 instanceCount += g.drawRange.count;
                 nodesCount ++;
 
-                this.texturesNeedUpdate = true;
-
             })
+
 
             totalMemoryInDisplay = instanceCount * 56;
 
@@ -339,16 +324,18 @@ export default class SplatsManager {
 
             this.instanceCount = instanceCount;
 
-            this.enableScale = true;
+            this.texturesNeedUpdate = true;
             this.forceSorting = true;
+
+            this.sortSplats(camera, 100);
 
       }
     
     }
 
-    sortSplats(camera: Camera) {
+    sortSplats(camera: Camera, waitToRender: number = 0) {
         
-        if(!this.dataUpdated || this.mesh == null || this.instanceCount == 0) return;
+        if(this.mesh == null || this.instanceCount == 0) return;
 
         let mvpMatrix = new Matrix4();
         camera.updateMatrixWorld();
@@ -379,6 +366,7 @@ export default class SplatsManager {
             this.sorter.postMessage({
                 sort: sortMessage
             })
+
             this.enableSorting = false;
             this.forceSorting = false;
 
@@ -387,19 +375,34 @@ export default class SplatsManager {
                 if(e.data.dataSorted) {
 
                     if(e.data.dataSorted != null) {
+
+
+
                         let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
                         indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
                         indexAttribute.needsUpdate = true;
-    
+
                         if(this.texturesNeedUpdate) {
                             this.textures.map(text => text.needsUpdate = true);
                             this.texturesNeedUpdate = false;
                         }
     
                         this.mesh.geometry.instanceCount = this.instanceCount;
+    
+                        setTimeout( ()=> {
+            
+                            this.enableSorting = true;
+
+                        }, waitToRender);
+    
+                    } else {
+
+                        this.enableSorting = true;
+
                     }
 
-                    this.enableSorting = true;
+                    
+
                 }
 
             }

@@ -292,11 +292,17 @@ export class Viewer {
 
       }
       
+    } else {
+
+      console.log("sorting");
+
+      if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera, 0);
+
     }
 
     this.lastUpdateViewPos.copy(this.camera.position);
 
-    if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera);
+    
 
   }
 
