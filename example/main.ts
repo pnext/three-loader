@@ -96,13 +96,19 @@ function createHarmonicsSlider(): HTMLInputElement {
 }
 
 
-function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
+function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, isSplats: boolean): void {
     if (loaded[version]) {
         return;
     }
     loaded[version] = true;
 
-    viewer.load(file, url, 'v2', true)
+    //TODO: check for mobile, not noly IOS
+    function isIOS() {
+        const ua = navigator.userAgent;
+        return ua.indexOf('iPhone') > 0 || ua.indexOf('iPad') > 0;
+    }
+
+    viewer.load(file, url, 'v2', isSplats, !isIOS())
         .then(pco => {
             pointClouds[version] = pco;
             pco.rotateX(-Math.PI / 2);
@@ -116,10 +122,9 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
 
             const camera = viewer.camera;
             camera.far = 200;
-            console.log(camera);
             camera.updateProjectionMatrix();
-            camera.position.set(50, 10, -10);
-            camera.lookAt(new Vector3());
+            camera.position.set(16, 4, -6);
+            camera.lookAt(new Vector3(9, 3, -6.5));
 
             viewer.add(pco);
         })
@@ -159,7 +164,7 @@ function setupUI(cfg: PointCloudsConfig): void {
 
     const loadBtn = createButton('Load', (e: MouseEvent) => {
         e.stopPropagation();
-        setupPointCloud(cfg.version, cfg.file, cfg.url)
+        setupPointCloud(cfg.version, cfg.file, cfg.url, cfg.splats)
         }
     );
 

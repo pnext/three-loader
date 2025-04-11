@@ -114,6 +114,7 @@ export class Viewer {
     targetEl.appendChild(this.renderer.domElement);
 
     this.cameraControls = new OrbitControls(this.camera, this.targetEl);
+    this.cameraControls.target.set(9, 3, -6.5);
 
     this.resize();
     window.addEventListener('resize', this.resize);
@@ -213,11 +214,13 @@ export class Viewer {
    * @param baseUrl
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
-  async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", loadHarmonics: boolean = false): Promise<PointCloudOctree> {
+  async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", isSplats: boolean = false, loadHarmonics: boolean = false): Promise<PointCloudOctree> {
     const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
 
-    await this.splatsManager.initialize(this.pointBudget, loadHarmonics);
-    this.globalScene.add(this.splatsManager.mesh);
+    if(isSplats) {
+      await this.splatsManager.initialize(this.pointBudget, loadHarmonics);
+      this.globalScene.add(this.splatsManager.mesh);
+    }
 
     return loader.loadPointCloud(
       // The file name of the point cloud which is to be loaded.
