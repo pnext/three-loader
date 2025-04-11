@@ -31,7 +31,7 @@ const examplePointClouds: PointCloudsConfig[] = [
         file: 'metadata.json',
         //url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
         // url: 'http://localhost:8080/gaussian/gltf/converted/',
-        url: 'https://www.mdbm.es/cristales_noria/',
+        url: 'https://www.mdbm.es/alamedilla/',
         version: 'v2',
         splats: true
     }
@@ -96,13 +96,13 @@ function createHarmonicsSlider(): HTMLInputElement {
 }
 
 
-function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, splats: boolean): void {
+function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
     if (loaded[version]) {
         return;
     }
     loaded[version] = true;
 
-    viewer.load(file, url, 'v2')
+    viewer.load(file, url, 'v2', true)
         .then(pco => {
             pointClouds[version] = pco;
             pco.rotateX(-Math.PI / 2);
@@ -115,12 +115,12 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, splats
             pco.position.set(0, 0, 0);
 
             const camera = viewer.camera;
-            camera.far = 1000;
+            camera.far = 200;
+            console.log(camera);
             camera.updateProjectionMatrix();
             camera.position.set(50, 10, -10);
             camera.lookAt(new Vector3());
 
-            console.log(splats);
             viewer.add(pco);
         })
         .catch(err => console.error(err));
@@ -159,7 +159,7 @@ function setupUI(cfg: PointCloudsConfig): void {
 
     const loadBtn = createButton('Load', (e: MouseEvent) => {
         e.stopPropagation();
-        setupPointCloud(cfg.version, cfg.file, cfg.url, cfg.splats)
+        setupPointCloud(cfg.version, cfg.file, cfg.url)
         }
     );
 

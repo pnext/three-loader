@@ -4,7 +4,7 @@ function sortWorker(self: any) {
     const MemoryPageSize = 65536;
     const BytesPerFloat = 4;
     const BytesPerInt = 4;
-    const DefaultSplatSortDistanceMapPrecision = 24;
+    const DefaultSplatSortDistanceMapPrecision = 14;
 
     // let centersReady = false;
     let wasmInstance: any; 

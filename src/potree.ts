@@ -38,7 +38,7 @@ export class QueueItem {
   ) { }
 }
 
-type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>) => Promise<PCOGeometry>
+type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>, loadHarmonics: boolean) => Promise<PCOGeometry>
 
 const GEOMETRY_LOADERS = {
   v1: loadPOC,
@@ -66,8 +66,9 @@ export class Potree implements IPotree {
     url: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+    loadHarmonics: boolean = false
   ): Promise<PointCloudOctree> {
-    return this.loadGeometry(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(geometry => new PointCloudOctree(this, geometry));
   }
 
   updatePointClouds(

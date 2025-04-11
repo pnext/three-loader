@@ -28,7 +28,7 @@ export class NodeLoader {
 
 	isSplats: boolean = false;
 
-	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata) {
+	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata, public harmonicsEnabled: boolean = false) {
 		metadata.attributes.map(attr => {
 			if(attr.name == "sh_band_0") this.isSplats = true;
 		})
@@ -87,32 +87,44 @@ export class NodeLoader {
 
 				} else {
 
-					const urls: Record<string, string> = {
+					let urls : Record<string, string>;
+
+					urls = {
 						positions: await this.getUrl(this.gltfPositionsPath),
 						colors: await this.getUrl('sh_band_0.glbin'),
 						opacities: await this.getUrl('opacity.glbin'),
 						scales: await this.getUrl('scale.glbin'),
 						rotations: await this.getUrl('rotation.glbin'),
-	
-						//For the spherical harmonics
-						shBand1_0: await this.getUrl('sh_band_1_triplet_0.glbin'),
-						shBand1_1: await this.getUrl('sh_band_1_triplet_1.glbin'),
-						shBand1_2: await this.getUrl('sh_band_1_triplet_2.glbin'),
-	
-						shBand2_0: await this.getUrl('sh_band_2_triplet_0.glbin'),
-						shBand2_1: await this.getUrl('sh_band_2_triplet_1.glbin'),
-						shBand2_2: await this.getUrl('sh_band_2_triplet_2.glbin'),
-						shBand2_3: await this.getUrl('sh_band_2_triplet_3.glbin'),
-						shBand2_4: await this.getUrl('sh_band_2_triplet_4.glbin'),
-	
-						shBand3_0: await this.getUrl('sh_band_3_triplet_0.glbin'),
-						shBand3_1: await this.getUrl('sh_band_3_triplet_1.glbin'),
-						shBand3_2: await this.getUrl('sh_band_3_triplet_2.glbin'),
-						shBand3_3: await this.getUrl('sh_band_3_triplet_3.glbin'),
-						shBand3_4: await this.getUrl('sh_band_3_triplet_4.glbin'),
-						shBand3_5: await this.getUrl('sh_band_3_triplet_5.glbin'),
-						shBand3_6: await this.getUrl('sh_band_3_triplet_6.glbin'),
 					};
+
+					if(this.harmonicsEnabled) {
+
+						urls = {
+							positions: await this.getUrl(this.gltfPositionsPath),
+							colors: await this.getUrl('sh_band_0.glbin'),
+							opacities: await this.getUrl('opacity.glbin'),
+							scales: await this.getUrl('scale.glbin'),
+							rotations: await this.getUrl('rotation.glbin'),
+							shBand1_0: await this.getUrl('sh_band_1_triplet_0.glbin'),
+							shBand1_1: await this.getUrl('sh_band_1_triplet_1.glbin'),
+							shBand1_2: await this.getUrl('sh_band_1_triplet_2.glbin'),
+		
+							shBand2_0: await this.getUrl('sh_band_2_triplet_0.glbin'),
+							shBand2_1: await this.getUrl('sh_band_2_triplet_1.glbin'),
+							shBand2_2: await this.getUrl('sh_band_2_triplet_2.glbin'),
+							shBand2_3: await this.getUrl('sh_band_2_triplet_3.glbin'),
+							shBand2_4: await this.getUrl('sh_band_2_triplet_4.glbin'),
+		
+							shBand3_0: await this.getUrl('sh_band_3_triplet_0.glbin'),
+							shBand3_1: await this.getUrl('sh_band_3_triplet_1.glbin'),
+							shBand3_2: await this.getUrl('sh_band_3_triplet_2.glbin'),
+							shBand3_3: await this.getUrl('sh_band_3_triplet_3.glbin'),
+							shBand3_4: await this.getUrl('sh_band_3_triplet_4.glbin'),
+							shBand3_5: await this.getUrl('sh_band_3_triplet_5.glbin'),
+							shBand3_6: await this.getUrl('sh_band_3_triplet_6.glbin'),
+						};
+
+					}
 	
 					const offsets: Record<string, bigint> = {
 						positions: 3n,
@@ -164,7 +176,7 @@ export class NodeLoader {
 							opacities,
 							scales,
 							rotations,
-	
+
 							shBand1_0,
 							shBand1_1,
 							shBand1_2,
@@ -190,23 +202,25 @@ export class NodeLoader {
 						buffer = appendBuffer(buffer, scales);
 						buffer = appendBuffer(buffer, rotations);
 	
-						buffer = appendBuffer(buffer, shBand1_0);
-						buffer = appendBuffer(buffer, shBand1_1);
-						buffer = appendBuffer(buffer, shBand1_2);
-	
-						buffer = appendBuffer(buffer, shBand2_0);
-						buffer = appendBuffer(buffer, shBand2_1);
-						buffer = appendBuffer(buffer, shBand2_2);
-						buffer = appendBuffer(buffer, shBand2_3);
-						buffer = appendBuffer(buffer, shBand2_4);
-	
-						buffer = appendBuffer(buffer, shBand3_0);
-						buffer = appendBuffer(buffer, shBand3_1);
-						buffer = appendBuffer(buffer, shBand3_2);
-						buffer = appendBuffer(buffer, shBand3_3);
-						buffer = appendBuffer(buffer, shBand3_4);
-						buffer = appendBuffer(buffer, shBand3_5);
-						buffer = appendBuffer(buffer, shBand3_6);
+						if(this.harmonicsEnabled) {
+							buffer = appendBuffer(buffer, shBand1_0);
+							buffer = appendBuffer(buffer, shBand1_1);
+							buffer = appendBuffer(buffer, shBand1_2);
+		
+							buffer = appendBuffer(buffer, shBand2_0);
+							buffer = appendBuffer(buffer, shBand2_1);
+							buffer = appendBuffer(buffer, shBand2_2);
+							buffer = appendBuffer(buffer, shBand2_3);
+							buffer = appendBuffer(buffer, shBand2_4);
+		
+							buffer = appendBuffer(buffer, shBand3_0);
+							buffer = appendBuffer(buffer, shBand3_1);
+							buffer = appendBuffer(buffer, shBand3_2);
+							buffer = appendBuffer(buffer, shBand3_3);
+							buffer = appendBuffer(buffer, shBand3_4);
+							buffer = appendBuffer(buffer, shBand3_5);
+							buffer = appendBuffer(buffer, shBand3_6);
+						}
 					}
 				}
 
@@ -310,16 +324,20 @@ export class NodeLoader {
 							geometry.setAttribute('POS_COLOR', new BufferAttribute(new Uint32Array(buffer), 4));
 						}	
 
-						else if (property === "HARMONICS1") {
-							geometry.setAttribute('HARMONICS1', new BufferAttribute(new Uint32Array(buffer), 3));
-						}
+						if(this.harmonicsEnabled) {
 
-						else if (property === "HARMONICS2") {
-							geometry.setAttribute('HARMONICS2', new BufferAttribute(new Uint32Array(buffer), 5));
-						}
+							if (property === "HARMONICS1") {
+								geometry.setAttribute('HARMONICS1', new BufferAttribute(new Uint32Array(buffer), 3));
+							}
 
-						else if (property === "HARMONICS3") {
-							geometry.setAttribute('HARMONICS3', new BufferAttribute(new Uint32Array(buffer), 7));
+							else if (property === "HARMONICS2") {
+								geometry.setAttribute('HARMONICS2', new BufferAttribute(new Uint32Array(buffer), 5));
+							}
+
+							else if (property === "HARMONICS3") {
+								geometry.setAttribute('HARMONICS3', new BufferAttribute(new Uint32Array(buffer), 7));
+							}
+
 						}
 					}
 
@@ -354,7 +372,8 @@ export class NodeLoader {
 				max: max,
 				size: size,
 				offset: offset,
-				numPoints: numPoints
+				numPoints: numPoints,
+				harmonicsEnabled: this.harmonicsEnabled
 			};
 
 			worker.postMessage(message, [message.buffer]);
@@ -568,13 +587,16 @@ export class OctreeLoader {
 	gltfColorsPath = '';
 	gltfPositionsPath = '';
 
+	harmonicsEnabled: boolean = false;
+
 	getUrl: GetUrlFn;
 
-	constructor(getUrl: GetUrlFn, url: string) {
+	constructor(getUrl: GetUrlFn, url: string, loadHarmonics: boolean = false) {
 		this.getUrl = getUrl;
 		this.basePath = extractBasePath(url);
 		this.hierarchyPath = buildUrl(this.basePath, HIERARCHY_FILE);
 		this.octreePath = buildUrl(this.basePath, OCTREE_FILE);
+		this.harmonicsEnabled = loadHarmonics;
 
 		// We default to the known naming convention for glTF datasets
 		this.gltfColorsPath = buildUrl(this.basePath, GLTF_COLORS_FILE);
@@ -669,7 +691,7 @@ export class OctreeLoader {
 	}
 
 	private createLoader(url: string, metadata: Metadata, attributes: any): NodeLoader {
-		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata);
+		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata, this.harmonicsEnabled);
 		loader.attributes = attributes;
 		loader.scale = metadata.scale;
 		loader.offset = metadata.offset;

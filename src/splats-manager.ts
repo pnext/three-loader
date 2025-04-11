@@ -59,8 +59,7 @@ export default class SplatsManager {
     private lastSortViewDir = new Vector3(0, 0, -1);
     private sortViewDir = new Vector3(0, 0, -1);
     private lastSortViewPos = new Vector3();
-    private lastUpdateViewPos = new Vector3();
-    private updateViewOffset = new Vector3();
+
     private sortViewOffset = new Vector3();
     private enableSorting = true;
 
@@ -73,10 +72,16 @@ export default class SplatsManager {
     private textures: Array<Texture> = new Array();
     private enabled: boolean = false;
     private texturesNeedUpdate = false;
+
+    private instanceCount: number = 0;
     
     rendererSize = new Vector2();
 
-    async initialize(maxPointBudget: number) {
+    private harmonicsEnabled: boolean = false;
+
+    async initialize(maxPointBudget: number, renderHamonics = false) {
+
+        this.harmonicsEnabled = renderHamonics
 
         this.sorter = await createSortWorker(maxPointBudget);
 
@@ -252,25 +257,26 @@ export default class SplatsManager {
             this.mesh.material.uniforms["splatScale"].value += 0.02;
         }
 
-        let positionDiff = this.updateViewOffset
-        .copy(camera.position)
-        .sub(this.lastSortViewPos)
-        .length();
-
-        if(positionDiff < 0.) return;
-
-        this.lastUpdateViewPos.copy(camera.position);
         this.dataUpdated = true;
       
 
         let instanceCount = 0;
         let nodesCount = 0;
         let nodesAsString = "";
+        
 
-        mesh.traverseVisible(el => {
+        // let totalMemoryUsed = 0;
+        // let totalMemoryInDisplay = 0;
+
+        mesh.traverse(el => {
             let m = el as Mesh;
             let g = m.geometry as BufferGeometry;
             instanceCount += g.drawRange.count;
+        });
+
+        // totalMemoryUsed = instanceCount * 56;
+
+        mesh.traverseVisible(el => {
             nodesAsString += el.name;
         });
 
@@ -279,6 +285,8 @@ export default class SplatsManager {
         if(nodesAsString != this.nodesAsString && this.enableSorting) {
         
             this.nodesAsString = nodesAsString;
+
+            // console.log(nodesAsString);
 
             instanceCount = 0;
             nodesCount = 0;
@@ -308,9 +316,12 @@ export default class SplatsManager {
                 this.bufferCovariance0.set(g.getAttribute("COVARIANCE0").array, instanceCount * 4);
                 this.bufferCovariance1.set(g.getAttribute("COVARIANCE1").array, instanceCount * 2);
                 this.bufferPosColor.set(g.getAttribute("POS_COLOR").array, instanceCount * 4);
-                this.bufferHarmonics1.set(g.getAttribute("HARMONICS1").array, instanceCount * 3);
-                this.bufferHarmonics2.set(g.getAttribute("HARMONICS2").array, instanceCount * 5);
-                this.bufferHarmonics3.set(g.getAttribute("HARMONICS3").array, instanceCount * 7);
+
+                if(this.harmonicsEnabled) {
+                    this.bufferHarmonics1.set(g.getAttribute("HARMONICS1").array, instanceCount * 3);
+                    this.bufferHarmonics2.set(g.getAttribute("HARMONICS2").array, instanceCount * 5);
+                    this.bufferHarmonics3.set(g.getAttribute("HARMONICS3").array, instanceCount * 7);
+                }
 
                 instanceCount += g.drawRange.count;
                 nodesCount ++;
@@ -319,7 +330,14 @@ export default class SplatsManager {
 
             })
 
-            this.mesh.geometry.instanceCount = instanceCount;
+            // totalMemoryInDisplay = instanceCount * 56;
+
+            // console.log("-----------------------------------------------------");
+            // console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
+            // console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
+            // console.log("-----------------------------------------------------");
+
+            this.instanceCount = instanceCount;
 
             this.enableScale = true;
             this.forceSorting = true;
@@ -329,10 +347,8 @@ export default class SplatsManager {
     }
 
     sortSplats(camera: Camera) {
-
-        return;
         
-        if(!this.dataUpdated || this.mesh == null || this.mesh.geometry.instanceCount == Infinity) return;
+        if(!this.dataUpdated || this.mesh == null || this.instanceCount == 0) return;
 
         let mvpMatrix = new Matrix4();
         camera.updateMatrixWorld();
@@ -357,31 +373,33 @@ export default class SplatsManager {
                 indices: this.indexesBuffer,
                 centers: this.bufferCenters,
                 modelViewProj: mvpMatrix.elements,
-                totalSplats: this.mesh.geometry.instanceCount
+                totalSplats: this.instanceCount
             }
 
             this.sorter.postMessage({
-            sort: sortMessage
+                sort: sortMessage
             })
             this.enableSorting = false;
             this.forceSorting = false;
 
             this.sorter.onmessage = (e: any) => {
             
-            //pass the centers information
-            if(e.data.dataSorted ) {
+                if(e.data.dataSorted ) {
 
-                let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
-                indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
-                indexAttribute.needsUpdate = true;
+                    let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
+                    indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
+                    indexAttribute.needsUpdate = true;
 
-                if(this.texturesNeedUpdate) {
-                    this.textures.map(text => text.needsUpdate = true);
-                    this.texturesNeedUpdate = false;
+                    if(this.texturesNeedUpdate) {
+                        this.textures.map(text => text.needsUpdate = true);
+                        this.texturesNeedUpdate = false;
+                    }
+
+                    this.mesh.geometry.instanceCount = this.instanceCount;
+
+
+                    this.enableSorting = true;
                 }
-                
-                this.enableSorting = true;
-            }
 
             }
         

@@ -31,9 +31,10 @@ export class PointCloudOctreeNode extends EventDispatcher implements IPointCloud
 
       // tslint:disable-next-line:forin
       for (const key in attributes) {
-        if (key === 'position') {
+        //if (key === 'position') {
+        console.log(key);
           delete (attributes[key] as any).array;
-        }
+        //}
 
         delete attributes[key];
       }

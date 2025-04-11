@@ -16,7 +16,7 @@ const typedArrayMapping = {
 
 onmessage = function (event) {
 
-	const { buffer, pointAttributes, scale, name, min, max, size, offset, numPoints } = event.data;
+	const { buffer, pointAttributes, scale, name, min, max, size, offset, numPoints, harmonicsEnabled } = event.data;
 
 	const view = new DataView(buffer);
 
@@ -226,7 +226,7 @@ onmessage = function (event) {
 		} 
 		
 		//For the spherical harmonics
-		else if (pointAttribute.name.indexOf("triplet") > -1) {
+		else if (pointAttribute.name.indexOf("triplet") > -1 && harmonicsEnabled) {
 
 			for (let j = 0; j < numPoints; j++) {
 			

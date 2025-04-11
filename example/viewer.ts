@@ -79,10 +79,12 @@ export class Viewer {
   private raycastSplat: any;
   private elapsedTime: number = 0;
   private raycaster = new Raycaster();
+  private lastUpdateViewPos = new Vector3();
+  private updateViewOffset = new Vector3();
 
   //Max amount of points available to render harmonics inside a 4096 x 4096 texture
   //anything above 2.300.000 particles will require a higher texture and could break.
-  private pointBudget = 1000000;
+  private pointBudget = 1200000;
 
   async initialize(targetEl: HTMLElement): Promise<void> {
     if (this.targetEl || !targetEl) {
@@ -91,12 +93,8 @@ export class Viewer {
 
     this.potree_v2.pointBudget = this.pointBudget;
 
-    await this.splatsManager.initialize(this.pointBudget);
-
     //setup the splats manager
     this.globalScene = new Scene();
-    this.globalScene.add(this.splatsManager.mesh);
-
 
     this.IDRenderTarget = new WebGLRenderTarget(1, 1, {
       minFilter: NearestFilter,
@@ -215,14 +213,20 @@ export class Viewer {
    * @param baseUrl
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
-  load(fileName: string, baseUrl: string, version: PotreeVersion = "v1"): Promise<PointCloudOctree> {
+  async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", loadHarmonics: boolean = false): Promise<PointCloudOctree> {
     const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
+
+    await this.splatsManager.initialize(this.pointBudget, loadHarmonics);
+    this.globalScene.add(this.splatsManager.mesh);
 
     return loader.loadPointCloud(
       // The file name of the point cloud which is to be loaded.
       fileName,
       // Given the relative URL of a file, should return a full URL.
       url => `${baseUrl}${url}`,
+      undefined,
+      //Load the harmonics if necessary (for desktop only)
+      loadHarmonics
     );
   }
 
@@ -255,12 +259,18 @@ export class Viewer {
     // camera control system.
     this.cameraControls.update();
 
-    if(this.enableUpdate) {
+    let positionDiff = this.updateViewOffset
+    .copy(this.camera.position)
+    .sub(this.lastUpdateViewPos)
+    .length();
+
+    if(this.enableUpdate && positionDiff < .01) {
 
       // This is where most of the potree magic happens. It updates the
       // visiblily of the octree nodes based on the camera frustum and it
       // triggers any loads/unloads which are necessary to keep the number
       // of visible points in check.
+
       this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
       this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
 
@@ -270,12 +280,18 @@ export class Viewer {
 
         if(mesh) {
           this.renderer.getSize(this.rendererSize);
+          this.camera.far = 1000;
+          this.camera.updateProjectionMatrix();
           this.splatsManager.update(mesh, this.camera, this.rendererSize);
+          this.camera.far = 100;
+          this.camera.updateProjectionMatrix();
         }
 
       }
       
     }
+
+    this.lastUpdateViewPos.copy(this.camera.position);
 
     if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera);
 
