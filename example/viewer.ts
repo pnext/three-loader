@@ -296,7 +296,7 @@ export class Viewer {
 
       console.log("sorting");
 
-      if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera, 0);
+      if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera);
 
     }
 

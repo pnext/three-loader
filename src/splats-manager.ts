@@ -24,6 +24,7 @@ import {
    } from 'three';
 
    import { createSortWorker } from '../src/workers/SortWorker';
+ 
 
 export default class SplatsManager {
 
@@ -327,13 +328,36 @@ export default class SplatsManager {
             this.texturesNeedUpdate = true;
             this.forceSorting = true;
 
-            this.sortSplats(camera, 100);
+            //16 * 2... Wait two frames for data to be uploaded, should take only one.
+            this.sortSplats(camera);
 
       }
     
     }
 
-    sortSplats(camera: Camera, waitToRender: number = 0) {
+    defer() {
+        
+        let promise = new Promise( (resolve) => {
+
+            let counter = 0;
+            let anim: any;
+            let frameCounter = () => {
+                counter++;
+                if(counter == 2) {
+                    resolve("true");
+                    cancelAnimationFrame(anim);
+                }
+            }
+            anim = requestAnimationFrame(frameCounter);
+    
+            frameCounter();
+
+        });
+
+        return promise;
+    }
+
+    sortSplats(camera: Camera) {
         
         if(this.mesh == null || this.instanceCount == 0) return;
 
@@ -370,13 +394,11 @@ export default class SplatsManager {
             this.enableSorting = false;
             this.forceSorting = false;
 
-            this.sorter.onmessage = (e: any) => {
+            this.sorter.onmessage = async (e: any) => {
             
                 if(e.data.dataSorted) {
 
                     if(e.data.dataSorted != null) {
-
-
 
                         let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
                         indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
@@ -389,11 +411,7 @@ export default class SplatsManager {
     
                         this.mesh.geometry.instanceCount = this.instanceCount;
     
-                        setTimeout( ()=> {
-            
-                            this.enableSorting = true;
-
-                        }, waitToRender);
+                        this.defer().then( _ => this.enableSorting = true);                   
     
                     } else {
 
