@@ -71,6 +71,7 @@ export default class SplatsManager {
     private texturesNeedUpdate = false;
 
     private instanceCount: number = 0;
+    private printMemory = false;
     
     rendererSize = new Vector2();
 
@@ -318,10 +319,12 @@ export default class SplatsManager {
 
             totalMemoryInDisplay = instanceCount * 56;
 
-            console.log("-----------------------------------------------------");
-            console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
-            console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
-            console.log("-----------------------------------------------------");
+            if(this.printMemory) {
+                console.log("----------------------------");
+                console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
+                console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
+                console.log("----------------------------");
+            }
 
             this.instanceCount = instanceCount;
 

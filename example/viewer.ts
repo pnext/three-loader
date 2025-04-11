@@ -283,18 +283,12 @@ export class Viewer {
 
         if(mesh) {
           this.renderer.getSize(this.rendererSize);
-          this.camera.far = 1000;
-          this.camera.updateProjectionMatrix();
           this.splatsManager.update(mesh, this.camera, this.rendererSize);
-          this.camera.far = 100;
-          this.camera.updateProjectionMatrix();
         }
 
       }
       
     } else {
-
-      console.log("sorting");
 
       if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera);
 

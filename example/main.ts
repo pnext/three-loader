@@ -121,7 +121,7 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, isSpla
             pco.position.set(0, 0, 0);
 
             const camera = viewer.camera;
-            camera.far = 200;
+            camera.far = 1000;
             camera.updateProjectionMatrix();
             camera.position.set(16, 4, -6);
             camera.lookAt(new Vector3(9, 3, -6.5));
