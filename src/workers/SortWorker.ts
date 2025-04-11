@@ -4,7 +4,7 @@ function sortWorker(self: any) {
     const MemoryPageSize = 65536;
     const BytesPerFloat = 4;
     const BytesPerInt = 4;
-    const DefaultSplatSortDistanceMapPrecision = 14;
+    const DefaultSplatSortDistanceMapPrecision = 16;
 
     // let centersReady = false;
     let wasmInstance: any; 
@@ -90,11 +90,7 @@ function sortWorker(self: any) {
         const memoryRequiredForModelViewProjectionMatrix = matrixSize;
         const memoryRequiredForMappedDistances = splatCount * BytesPerInt;
         const memoryRequiredForSortedIndexes = splatCount * BytesPerInt;
-
         const memoryRequiredForIntermediateSortBuffers = distanceMapRange * BytesPerFloat * 2;
-
-        const memoryRequiredforTransformIndexes = 0;
-        const memoryRequiredforTransforms = 0;
         const extraMemory = MemoryPageSize * 32;
     
         const totalRequiredMemory =
@@ -104,8 +100,6 @@ function sortWorker(self: any) {
         memoryRequiredForMappedDistances +
         memoryRequiredForIntermediateSortBuffers +
         memoryRequiredForSortedIndexes +
-        memoryRequiredforTransformIndexes +
-        memoryRequiredforTransforms +
         extraMemory;
       
         const totalPagesRequired = Math.floor(totalRequiredMemory / MemoryPageSize) + 1;

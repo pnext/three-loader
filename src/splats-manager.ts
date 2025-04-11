@@ -265,8 +265,8 @@ export default class SplatsManager {
         let nodesAsString = "";
         
 
-        // let totalMemoryUsed = 0;
-        // let totalMemoryInDisplay = 0;
+        let totalMemoryUsed = 0;
+        let totalMemoryInDisplay = 0;
 
         mesh.traverse(el => {
             let m = el as Mesh;
@@ -274,7 +274,7 @@ export default class SplatsManager {
             instanceCount += g.drawRange.count;
         });
 
-        // totalMemoryUsed = instanceCount * 56;
+        totalMemoryUsed = instanceCount * 56;
 
         mesh.traverseVisible(el => {
             nodesAsString += el.name;
@@ -330,12 +330,12 @@ export default class SplatsManager {
 
             })
 
-            // totalMemoryInDisplay = instanceCount * 56;
+            totalMemoryInDisplay = instanceCount * 56;
 
-            // console.log("-----------------------------------------------------");
-            // console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
-            // console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
-            // console.log("-----------------------------------------------------");
+            console.log("-----------------------------------------------------");
+            console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
+            console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
+            console.log("-----------------------------------------------------");
 
             this.instanceCount = instanceCount;
 
@@ -384,19 +384,20 @@ export default class SplatsManager {
 
             this.sorter.onmessage = (e: any) => {
             
-                if(e.data.dataSorted ) {
+                if(e.data.dataSorted) {
 
-                    let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
-                    indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
-                    indexAttribute.needsUpdate = true;
-
-                    if(this.texturesNeedUpdate) {
-                        this.textures.map(text => text.needsUpdate = true);
-                        this.texturesNeedUpdate = false;
+                    if(e.data.dataSorted != null) {
+                        let indexAttribute = this.mesh.geometry.getAttribute("indexes_sorted");
+                        indexAttribute.array.set(new Int32Array(e.data.dataSorted), 0);
+                        indexAttribute.needsUpdate = true;
+    
+                        if(this.texturesNeedUpdate) {
+                            this.textures.map(text => text.needsUpdate = true);
+                            this.texturesNeedUpdate = false;
+                        }
+    
+                        this.mesh.geometry.instanceCount = this.instanceCount;
                     }
-
-                    this.mesh.geometry.instanceCount = this.instanceCount;
-
 
                     this.enableSorting = true;
                 }
