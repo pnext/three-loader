@@ -25,6 +25,7 @@ import {
 
    import { createSortWorker } from '../src/workers/SortWorker';
  
+const DELAYED_FRAMES = 2;
 
 export default class SplatsManager {
 
@@ -135,7 +136,6 @@ export default class SplatsManager {
         geom.setAttribute('position', new BufferAttribute(quadVertices, 3));
         geom.setIndex(new BufferAttribute(quadIndices, 1));
     
-        geom.setAttribute('indexes', new InstancedBufferAttribute(this.indexesBuffer, 1));
         geom.setAttribute('indexes_sorted', new InstancedBufferAttribute(indexesToSort, 1));
     
         this.mesh = new Mesh(geom, shader);
@@ -277,8 +277,6 @@ export default class SplatsManager {
         
             this.nodesAsString = nodesAsString;
 
-            // console.log(nodesAsString);
-
             instanceCount = 0;
             nodesCount = 0;
 
@@ -343,15 +341,15 @@ export default class SplatsManager {
         let promise = new Promise( (resolve) => {
 
             let counter = 0;
-            let anim: any;
+
             let frameCounter = () => {
-                counter++;
-                if(counter == 2) {
+                let anim = requestAnimationFrame(frameCounter);
+                if(counter == DELAYED_FRAMES) {
                     resolve("true");
                     cancelAnimationFrame(anim);
                 }
+                counter++;
             }
-            anim = requestAnimationFrame(frameCounter);
     
             frameCounter();
 
