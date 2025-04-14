@@ -25,6 +25,7 @@ export interface IPointCloudTreeNode {
 
 export interface IPointCloudGeometryNode extends IPointCloudTreeNode {
   geometry: BufferGeometry | undefined;
+  children: ReadonlyArray<IPointCloudGeometryNode | null>
   oneTimeDisposeHandlers: Function[];
 
   loading: boolean;
