@@ -6,7 +6,7 @@ import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } 
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
 import { handleEmptyBuffer, handleFailedRequest } from '../utils/utils';
-import { WorkerPool } from '../utils/worker-pool';
+import { WorkerPool, WorkerType } from '../utils/worker-pool';
 import { Version } from '../version';
 import { GetUrlFn, XhrRequest } from './types';
 
@@ -48,10 +48,7 @@ export class BinaryLoader {
   xhrRequest: XhrRequest;
   callbacks: Callback[];
 
-  public static readonly WORKER_POOL = new WorkerPool(
-    32,
-    require('../workers/binary-decoder.worker.js').default,
-  );
+  public static readonly WORKER_POOL = WorkerPool.getInstance();
 
   constructor({
     getUrl = s => Promise.resolve(s),
@@ -111,7 +108,7 @@ export class BinaryLoader {
       return;
     }
 
-    BinaryLoader.WORKER_POOL.getWorker().then(autoTerminatingWorker => {
+    BinaryLoader.WORKER_POOL.getWorker(WorkerType.BINARY_DECODER_WORKER).then(autoTerminatingWorker => {
       const pointAttributes = node.pcoGeometry.pointAttributes;
       const numPoints = buffer.byteLength / pointAttributes.byteSize;
 
@@ -122,7 +119,7 @@ export class BinaryLoader {
       autoTerminatingWorker.worker.onmessage = (e: WorkerResponse) => {
         if (this.disposed) {
           resolve();
-          BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
+          BinaryLoader.WORKER_POOL.releaseWorker(WorkerType.BINARY_DECODER_WORKER, autoTerminatingWorker);
           return;
         }
 
@@ -145,7 +142,7 @@ export class BinaryLoader {
 
         this.callbacks.forEach(callback => callback(node));
         resolve();
-        BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
+        BinaryLoader.WORKER_POOL.releaseWorker(WorkerType.BINARY_DECODER_WORKER, autoTerminatingWorker);
       };
 
       const message = {
