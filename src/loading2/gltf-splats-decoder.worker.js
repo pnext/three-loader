@@ -1,5 +1,4 @@
 import { PointAttribute, PointAttributeTypes } from './point-attributes.ts';
-import { Quaternion, Vector3, Matrix3, Matrix4, Vector4 } from 'three';
 
 const typedArrayMapping = {
 	'int8': Int8Array,
@@ -201,7 +200,7 @@ onmessage = function (event) {
 		} else if (["rotation"].includes(pointAttribute.name)) {
 
 
-			const tempRotation = new Quaternion();
+			const tempRotation = {x:0, y:0, z:0, w: 0}
 
 			for (let j = 0; j < numPoints; j++) {
 
@@ -212,8 +211,24 @@ onmessage = function (event) {
 				const rz = view.getFloat32(rotationOffset + 8, true);
 				const rw = view.getFloat32(rotationOffset + 12, true);
 
-				tempRotation.set(rx, ry, rz, rw);
-				tempRotation.normalize();
+				tempRotation.x = rx;
+				tempRotation.y = ry;
+				tempRotation.z = rz;
+				tempRotation.w = rw;
+
+				let l = Math.sqrt( rx * rx + ry * ry + rz * rz + rw * rw );
+
+				if(l == 0) {
+					tempRotation.x = 0;
+					tempRotation.y = 0;
+					tempRotation.z = 0;
+					tempRotation.w = 1;
+				} else {
+					tempRotation.x = rx / l;
+					tempRotation.y = ry / l;
+					tempRotation.z = rz / l;
+					tempRotation.w = rw / l;
+				}
 	
 				rotations[4 * j + 0] = tempRotation.x;
 				rotations[4 * j + 1] = tempRotation.y;
@@ -253,33 +268,83 @@ onmessage = function (event) {
 
 	//calculate the convariance from scales and rotations.
 	{
+
+		function multiplyMatricex(ae, be) {
+			const te = new Array(9);
+	
+			const a11 = ae[ 0 ], a12 = ae[ 3 ], a13 = ae[ 6 ];
+			const a21 = ae[ 1 ], a22 = ae[ 4 ], a23 = ae[ 7 ];
+			const a31 = ae[ 2 ], a32 = ae[ 5 ], a33 = ae[ 8 ];
+	
+			const b11 = be[ 0 ], b12 = be[ 3 ], b13 = be[ 6 ];
+			const b21 = be[ 1 ], b22 = be[ 4 ], b23 = be[ 7 ];
+			const b31 = be[ 2 ], b32 = be[ 5 ], b33 = be[ 8 ];
+	
+			te[ 0 ] = a11 * b11 + a12 * b21 + a13 * b31;
+			te[ 3 ] = a11 * b12 + a12 * b22 + a13 * b32;
+			te[ 6 ] = a11 * b13 + a12 * b23 + a13 * b33;
+	
+			te[ 1 ] = a21 * b11 + a22 * b21 + a23 * b31;
+			te[ 4 ] = a21 * b12 + a22 * b22 + a23 * b32;
+			te[ 7 ] = a21 * b13 + a22 * b23 + a23 * b33;
+	
+			te[ 2 ] = a31 * b11 + a32 * b21 + a33 * b31;
+			te[ 5 ] = a31 * b12 + a32 * b22 + a33 * b32;
+			te[ 8 ] = a31 * b13 + a32 * b23 + a33 * b33;
+
+			return te;
+		}
+
+
+		function generateCovarianceMatrix(quaternion, scale ) {
+
+			const covarianceMatrix = new Array(16)
+	
+			const x = quaternion.x, y = quaternion.y, z = quaternion.z, w = quaternion.w;
+
+			const x2 = x + x,	y2 = y + y, z2 = z + z;
+			const xx = x * x2, xy = x * y2, xz = x * z2;
+			const yy = y * y2, yz = y * z2, zz = z * z2;
+			const wx = w * x2, wy = w * y2, wz = w * z2;
+	
+			const sx = scale.x, sy = scale.y, sz = scale.z;
+	
+			covarianceMatrix[ 0 ] = ( 1 - ( yy + zz ) ) * sx;
+			covarianceMatrix[ 1 ] = ( xy + wz ) * sx;
+			covarianceMatrix[ 2 ] = ( xz - wy ) * sx;
+	
+			covarianceMatrix[ 3 ] = ( xy - wz ) * sy;
+			covarianceMatrix[ 4 ] = ( 1 - ( xx + zz ) ) * sy;
+			covarianceMatrix[ 5 ] = ( yz + wx ) * sy;
+	
+			covarianceMatrix[ 6 ] = ( xz + wy ) * sz;
+			covarianceMatrix[ 7 ] = ( yz - wx ) * sz;
+			covarianceMatrix[ 8 ] = ( 1 - ( xx + yy ) ) * sz;
+
+			const transposeCovariance = covarianceMatrix.map(el => el);
+
+			let tmp;
+			const m = transposeCovariance;
+	
+			tmp = m[ 1 ]; m[ 1 ] = m[ 3 ]; m[ 3 ] = tmp;
+			tmp = m[ 2 ]; m[ 2 ] = m[ 6 ]; m[ 6 ] = tmp;
+			tmp = m[ 5 ]; m[ 5 ] = m[ 7 ]; m[ 7 ] = tmp;
+
+			return multiplyMatricex(covarianceMatrix, transposeCovariance);
+	
+		}
+
 		function computeCovariance(scale, rotation, outOffset) {
 
-			const tempMatrix4 = new Matrix4();
-			const scaleMatrix = new Matrix3();
-			const rotationMatrix = new Matrix3();
-			const covarianceMatrix = new Matrix3();
-			const transformedCovariance = new Matrix3();
+			let transformedCovariance = generateCovarianceMatrix(rotation,scale);
 
-			tempMatrix4.makeScale(scale.x, scale.y, scale.z);
-			scaleMatrix.setFromMatrix4(tempMatrix4);
-	
-			tempMatrix4.makeRotationFromQuaternion(rotation);
-			rotationMatrix.setFromMatrix4(tempMatrix4);
-	
-			covarianceMatrix.copy(rotationMatrix).multiply(scaleMatrix);
-			transformedCovariance
-			.copy(covarianceMatrix)
-			.transpose()
-			.premultiply(covarianceMatrix);
+			covariances0[4 * outOffset + 0] = transformedCovariance[0];
+			covariances0[4 * outOffset + 1] = transformedCovariance[3];
+			covariances0[4 * outOffset + 2] = transformedCovariance[6];
+			covariances0[4 * outOffset + 3] = transformedCovariance[4];
 
-			covariances0[4 * outOffset + 0] = transformedCovariance.elements[0];
-			covariances0[4 * outOffset + 1] = transformedCovariance.elements[3];
-			covariances0[4 * outOffset + 2] = transformedCovariance.elements[6];
-			covariances0[4 * outOffset + 3] = transformedCovariance.elements[4];
-
-			covariances1[2 * outOffset + 0] = transformedCovariance.elements[7];
-			covariances1[2 * outOffset + 1] = transformedCovariance.elements[8];
+			covariances1[2 * outOffset + 0] = transformedCovariance[7];
+			covariances1[2 * outOffset + 1] = transformedCovariance[8];
 
 		}
 
@@ -290,8 +355,8 @@ onmessage = function (event) {
 
 		for (let j = 0; j < numPoints; j++) {
 
-			const quat = new Quaternion();
-			const scale = new Vector3();
+			const quat = {x:0, y:0, z:0, w:0}
+			const scale = {x:0, y:0, z:0}
 
 			quat.w = rotations[4 * j + 0];
 			quat.x = rotations[4 * j + 1];
@@ -343,29 +408,13 @@ onmessage = function (event) {
 
 		  for (let j = 0; j < numPoints; j++) {
 
-			const color = new Vector4();
-			const pos = new Vector3();
-
-			const quat = new Quaternion();
-			quat.w = rotations[4 * j + 0];
-			quat.x = rotations[4 * j + 1];
-			quat.y = rotations[4 * j + 2];
-			quat.z = rotations[4 * j + 3];
-
-			let normal = new Vector3(0, 0, 1);
-			normal.applyQuaternion(quat);
-
-			normal.multiplyScalar(0.5).add(new Vector3(0.5));
-			normal.multiplyScalar(255);
+			const color = {x:0, y:0, z:0, w: 0}
+			const pos = {x:0, y:0, z:0}
 
 			color.x = colors[4 * j + 0];
 			color.y = colors[4 * j + 1];
 			color.z = colors[4 * j + 2];
 			color.w = colors[4 * j + 3];
-
-			// color.x = normal.x;
-			// color.y = normal.y;
-			// color.z = normal.z;
 
 			pos.x = positions[4 * j + 0];
 			pos.y = positions[4 * j + 1];
