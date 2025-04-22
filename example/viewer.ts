@@ -17,7 +17,7 @@ import { MathUtils,
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree, PotreeVersion } from '../src';
-import SplatsManager from "../src/splats-manager"
+import {SplatsManager} from "../src/splats-manager"
 
 
 
@@ -77,6 +77,8 @@ export class Viewer {
 
   private IDRenderTarget: any;
   private raycastSplat: any;
+  private raycastSplatDebug: any;
+
   private elapsedTime: number = 0;
   private raycaster = new Raycaster();
   private lastUpdateViewPos = new Vector3();
@@ -105,11 +107,18 @@ export class Viewer {
 
     const mat = new MeshBasicMaterial({ color: '#ffffff' });
     mat.transparent = true;
+    mat.wireframe = true;
     const planeGeo = new SphereGeometry(1);
     this.raycastSplat = new Mesh(planeGeo, mat);
     this.raycastSplat.renderOrder = 100;
-    
 
+
+    const mat2 = new MeshBasicMaterial({ color: '#ff0000' });
+    mat.transparent = true;
+    const sphereGeo = new SphereGeometry(0.005);
+    this.raycastSplatDebug = new Mesh(sphereGeo, mat2);
+    this.raycastSplatDebug.renderOrder = 10000;
+  
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
 
@@ -123,7 +132,7 @@ export class Viewer {
       this.elapsedTime = Date.now();
     })
 
-    targetEl.addEventListener("mouseup", this.updateCameraTarget.bind(this));
+    targetEl.addEventListener("mousemove", this.updateCameraTarget.bind(this));
 
     requestAnimationFrame(this.loop);
   }
@@ -135,7 +144,7 @@ export class Viewer {
     let clickTime = Date.now();
     let deltaTime = clickTime - this.elapsedTime;
 
-    if(deltaTime < 200) {
+    if(deltaTime > -1) {
 
       const rgba = new Float32Array(4);
       const DPR = this.renderer?.getPixelRatio() || 1;
@@ -157,11 +166,14 @@ export class Viewer {
         if (scale.x === 0) scale.x = 0.0001;
         if (scale.y === 0) scale.y = 0.0001;
         if (scale.z === 0) scale.z = 0.0001;
-        scale.multiplyScalar(4);
+        scale.multiplyScalar(2.82842712475);
+
+        let pos = this.splatsManager.mesh.worldToLocal(splatData.position);
   
-        this.raycastSplat.position.copy(splatData.position);
+        this.raycastSplat.position.copy(pos);
         this.raycastSplat.scale.copy(scale);
         this.raycastSplat.quaternion.copy(splatData.orientation);
+
   
         this.raycastSplat.updateMatrix();
         this.raycastSplat.updateMatrixWorld();
@@ -173,12 +185,15 @@ export class Viewer {
   
         const intersects = this.raycaster.intersectObject(this.raycastSplat);
   
-        let center = new Vector3(Infinity, Infinity, Infinity);
+       let center = new Vector3(Infinity, Infinity, Infinity);
         if (intersects.length > 0) {
           center = intersects[0].point;
-          this.cameraControls.target.copy(center);
+          console.log("intersecting");
+          pos = this.splatsManager.mesh.worldToLocal(center);
+          this.raycastSplatDebug.position.copy(pos);
+          //this.cameraControls.target.copy(center);
         } else {
-          this.cameraControls.target.copy(splatData.position);
+          //this.cameraControls.target.copy(splatData.position);
         }
     
         deltaTime = clickTime;
@@ -320,11 +335,16 @@ export class Viewer {
       this.splatsManager.renderSplatsIDs(true);
       this.renderer.setRenderTarget(this.IDRenderTarget);
       this.renderer.clear();
-      // this.globalScene.remove(this.raycastSplat);
+      // this.splatsManager.mesh.remove(this.raycastSplat);
+      // this.splatsManager.mesh.remove(this.raycastSplatDebug);
+
       this.renderer.render(this.globalScene, this.camera);
 
       this.splatsManager.renderSplatsIDs(false);
       this.renderer.setRenderTarget(null);
+
+      // this.splatsManager.mesh.add(this.raycastSplat);
+      // this.splatsManager.mesh.add(this.raycastSplatDebug);
 
       this.renderer.render(this.globalScene, this.camera);
 

@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { ClipMode, PointCloudOctree } from '../src';
 import { Viewer } from './viewer';
 
@@ -111,7 +110,6 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, isSpla
     viewer.load(file, url, 'v2', isSplats, !isIOS())
         .then(pco => {
             pointClouds[version] = pco;
-            pco.rotateX(-Math.PI / 2);
             pco.material.size = 1.0;
 
             pco.material.pointColorType = 0;
@@ -123,8 +121,8 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, isSpla
             const camera = viewer.camera;
             camera.far = 1000;
             camera.updateProjectionMatrix();
-            camera.position.set(16, 4, -6);
-            camera.lookAt(new Vector3(9, 3, -6.5));
+            camera.up.set(0, 0, 1);
+            camera.position.set(-4, 4, 16);
 
             viewer.add(pco);
         })

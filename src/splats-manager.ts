@@ -25,9 +25,10 @@ import {
 
    import { createSortWorker } from '../src/workers/SortWorker';
  
-const DELAYED_FRAMES = 2;
+const DELAYED_FRAMES = 1;
+const ROTATE_MESH = false;
 
-export default class SplatsManager {
+export class SplatsManager {
 
     public mesh: any;
     public forceSorting: boolean = false;
@@ -72,11 +73,15 @@ export default class SplatsManager {
     private texturesNeedUpdate = false;
 
     private instanceCount: number = 0;
-    private printMemory = false;
+    private debugMode = false;
     
     rendererSize = new Vector2();
 
     private harmonicsEnabled: boolean = false;
+
+    constructor(debug: boolean = false) {
+        this.debugMode = debug;
+    }
 
     async initialize(maxPointBudget: number, renderHamonics = false) {
 
@@ -101,6 +106,7 @@ export default class SplatsManager {
         const quadIndices = new Uint16Array([
           0, 1, 2, 
           2, 1, 3  
+
         ]);
 
         //Global mesh used to setup the global rendering of the points
@@ -127,8 +133,11 @@ export default class SplatsManager {
                     harmonicsTexture2:{value: null},
                     harmonicsTexture3:{value: null},
                     cameraPosition:{value: new Vector3(0, 0, 0)},
-                    harmonicsDegree:{value: 0},
+                    harmonicsDegree:{value: 3},
                     renderIds:{value: false},
+                    debugMode: {value: false},
+                    renderOnlyHarmonics: {value: false},
+                    harmonicsScale: {value: 4}
                 }
         });
         let geom = new InstancedBufferGeometry();
@@ -139,7 +148,7 @@ export default class SplatsManager {
         geom.setAttribute('indexes_sorted', new InstancedBufferAttribute(indexesToSort, 1));
     
         this.mesh = new Mesh(geom, shader);
-        this.mesh.rotateX(-Math.PI / 2);
+        if(ROTATE_MESH) this.mesh.rotateX(-Math.PI / 2);
     
         this.mesh.frustumCulled = false;
     
@@ -162,7 +171,7 @@ export default class SplatsManager {
         let degree2Size = Math.ceil(Math.sqrt(maxPointBudget * 5));
         let degree3Size = Math.ceil(Math.sqrt(maxPointBudget * 7));
     
-        console.log("max texture size: " + degree3Size + " point budget: " + maxPointBudget);
+        if(this.debugMode) console.log("max texture size: " + degree3Size + " point budget: " + maxPointBudget);
     
         this.bufferHarmonics1 = new Uint32Array(degree1Size * degree1Size);
         this.bufferHarmonics2 = new Uint32Array(degree2Size * degree2Size);
@@ -220,7 +229,7 @@ export default class SplatsManager {
         this.mesh.material.transparent = !status;
     }
 
-    update(mesh: Mesh, camera: Camera, size: Vector2) {
+    update(mesh: Mesh, camera: Camera, size: Vector2, callback = () => {}) {
 
         if(this.mesh == null) return;
 
@@ -317,7 +326,7 @@ export default class SplatsManager {
 
             totalMemoryInDisplay = instanceCount * 56;
 
-            if(this.printMemory) {
+            if(this.debugMode) {
                 console.log("----------------------------");
                 console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
                 console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
@@ -329,8 +338,7 @@ export default class SplatsManager {
             this.texturesNeedUpdate = true;
             this.forceSorting = true;
 
-            //16 * 2... Wait two frames for data to be uploaded, should take only one.
-            this.sortSplats(camera);
+            this.sortSplats(camera, callback);
 
       }
     
@@ -358,7 +366,7 @@ export default class SplatsManager {
         return promise;
     }
 
-    sortSplats(camera: Camera) {
+    sortSplats(camera: Camera, callback = () => {}) {
         
         if(this.mesh == null || this.instanceCount == 0) return;
 
@@ -388,6 +396,8 @@ export default class SplatsManager {
                 totalSplats: this.instanceCount
             }
 
+            if(this.debugMode) console.log("sorting started");
+
             this.sorter.postMessage({
                 sort: sortMessage
             })
@@ -412,7 +422,13 @@ export default class SplatsManager {
     
                         this.mesh.geometry.instanceCount = this.instanceCount;
     
-                        this.defer().then( _ => this.enableSorting = true);                   
+                        this.defer().then( _ => {
+                            this.enableSorting = true;
+                            callback();
+                            if(this.debugMode) {
+                                console.log("sorting completed")
+                            }
+                        });                   
     
                     } else {
 

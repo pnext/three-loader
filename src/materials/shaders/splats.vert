@@ -19,6 +19,9 @@ uniform highp usampler2D harmonicsTexture1;
 uniform highp usampler2D harmonicsTexture2;
 uniform highp usampler2D harmonicsTexture3;
 
+uniform bool renderOnlyHarmonics;
+uniform float harmonicsScale;
+
 
 out vec3 vColor;
 out float vOpacity;
@@ -191,9 +194,9 @@ void main() {
         sh2 = unpack111011s(d2);
         sh3 = unpack111011s(d3);
 
-        float x = worldViewDir.x;
+        float x = worldViewDir.z;
         float y = worldViewDir.y;
-        float z = worldViewDir.z;
+        float z = worldViewDir.x;
 
         float xx = 1.;
         float yy = 1.;
@@ -268,8 +271,12 @@ void main() {
         }
     }
 
-    vColor += harmonics;
-
+    if(renderOnlyHarmonics) {
+        vColor = harmonicsScale * harmonics;
+    } else {
+        vColor += harmonics;
+    }
+    
     vColor.rgb = clamp(vColor.rgb, vec3(0.), vec3(1.));
 
 	vOpacity = colorData.a;
