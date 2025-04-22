@@ -57,7 +57,7 @@ export interface IPotree {
   maxNumNodesLoading: number;
   lru: LRU;
 
-  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest, loadHarmonics?: boolean): Promise<PointCloudOctree>;
+  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],

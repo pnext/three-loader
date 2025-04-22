@@ -230,22 +230,26 @@ export class Viewer {
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
   async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", isSplats: boolean = false, loadHarmonics: boolean = false): Promise<PointCloudOctree> {
-    const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
-
-    if(isSplats) {
+    if (isSplats) {
       await this.splatsManager.initialize(this.pointBudget, loadHarmonics);
       this.globalScene.add(this.splatsManager.mesh);
     }
 
-    return loader.loadPointCloud(
-      // The file name of the point cloud which is to be loaded.
-      fileName,
-      // Given the relative URL of a file, should return a full URL.
-      url => `${baseUrl}${url}`,
-      undefined,
-      //Load the harmonics if necessary (for desktop only)
-      loadHarmonics
-    );
+    return version === 'v1'
+      ? this.potree_v1.loadPointCloud(
+        // The file name of the point cloud which is to be loaded.
+        fileName,
+        // Given the relative URL of a file, should return a full URL.
+        url => `${baseUrl}${url}`,
+      )
+      : this.potree_v2.loadPointCloud(
+        // The file name of the point cloud which is to be loaded.
+        fileName,
+        // Given the relative URL of a file, should return a full URL.
+        url => `${baseUrl}${url}`,
+        undefined,
+        { loadHarmonics }
+      )
   }
 
   add(pco: PointCloudOctree): void {
