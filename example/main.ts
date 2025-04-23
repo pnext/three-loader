@@ -21,16 +21,12 @@ const examplePointClouds: PointCloudsConfig[] = [
     {
         file: 'metadata.json',
         url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
-        // url: 'http://localhost:8080/gaussian/gltf/converted/',
-        //url: 'http://localhost:8081/alamedilla/',
         version: 'v1',
         splats: false
     },
     {
         file: 'metadata.json',
-        //url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
-        // url: 'http://localhost:8080/gaussian/gltf/converted/',
-        url: 'https://www.mdbm.es/alamedilla/',
+        url: 'http://localhost:8081/alamedilla/',
         version: 'v2',
         splats: true
     }
