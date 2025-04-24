@@ -26,7 +26,7 @@ const examplePointClouds: PointCloudsConfig[] = [
     },
     {
         file: 'metadata.json',
-        url: 'http://localhost:8081/alamedilla/',
+        url: 'https://www.mdbm.es/alamedilla/',
         version: 'v2',
         splats: true
     }
@@ -103,7 +103,7 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, isSpla
         return ua.indexOf('iPhone') > 0 || ua.indexOf('iPad') > 0;
     }
 
-    viewer.load(file, url, 'v2', isSplats, !isIOS())
+    viewer.load(file, url, 'v2', !isIOS())
         .then(pco => {
             pointClouds[version] = pco;
             pco.material.size = 1.0;

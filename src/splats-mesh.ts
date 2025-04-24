@@ -20,15 +20,15 @@ import {
     Texture,
     ShaderMaterial,
     DoubleSide,
-    GLSL3
+    GLSL3,
+    Object3D
    } from 'three';
 
-   import { createSortWorker } from '../src/workers/SortWorker';
+   import { createSortWorker } from './workers/SortWorker';
  
 const DELAYED_FRAMES = 1;
-const ROTATE_MESH = false;
 
-export class SplatsManager {
+export class SplatsMesh extends Object3D{
 
     public mesh: any;
     public forceSorting: boolean = false;
@@ -80,6 +80,7 @@ export class SplatsManager {
     private harmonicsEnabled: boolean = false;
 
     constructor(debug: boolean = false) {
+        super();
         this.debugMode = debug;
     }
 
@@ -144,13 +145,11 @@ export class SplatsManager {
 
         geom.setAttribute('position', new BufferAttribute(quadVertices, 3));
         geom.setIndex(new BufferAttribute(quadIndices, 1));
-    
         geom.setAttribute('indexes_sorted', new InstancedBufferAttribute(indexesToSort, 1));
     
         this.mesh = new Mesh(geom, shader);
-        if(ROTATE_MESH) this.mesh.rotateX(-Math.PI / 2);
-    
         this.mesh.frustumCulled = false;
+        this.add(this.mesh);
     
         //Create the global textures
         let size = Math.ceil(Math.sqrt(maxPointBudget));

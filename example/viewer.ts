@@ -66,8 +66,6 @@ export class Viewer {
    */
   private reqAnimationFrameHandle: number | undefined;
 
-  private rendererSize: Vector2 = new Vector2();
-
   /**
    * Initializes the viewer into the specified element.
    *
@@ -81,8 +79,6 @@ export class Viewer {
 
   private elapsedTime: number = 0;
   private raycaster = new Raycaster();
-  private lastUpdateViewPos = new Vector3();
-  private updateViewOffset = new Vector3();
 
   //Max amount of points available to render harmonics inside a 4096 x 4096 texture
   //anything above 2.300.000 particles will require a higher texture and could break.
@@ -139,7 +135,7 @@ export class Viewer {
 
   updateCameraTarget(e: any) {
 
-    if(!this.splatsManager.splatsEnabled) return;
+    if(!this.pointClouds[0].splatsMesh.splatsEnabled) return;
 
     let clickTime = Date.now();
     let deltaTime = clickTime - this.elapsedTime;
@@ -159,7 +155,7 @@ export class Viewer {
       const globalID = rgba[0];
       const nodeID = rgba[1];
 
-      const splatData = this.splatsManager.getSplatData(globalID, nodeID);
+      const splatData = this.pointClouds[0].splatsMesh.getSplatData(globalID, nodeID);
 
       if(splatData != null) {
         let scale = splatData.scale;
@@ -168,7 +164,7 @@ export class Viewer {
         if (scale.z === 0) scale.z = 0.0001;
         scale.multiplyScalar(2.82842712475);
 
-        let pos = this.splatsManager.mesh.worldToLocal(splatData.position);
+        let pos = this.pointClouds[0].splatsMesh.worldToLocal(splatData.position);
   
         this.raycastSplat.position.copy(pos);
         this.raycastSplat.scale.copy(scale);
@@ -189,7 +185,7 @@ export class Viewer {
         if (intersects.length > 0) {
           center = intersects[0].point;
           console.log("intersecting");
-          pos = this.splatsManager.mesh.worldToLocal(center);
+          pos = this.pointClouds[0].splatsMesh.worldToLocal(center);
           this.raycastSplatDebug.position.copy(pos);
           //this.cameraControls.target.copy(center);
         } else {
@@ -229,13 +225,8 @@ export class Viewer {
    * @param baseUrl
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
-  async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", isSplats: boolean = false, loadHarmonics: boolean = false): Promise<PointCloudOctree> {
+  async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", loadHarmonics: boolean = false): Promise<PointCloudOctree> {
     const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
-
-    if(isSplats) {
-      await this.splatsManager.initialize(this.pointBudget, loadHarmonics);
-      this.globalScene.add(this.splatsManager.mesh);
-    }
 
     return loader.loadPointCloud(
       // The file name of the point cloud which is to be loaded.
@@ -257,8 +248,6 @@ export class Viewer {
     this.scene.remove(pointCloud);
     pointCloud.dispose();
     this.pointClouds = this.pointClouds.filter(pco => pco !== pointCloud);
-    this.globalScene.remove(this.splatsManager.mesh);
-    this.splatsManager.dispose();
   }
 
   async renderAsSplats(): Promise<Viewer> {
@@ -273,45 +262,18 @@ export class Viewer {
    *    The time, in milliseconds, since the last update.
    */
   update(_: number): void {
+
     // Alternatively, you could use Three's OrbitControls or any other
     // camera control system.
     this.cameraControls.update();
 
-    let positionDiff = this.updateViewOffset
-    .copy(this.camera.position)
-    .sub(this.lastUpdateViewPos)
-    .length();
+    // This is where most of the potree magic happens. It updates the
+    // visiblily of the octree nodes based on the camera frustum and it
+    // triggers any loads/unloads which are necessary to keep the number
+    // of visible points in check.
 
-    if(this.enableUpdate && positionDiff < .01) {
-
-      // This is where most of the potree magic happens. It updates the
-      // visiblily of the octree nodes based on the camera frustum and it
-      // triggers any loads/unloads which are necessary to keep the number
-      // of visible points in check.
-
-      this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
-      this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
-
-      if(this.splatsManager.splatsEnabled && this.scene.children[0]) {
-
-        let mesh = this.scene.children[0].children[0] as Mesh;
-
-        if(mesh) {
-          this.renderer.getSize(this.rendererSize);
-          this.splatsManager.update(mesh, this.camera, this.rendererSize);
-        }
-
-      }
-      
-    } else {
-
-      if(this.splatsManager.splatsEnabled) this.splatsManager.sortSplats(this.camera);
-
-    }
-
-    this.lastUpdateViewPos.copy(this.camera.position);
-
-    
+    this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
+    this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
 
   }
 
@@ -325,26 +287,26 @@ export class Viewer {
     //This is used to setup the different nodes of the Octree from Potree
     this.renderer.render(this.scene, this.camera);
 
-    if(this.splatsManager.splatsEnabled) {
+    if(this.pointClouds[0].splatsMesh.splatsEnabled) {
 
       const h = this.renderer.domElement.height || 1;
       const w = this.renderer.domElement.width || 1;
       this.IDRenderTarget.setSize(w, h);
 
       //Setup the splats to render in ID mode
-      this.splatsManager.renderSplatsIDs(true);
+      this.pointClouds[0].splatsMesh.renderSplatsIDs(true);
       this.renderer.setRenderTarget(this.IDRenderTarget);
       this.renderer.clear();
-      // this.splatsManager.mesh.remove(this.raycastSplat);
-      // this.splatsManager.mesh.remove(this.raycastSplatDebug);
+      // this.this.pointClouds[0].splatsMesh.remove(this.raycastSplat);
+      // this.this.pointClouds[0].splatsMesh.remove(this.raycastSplatDebug);
 
       this.renderer.render(this.globalScene, this.camera);
 
-      this.splatsManager.renderSplatsIDs(false);
+      this.pointClouds[0].splatsMesh.renderSplatsIDs(false);
       this.renderer.setRenderTarget(null);
 
-      // this.splatsManager.mesh.add(this.raycastSplat);
-      // this.splatsManager.mesh.add(this.raycastSplatDebug);
+      // this.this.pointClouds[0].splatsMesh.add(this.raycastSplat);
+      // this.this.pointClouds[0].splatsMesh.add(this.raycastSplatDebug);
 
       this.renderer.render(this.globalScene, this.camera);
 
