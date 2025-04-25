@@ -31,7 +31,8 @@ const DELAYED_FRAMES = 1;
 export class SplatsMesh extends Object3D{
 
     public mesh: any;
-    public forceSorting: boolean = false;
+    public material: ShaderMaterial | null = null;
+    public forceSorting: boolean = true;
 
     private nodesAsString: string = "";
     private texturePosColor: any;
@@ -141,6 +142,9 @@ export class SplatsMesh extends Object3D{
                     harmonicsScale: {value: 4}
                 }
         });
+
+        this.material = shader;
+
         let geom = new InstancedBufferGeometry();
 
         geom.setAttribute('position', new BufferAttribute(quadVertices, 3));
@@ -207,37 +211,37 @@ export class SplatsMesh extends Object3D{
 
         this.textures.map(text => text.needsUpdate = true);
 
-        this.mesh.material.uniforms["posColorTexture"].value = this.texturePosColor;
-        this.mesh.material.uniforms["covarianceTexture0"].value = this.textureCovariance0;
-        this.mesh.material.uniforms["covarianceTexture1"].value = this.textureCovariance1;
-        this.mesh.material.uniforms["nodeTexture"].value = this.textureNode;
-        this.mesh.material.uniforms["nodeIndicesTexture"].value = this.textureNodeIndices;
+        this.material.uniforms["posColorTexture"].value = this.texturePosColor;
+        this.material.uniforms["covarianceTexture0"].value = this.textureCovariance0;
+        this.material.uniforms["covarianceTexture1"].value = this.textureCovariance1;
+        this.material.uniforms["nodeTexture"].value = this.textureNode;
+        this.material.uniforms["nodeIndicesTexture"].value = this.textureNodeIndices;
     
-        this.mesh.material.uniforms["harmonicsTexture1"].value = this.textureHarmonics1;
-        this.mesh.material.uniforms["harmonicsTexture2"].value = this.textureHarmonics2;
-        this.mesh.material.uniforms["harmonicsTexture3"].value = this.textureHarmonics3;
+        this.material.uniforms["harmonicsTexture1"].value = this.textureHarmonics1;
+        this.material.uniforms["harmonicsTexture2"].value = this.textureHarmonics2;
+        this.material.uniforms["harmonicsTexture3"].value = this.textureHarmonics3;
 
         this.enabled = true;
     }
 
     renderSplatsIDs(status: boolean) {
 
-        if(this.mesh == null) return;
+        if(this.material == null) return;
         
-        this.mesh.material.uniforms["renderIds"].value = status;
-        this.mesh.material.transparent = !status;
+        this.material.uniforms["renderIds"].value = status;
+        this.material.transparent = !status;
     }
 
     update(mesh: Mesh, camera: Camera, size: Vector2, callback = () => {}) {
 
-        if(this.mesh == null) return;
+        if(this.material == null) return;
 
-        this.mesh.material.uniforms["cameraPosition"].value = camera.position;
+        this.material.uniforms["cameraPosition"].value = camera.position;
 
         let mat =  mesh.material as RawShaderMaterial;
         mat.visible = false;
 
-        let material = this.mesh.material as RawShaderMaterial;
+        let material = this.material as RawShaderMaterial;
 
         material.uniforms.basisViewport.value.set(
             1.0 / size.x,
@@ -281,7 +285,7 @@ export class SplatsMesh extends Object3D{
 
         this.forceSorting = false;
       
-        if(nodesAsString != this.nodesAsString && this.enableSorting) {
+        if((nodesAsString != this.nodesAsString) && this.enableSorting) {
         
             this.nodesAsString = nodesAsString;
 
@@ -422,8 +426,8 @@ export class SplatsMesh extends Object3D{
                         this.mesh.geometry.instanceCount = this.instanceCount;
     
                         this.defer().then( _ => {
-                            this.enableSorting = true;
                             callback();
+                            this.enableSorting = true;
                             if(this.debugMode) {
                                 console.log("sorting completed")
                             }
@@ -499,7 +503,7 @@ export class SplatsMesh extends Object3D{
         this.mesh.geometry.dispose();
 
         //Remove the shader
-        this.mesh.material.dispose();
+        this.material?.dispose();
 
         //Removing textures
         this.textures.map(text => text.dispose());

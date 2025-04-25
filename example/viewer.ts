@@ -1,5 +1,5 @@
-import { MathUtils, 
-  Mesh, 
+import { 
+  Mesh,
   PerspectiveCamera, 
   Scene, 
   Vector2, 
@@ -17,13 +17,10 @@ import { MathUtils,
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree, PotreeVersion } from '../src';
-import {SplatsManager} from "../src/splats-manager"
-
 
 
 export class Viewer {
 
-  public splatsManager = new SplatsManager();
   public enableUpdate: boolean = true;
 
   /**
@@ -114,7 +111,10 @@ export class Viewer {
     const sphereGeo = new SphereGeometry(0.005);
     this.raycastSplatDebug = new Mesh(sphereGeo, mat2);
     this.raycastSplatDebug.renderOrder = 10000;
-  
+    
+    this.scene.add(this.raycastSplat);
+    this.scene.add(this.raycastSplatDebug);
+
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
 
@@ -135,7 +135,7 @@ export class Viewer {
 
   updateCameraTarget(e: any) {
 
-    if(!this.pointClouds[0].splatsMesh.splatsEnabled) return;
+    if(!this.pointClouds[0]?.splatsMesh?.splatsEnabled) return;
 
     let clickTime = Date.now();
     let deltaTime = clickTime - this.elapsedTime;
@@ -164,9 +164,8 @@ export class Viewer {
         if (scale.z === 0) scale.z = 0.0001;
         scale.multiplyScalar(2.82842712475);
 
-        let pos = this.pointClouds[0].splatsMesh.worldToLocal(splatData.position);
   
-        this.raycastSplat.position.copy(pos);
+        this.raycastSplat.position.copy(splatData.position);
         this.raycastSplat.scale.copy(scale);
         this.raycastSplat.quaternion.copy(splatData.orientation);
 
@@ -184,9 +183,7 @@ export class Viewer {
        let center = new Vector3(Infinity, Infinity, Infinity);
         if (intersects.length > 0) {
           center = intersects[0].point;
-          console.log("intersecting");
-          pos = this.pointClouds[0].splatsMesh.worldToLocal(center);
-          this.raycastSplatDebug.position.copy(pos);
+          this.raycastSplatDebug.position.copy(center);
           //this.cameraControls.target.copy(center);
         } else {
           //this.cameraControls.target.copy(splatData.position);
@@ -287,7 +284,7 @@ export class Viewer {
     //This is used to setup the different nodes of the Octree from Potree
     this.renderer.render(this.scene, this.camera);
 
-    if(this.pointClouds[0].splatsMesh.splatsEnabled) {
+    if(this.pointClouds[0]?.splatsMesh?.splatsEnabled) {
 
       const h = this.renderer.domElement.height || 1;
       const w = this.renderer.domElement.width || 1;
@@ -297,19 +294,12 @@ export class Viewer {
       this.pointClouds[0].splatsMesh.renderSplatsIDs(true);
       this.renderer.setRenderTarget(this.IDRenderTarget);
       this.renderer.clear();
-      // this.this.pointClouds[0].splatsMesh.remove(this.raycastSplat);
-      // this.this.pointClouds[0].splatsMesh.remove(this.raycastSplatDebug);
-
+      this.globalScene.add(this.pointClouds[0]);
       this.renderer.render(this.globalScene, this.camera);
 
+      this.scene.add(this.pointClouds[0]);
       this.pointClouds[0].splatsMesh.renderSplatsIDs(false);
       this.renderer.setRenderTarget(null);
-
-      // this.this.pointClouds[0].splatsMesh.add(this.raycastSplat);
-      // this.this.pointClouds[0].splatsMesh.add(this.raycastSplatDebug);
-
-      this.renderer.render(this.globalScene, this.camera);
-
     }
 
   }
@@ -346,20 +336,6 @@ export class Viewer {
     const size = new Vector2();
     this.renderer.getSize(size);
 
-  };
-
-  computeFocalLengths = (width: number, height: number, fov: number, aspect: number, dpr: number) => {
-
-    // console.log(width, height, fov, aspect, dpr);
-
-    const fovRad = MathUtils.degToRad(fov);
-    const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
-    const fy = (dpr * height) / (2 * Math.tan(fovRad / 2));
-    const fx = (dpr * width) / (2 * Math.tan(fovXRad / 2));
-
-    // console.log(fovRad, fovXRad, fy, fx);
-
-    return new Vector2(fx, fy);
   };
 
 }

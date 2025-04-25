@@ -9,6 +9,6 @@ export * from './point-cloud-tree';
 export * from './potree';
 export * from './types';
 export * from './version';
-export { SplatsManager } from './splats-mesh';
+export { SplatsMesh } from './splats-mesh';
 export { loadPOC as V1_LOADER} from './loading'; 
 export { loadOctree as V2_LOADER} from './loading2';

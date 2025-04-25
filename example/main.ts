@@ -14,7 +14,6 @@ interface PointCloudsConfig {
     file: string;
     url: string;
     version: 'v1' | 'v2';
-    splats: boolean
 }
 
 const examplePointClouds: PointCloudsConfig[] = [
@@ -22,13 +21,11 @@ const examplePointClouds: PointCloudsConfig[] = [
         file: 'metadata.json',
         url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
         version: 'v1',
-        splats: false
     },
     {
         file: 'metadata.json',
         url: 'https://www.mdbm.es/alamedilla/',
         version: 'v2',
-        splats: true
     }
 ];
 
@@ -70,7 +67,6 @@ function createSlider(version: string): HTMLInputElement {
             return;
         }
         cloud.potree.pointBudget = parseInt(slider.value, 10);
-        viewer.splatsManager.forceSorting = true;
         viewer.update(0);
         console.log(cloud.potree.pointBudget);
     });
@@ -84,14 +80,14 @@ function createHarmonicsSlider(): HTMLInputElement {
     slider.max = '3';
     slider.value = "0";
     slider.className = 'harmonics-slider';
-    slider.addEventListener('change', () => {
-        viewer.splatsManager.mesh.material.uniforms.harmonicsDegree.value = slider.value;
-    });
+    // slider.addEventListener('change', () => {
+    //     viewer.splatsManager.mesh.material.uniforms.harmonicsDegree.value = slider.value;
+    // });
     return slider;
 }
 
 
-function setupPointCloud(version: 'v1' | 'v2', file: string, url: string, isSplats: boolean): void {
+function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
     if (loaded[version]) {
         return;
     }
@@ -158,7 +154,7 @@ function setupUI(cfg: PointCloudsConfig): void {
 
     const loadBtn = createButton('Load', (e: MouseEvent) => {
         e.stopPropagation();
-        setupPointCloud(cfg.version, cfg.file, cfg.url, cfg.splats)
+        setupPointCloud(cfg.version, cfg.file, cfg.url)
         }
     );
 

@@ -7,7 +7,7 @@ import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker'
 import { PointCloudTree } from './point-cloud-tree';
 import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
-import { SplatsMesh } from 'splats-mesh';
+import { SplatsMesh } from './splats-mesh';
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
@@ -18,6 +18,8 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
+  splatsMesh: SplatsMesh = new SplatsMesh(true);
+
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
    */
@@ -28,10 +30,9 @@ export class PointCloudOctree extends PointCloudTree {
   visibleGeometry: IPointCloudGeometryNode[] = [];
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
+
   private visibleBounds: Box3 = new Box3();
   private picker: PointCloudOctreePicker | undefined;
-
-  splatsMesh: SplatsMesh = new SplatsMesh();
   private renderAsSplats: boolean | null = null;
   private lastUpdateViewPos = new Vector3();
   private updateViewOffset = new Vector3();
@@ -139,7 +140,6 @@ export class PointCloudOctree extends PointCloudTree {
   updateSplats(camera: Camera, size: Vector2, callback = () => {}) {
 
     let mesh = this.children[0] as Mesh;
-
     if(!mesh) return;
 
     //Parse the nodes to see if they contain splats information.
@@ -169,7 +169,9 @@ export class PointCloudOctree extends PointCloudTree {
   
       if(positionDiff < .01) {
 
-        this.splatsMesh.update(mesh, camera, size);
+        console.log("updating mesh");
+
+        this.splatsMesh.update(mesh, camera, size, callback);
 
       } 
       

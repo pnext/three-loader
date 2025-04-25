@@ -63,6 +63,7 @@ export interface IPotree {
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    callback?: any
   ): IVisibilityUpdateResult;
 }
 
