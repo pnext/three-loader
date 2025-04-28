@@ -1,11 +1,14 @@
-import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
-import { Box3, Sphere } from 'three';
+import { Box3, Sphere, Vector3 } from 'three';
 import { GetUrlFn, XhrRequest } from '../loading/types';
+import { Decoder } from './decoder';
+import { GeometryDecoder } from './geometry-decoder';
+import { GltfDecoder } from './gltf-decoder';
+import { GltfSplatDecoder } from './gltf-splats-decoder';
 import { OctreeGeometry } from './octree-geometry';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
-import { WorkerPool, WorkerType } from './worker-pool';
 import { buildUrl, extractBasePath } from './utils';
+import { WorkerPool, WorkerType } from './worker-pool';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
@@ -15,23 +18,20 @@ export const OCTREE_FILE = 'octree.bin';
 export const GLTF_COLORS_FILE = 'colors.glbin';
 export const GLTF_POSITIONS_FILE = 'positions.glbin';
 
+
+
 export class NodeLoader {
-
-	attributes?: PointAttributes;
-	scale?: [number, number, number];
-	offset?: [number, number, number];
-
-	hierarchyPath = '';
-	octreePath = '';
-	gltfColorsPath = '';
-	gltfPositionsPath = '';
-
-	isSplats: boolean = false;
-
-	constructor(public getUrl: GetUrlFn, public url: string, public workerPool: WorkerPool, public metadata: Metadata, public harmonicsEnabled: boolean = false) {
-		metadata.attributes.map(attr => {
-			if(attr.name == "sh_band_0") this.isSplats = true;
-		})
+	
+	private readonly decoder: GeometryDecoder;
+	constructor(public url: string, public metadata: Metadata, private loadingContext: LoadingContext) {
+		
+		if (this.metadata.encoding !== 'GLTF') {
+			this.decoder = new Decoder(metadata, loadingContext);
+		} else if (metadata.attributes.some(attr => attr.name === "sh_band_0")) {
+			this.decoder = new GltfSplatDecoder(metadata, loadingContext);
+		} else {
+			this.decoder = new GltfDecoder(metadata, loadingContext);
+		}
 	}
 
 	async load(node: OctreeGeometryNode) {
@@ -43,6 +43,7 @@ export class NodeLoader {
 		node.loading = true;
 		node.octreeGeometry.numNodesLoading++;
 
+		let worker: Worker | undefined
 		try {
 			if (node.nodeType === 2) {
 				await this.loadHierarchy(node);
@@ -54,337 +55,49 @@ export class NodeLoader {
 				throw new Error('byteOffset and byteSize are required');
 			}
 
-			let buffer;
+			worker = this.workerPool.getWorker(this.workerType);
+			const loaded = await this.decoder.decode(node, worker);
 
-			if (this.metadata.encoding === "GLTF") {
-
-				if(!this.isSplats) {
-
-					const urlColors = await this.getUrl(this.gltfColorsPath);
-					const urlPositions = await this.getUrl(this.gltfPositionsPath);
-	
-					if (byteSize === BigInt(0)) {
-						buffer = new ArrayBuffer(0);
-						console.warn(`loaded node with 0 bytes: ${node.name}`);
-					} else {
-						const firstPositions = byteOffset * 4n * 3n;
-						const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
-	
-						const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
-						const responsePositions = await fetch(urlPositions, { headers: headersPositions });
-	
-						const bufferPositions = await responsePositions.arrayBuffer();
-	
-						const firstColors = byteOffset * 4n;
-						const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
-	
-						const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
-						const responseColors = await fetch(urlColors, { headers: headersColors });
-						const bufferColors = await responseColors.arrayBuffer();
-	
-						buffer = appendBuffer(bufferPositions, bufferColors);
-					}
-
-				} else {
-
-					let urls : Record<string, string>;
-
-					urls = {
-						positions: await this.getUrl(this.gltfPositionsPath),
-						colors: await this.getUrl('sh_band_0.glbin'),
-						opacities: await this.getUrl('opacity.glbin'),
-						scales: await this.getUrl('scale.glbin'),
-						rotations: await this.getUrl('rotation.glbin'),
-					};
-
-					if(this.harmonicsEnabled) {
-
-						urls = {
-							positions: await this.getUrl(this.gltfPositionsPath),
-							colors: await this.getUrl('sh_band_0.glbin'),
-							opacities: await this.getUrl('opacity.glbin'),
-							scales: await this.getUrl('scale.glbin'),
-							rotations: await this.getUrl('rotation.glbin'),
-							shBand1_0: await this.getUrl('sh_band_1_triplet_0.glbin'),
-							shBand1_1: await this.getUrl('sh_band_1_triplet_1.glbin'),
-							shBand1_2: await this.getUrl('sh_band_1_triplet_2.glbin'),
-		
-							shBand2_0: await this.getUrl('sh_band_2_triplet_0.glbin'),
-							shBand2_1: await this.getUrl('sh_band_2_triplet_1.glbin'),
-							shBand2_2: await this.getUrl('sh_band_2_triplet_2.glbin'),
-							shBand2_3: await this.getUrl('sh_band_2_triplet_3.glbin'),
-							shBand2_4: await this.getUrl('sh_band_2_triplet_4.glbin'),
-		
-							shBand3_0: await this.getUrl('sh_band_3_triplet_0.glbin'),
-							shBand3_1: await this.getUrl('sh_band_3_triplet_1.glbin'),
-							shBand3_2: await this.getUrl('sh_band_3_triplet_2.glbin'),
-							shBand3_3: await this.getUrl('sh_band_3_triplet_3.glbin'),
-							shBand3_4: await this.getUrl('sh_band_3_triplet_4.glbin'),
-							shBand3_5: await this.getUrl('sh_band_3_triplet_5.glbin'),
-							shBand3_6: await this.getUrl('sh_band_3_triplet_6.glbin'),
-						};
-
-					}
-	
-					const offsets: Record<string, bigint> = {
-						positions: 3n,
-						colors: 3n,
-						opacities: 1n,
-						scales: 3n,
-						rotations: 4n,
-	
-						shBand1_0: 3n,
-						shBand1_1: 3n,
-						shBand1_2: 3n,
-	
-						shBand2_0: 3n,
-						shBand2_1: 3n,
-						shBand2_2: 3n,
-						shBand2_3: 3n,
-						shBand2_4: 3n,
-	
-						shBand3_0: 3n,
-						shBand3_1: 3n,
-						shBand3_2: 3n,
-						shBand3_3: 3n,
-						shBand3_4: 3n,
-						shBand3_5: 3n,
-						shBand3_6: 3n,
-		
-					};
-	
-					if (byteSize === BigInt(0)) {
-						buffer = new ArrayBuffer(0);
-						console.warn(`Loaded node with 0 bytes: ${node.name}`);
-					} else {
-	
-						const fetchBuffer = async (url: string, offsetMultiplier: bigint): Promise<ArrayBuffer> => {
-							const firstByte = byteOffset * 4n * offsetMultiplier;
-							const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
-							const headers: Record<string, string> = { Range: `bytes=${firstByte}-${lastByte}` };
-							const response = await fetch(url, { headers });
-							return response.arrayBuffer();
-						};
-	
-						const fetchPromises: Promise<ArrayBuffer>[] = Object.entries(urls).map(([key, url]) =>
-							fetchBuffer(url, offsets[key])
-						);
-	
-						const [
-							positions,
-							colors,
-							opacities,
-							scales,
-							rotations,
-
-							shBand1_0,
-							shBand1_1,
-							shBand1_2,
-	
-							shBand2_0,
-							shBand2_1,
-							shBand2_2,
-							shBand2_3,
-							shBand2_4,
-	
-							shBand3_0,
-							shBand3_1,
-							shBand3_2,
-							shBand3_3,
-							shBand3_4,
-							shBand3_5,
-							shBand3_6,
-	
-						]: ArrayBuffer[] = await Promise.all(fetchPromises);
-	
-						buffer = appendBuffer(positions, colors);
-						buffer = appendBuffer(buffer, opacities);
-						buffer = appendBuffer(buffer, scales);
-						buffer = appendBuffer(buffer, rotations);
-	
-						if(this.harmonicsEnabled) {
-							buffer = appendBuffer(buffer, shBand1_0);
-							buffer = appendBuffer(buffer, shBand1_1);
-							buffer = appendBuffer(buffer, shBand1_2);
-		
-							buffer = appendBuffer(buffer, shBand2_0);
-							buffer = appendBuffer(buffer, shBand2_1);
-							buffer = appendBuffer(buffer, shBand2_2);
-							buffer = appendBuffer(buffer, shBand2_3);
-							buffer = appendBuffer(buffer, shBand2_4);
-		
-							buffer = appendBuffer(buffer, shBand3_0);
-							buffer = appendBuffer(buffer, shBand3_1);
-							buffer = appendBuffer(buffer, shBand3_2);
-							buffer = appendBuffer(buffer, shBand3_3);
-							buffer = appendBuffer(buffer, shBand3_4);
-							buffer = appendBuffer(buffer, shBand3_5);
-							buffer = appendBuffer(buffer, shBand3_6);
-						}
-					}
-				}
-
-			}
-			else {
-				const urlOctree = await this.getUrl(this.octreePath);
-
-				const first = byteOffset;
-				const last = byteOffset + byteSize - BigInt(1);
-
-				if (byteSize === BigInt(0)) {
-					buffer = new ArrayBuffer(0);
-					console.warn(`loaded node with 0 bytes: ${node.name}`);
-				} else {
-					const headers = { Range: `bytes=${first}-${last}` };
-					const response = await fetch(urlOctree, { headers });
-
-					buffer = await response.arrayBuffer();
-				}
+			if (!loaded) {
+				return;
 			}
 
-			let workerType = this.metadata.encoding === 'GLTF' ? WorkerType.DECODER_WORKER_GLTF : WorkerType.DECODER_WORKER;
+			const { geometry, data} = loaded;
 
-			//The splats use a different method to decode them
-			if(this.isSplats) workerType = WorkerType.DECODER_WORKER_SPLATS;
+			node.density = data.density;
+			node.geometry = geometry;
+			node.loaded = true;
+			node.octreeGeometry.needsUpdate = true;
+			node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
 
-			const worker = this.workerPool.getWorker(workerType);
-
-			worker.onmessage = (e) => {
-
-				const data = e.data;
-				const buffers = data.attributeBuffers;
-				this.workerPool.returnWorker(workerType, worker);
-				const geometry = new BufferGeometry();
-
-				if(!this.isSplats) {
-	
-					for (const property in buffers) {
-
-						const buffer = buffers[property].buffer;
-
-						if (property === 'position') {
-							geometry.setAttribute('position', new BufferAttribute(new Float32Array(buffer), 3));
-						} else if (property === 'rgba') {
-							geometry.setAttribute('rgba', new BufferAttribute(new Uint8Array(buffer), 4, true));
-						} else if (property === 'NORMAL') {
-							geometry.setAttribute('normal', new BufferAttribute(new Float32Array(buffer), 3));
-						} else if (property === 'INDICES') {
-							const bufferAttribute = new BufferAttribute(new Uint8Array(buffer), 4);
-							bufferAttribute.normalized = true;
-							geometry.setAttribute('indices', bufferAttribute);
-						} else {
-							const bufferAttribute: BufferAttribute & {
-								potree?: object
-							} = new BufferAttribute(new Float32Array(buffer), 1);
-
-							const batchAttribute = buffers[property].attribute;
-							bufferAttribute.potree = {
-								offset: buffers[property].offset,
-								scale: buffers[property].scale,
-								preciseBuffer: buffers[property].preciseBuffer,
-								range: batchAttribute.range
-							};
-
-							geometry.setAttribute(property, bufferAttribute);
-						}
-					}
-				} else {
-
-					geometry.drawRange.count = node.numPoints;
-
-					for (const property in buffers) {
-
-						const buffer = buffers[property].buffer;
-
-						if(property === "position") {
-							geometry.setAttribute('centers', new BufferAttribute(new Float32Array(buffer), 4));
-						}
-
-						if(property === "scale") {
-							geometry.setAttribute('scale', new BufferAttribute(new Float32Array(buffer), 3));
-						}
-
-						if(property === "orientation") {
-							geometry.setAttribute('orientation', new BufferAttribute(new Float32Array(buffer), 4));
-						}
-
-						if(property === "raw_position") {
-							geometry.setAttribute('raw_position', new BufferAttribute(new Float32Array(buffer), 4));
-						}
-						
-						else if (property === 'COVARIANCE0') {
-							geometry.setAttribute('COVARIANCE0', new BufferAttribute(new Float32Array(buffer), 4));
-						}	
-
-						else if (property === 'COVARIANCE1') {
-							geometry.setAttribute('COVARIANCE1', new BufferAttribute(new Float32Array(buffer), 2));
-						}	
-
-						else if (property === 'POS_COLOR') {
-							geometry.setAttribute('POS_COLOR', new BufferAttribute(new Uint32Array(buffer), 4));
-						}	
-
-						if(this.harmonicsEnabled) {
-
-							if (property === "HARMONICS1") {
-								geometry.setAttribute('HARMONICS1', new BufferAttribute(new Uint32Array(buffer), 3));
-							}
-
-							else if (property === "HARMONICS2") {
-								geometry.setAttribute('HARMONICS2', new BufferAttribute(new Uint32Array(buffer), 5));
-							}
-
-							else if (property === "HARMONICS3") {
-								geometry.setAttribute('HARMONICS3', new BufferAttribute(new Uint32Array(buffer), 7));
-							}
-
-						}
-					}
-
-				}
-
-				node.density = data.density;
-				node.geometry = geometry;
-				node.loaded = true;
-				node.loading = false;
-				node.octreeGeometry.numNodesLoading--;
-				node.octreeGeometry.needsUpdate = true;
-				node.tightBoundingBox = this.getTightBoundingBox(data.tightBoundingBox);
-			};
-
-			const pointAttributes = node.octreeGeometry.pointAttributes;
-			const scale = node.octreeGeometry.scale;
-
-			const box = node.boundingBox;
-			const min = node.octreeGeometry.offset.clone().add(box.min);
-			const size = box.max.clone().sub(box.min);
-			const max = min.clone().add(size);
-			const numPoints = node.numPoints;
-
-			const offset = node.octreeGeometry.loader.offset;
-
-			const message = {
-				name: node.name,
-				buffer: buffer,
-				pointAttributes: pointAttributes,
-				scale: scale,
-				min: min,
-				max: max,
-				size: size,
-				offset: offset,
-				numPoints: numPoints,
-				harmonicsEnabled: this.harmonicsEnabled
-			};
-
-			worker.postMessage(message, [message.buffer]);
 		} catch (e) {
 			node.loaded = false;
+		} finally {
 			node.loading = false;
 			node.octreeGeometry.numNodesLoading--;
+			if (worker) {
+				this.workerPool.returnWorker(this.workerType, worker)
+			}
 		}
 	}
 
-	parseHierarchy(node: OctreeGeometryNode, buffer: ArrayBuffer) {
+	private get workerPool() {
+		return this.loadingContext.workerPool;
+	}
+
+	private get getUrl() {
+		return this.loadingContext.getUrl
+	}
+
+	private get hierarchyPath() {
+		return this.loadingContext.hierarchyPath;
+	}
+
+	private get workerType(): WorkerType {
+		return this.decoder.workerType;
+	}
+
+	private parseHierarchy(node: OctreeGeometryNode, buffer: ArrayBuffer) {
 		const view = new DataView(buffer);
 
 		const bytesPerNode = 22;
@@ -451,7 +164,7 @@ export class NodeLoader {
 		}
 	}
 
-	async loadHierarchy(node: OctreeGeometryNode) {
+	private async loadHierarchy(node: OctreeGeometryNode) {
 
 		const { hierarchyByteOffset, hierarchyByteSize } = node;
 
@@ -476,10 +189,13 @@ export class NodeLoader {
 		const box = new Box3(new Vector3().fromArray(min), new Vector3().fromArray(max));
 		box.max.sub(box.min);
 		box.min.set(0, 0, 0);
-	
+
 		return box;
-	  }
+	}
 }
+
+
+
 
 const tmpVec3 = new Vector3();
 function createChildAABB(aabb: Box3, index: number) {
@@ -506,13 +222,6 @@ function createChildAABB(aabb: Box3, index: number) {
 	}
 
 	return new Box3(min, max);
-}
-
-function appendBuffer(buffer1: any, buffer2: any) {
-	var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-	tmp.set(new Uint8Array(buffer1), 0);
-	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-	return tmp.buffer;
 }
 
 const typenameTypeattributeMap = {
@@ -577,7 +286,20 @@ export interface Metadata {
 	attributes: Attribute[];
 }
 
-export class OctreeLoader {
+export interface LoadingContext {
+	workerPool: WorkerPool;
+	basePath: string;
+	hierarchyPath: string;
+	octreePath: string;
+	gltfColorsPath: string;
+	gltfPositionsPath: string;
+
+	harmonicsEnabled: boolean;
+
+	getUrl: GetUrlFn;
+}
+
+export class OctreeLoader implements LoadingContext {
 
 	workerPool: WorkerPool = new WorkerPool();
 
@@ -621,8 +343,8 @@ export class OctreeLoader {
 			if (bufferView) {
 				attribute.uri = bufferView.uri;
 			}
-			
-			if (numElements === 1  && min && max) {
+
+			if (numElements === 1 && min && max) {
 				attribute.range = [min[0], max[0]];
 			} else {
 				attribute.range = [min, max];
@@ -660,27 +382,27 @@ export class OctreeLoader {
 	async load(url: string, xhrRequest: XhrRequest) {
 		const metadata = await this.fetchMetadata(url, xhrRequest);
 		const attributes = OctreeLoader.parseAttributes(metadata.attributes);
-	
+
 		this.applyCustomBufferURI(metadata.encoding, attributes);
-	
-		const loader = this.createLoader(url, metadata, attributes);
-	
+
+		const loader = this.createLoader(url, metadata);
+
 		const boundingBox = this.createBoundingBox(metadata);
 		const offset = this.getOffset(boundingBox);
 		const octree = this.initializeOctree(loader, url, metadata, boundingBox, offset, attributes);
 		const root = this.initializeRootNode(octree, boundingBox, metadata);
 		octree.root = root;
-	
+
 		loader.load(root);
-	
+
 		return { geometry: octree };
 	}
-	
+
 	private async fetchMetadata(url: string, xhrRequest: XhrRequest): Promise<Metadata> {
 		const response = await xhrRequest(url);
 		return response.json();
 	}
-	
+
 	private applyCustomBufferURI(encoding: string, attributes: any) {
 		// Only datasets with GLTF encoding support custom buffer URIs -
 		// as opposed to datasets with DEFAULT encoding coming from PotreeConverter
@@ -690,32 +412,24 @@ export class OctreeLoader {
 		}
 	}
 
-	private createLoader(url: string, metadata: Metadata, attributes: any): NodeLoader {
-		const loader = new NodeLoader(this.getUrl, url, this.workerPool, metadata, this.harmonicsEnabled);
-		loader.attributes = attributes;
-		loader.scale = metadata.scale;
-		loader.offset = metadata.offset;
-		loader.hierarchyPath = this.hierarchyPath;
-		loader.octreePath = this.octreePath;
-		loader.gltfColorsPath = this.gltfColorsPath;
-		loader.gltfPositionsPath = this.gltfPositionsPath;
-		return loader;
+	private createLoader(url: string, metadata: Metadata): NodeLoader {
+		return new NodeLoader(url, metadata, this);
 	}
-	
+
 	private createBoundingBox(metadata: Metadata): Box3 {
 		const min = new Vector3(...metadata.boundingBox.min);
 		const max = new Vector3(...metadata.boundingBox.max);
 		const boundingBox = new Box3(min, max);
 		return boundingBox;
 	}
-	
+
 	private getOffset(boundingBox: Box3): Vector3 {
 		const offset = boundingBox.min.clone();
 		boundingBox.min.sub(offset);
 		boundingBox.max.sub(offset);
 		return offset;
 	}
-	
+
 	private initializeOctree(loader: NodeLoader, url: string, metadata: Metadata, boundingBox: Box3, offset: Vector3, attributes: any): OctreeGeometry {
 		const octree = new OctreeGeometry(loader, boundingBox);
 		octree.url = url;
@@ -730,7 +444,7 @@ export class OctreeLoader {
 		octree.pointAttributes = attributes;
 		return octree;
 	}
-	
+
 	private initializeRootNode(octree: OctreeGeometry, boundingBox: Box3, metadata: Metadata): OctreeGeometryNode {
 		const root = new OctreeGeometryNode('r', octree, boundingBox);
 		root.level = 0;

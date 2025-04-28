@@ -169,8 +169,6 @@ export class PointCloudOctree extends PointCloudTree {
   
       if(positionDiff < .01) {
 
-        console.log("updating mesh");
-
         this.splatsMesh.update(mesh, camera, size, callback);
 
       } 
