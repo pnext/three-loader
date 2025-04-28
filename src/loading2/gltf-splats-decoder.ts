@@ -175,6 +175,8 @@ export class GltfSplatDecoder implements GeometryDecoder {
 
         const offset = this._metadata.offset;
 
+        console.log(node.name);
+
         const message = {
             name: node.name,
             buffer: buffer,

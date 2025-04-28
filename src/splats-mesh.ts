@@ -399,7 +399,7 @@ export class SplatsMesh extends Object3D{
                 totalSplats: this.instanceCount
             }
 
-            if(this.debugMode) console.log("sorting started");
+            // if(this.debugMode) console.log("sorting started");
 
             this.sorter.postMessage({
                 sort: sortMessage
@@ -428,9 +428,9 @@ export class SplatsMesh extends Object3D{
                         this.defer().then( _ => {
                             callback();
                             this.enableSorting = true;
-                            if(this.debugMode) {
-                                console.log("sorting completed")
-                            }
+                            // if(this.debugMode) {
+                            //     console.log("sorting completed")
+                            // }
                         });                   
     
                     } else {
