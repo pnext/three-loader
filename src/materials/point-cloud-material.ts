@@ -177,7 +177,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
   visibleNodesTexture: Texture | undefined;
-  private visibleNodeTextureOffsets = new Map<string, number>();
+  visibleNodeTextureOffsets = new Map<string, number>();
 
   private _gradient = SPECTRAL;
   private gradientTexture: Texture | undefined = generateGradientTexture(this._gradient);

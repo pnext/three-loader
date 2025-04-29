@@ -102,7 +102,6 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
     viewer.load(file, url, 'v2', !isIOS())
         .then(pco => {
             pointClouds[version] = pco;
-            pco.rotateX(-Math.PI * 0.5);
             pco.material.size = 1.0;
 
             pco.material.pointColorType = 0;
@@ -111,10 +110,13 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
             pco.position.set(0, 0, 0);
 
+            pco.rotateX(-Math.PI * 0.5);
+            //camera.up.set(0, 0, 1);
+
+
             const camera = viewer.camera;
             camera.far = 1000;
             camera.updateProjectionMatrix();
-            //camera.up.set(0, 0, 1);
             camera.position.set(-4, 4, 16);
 
             viewer.add(pco);

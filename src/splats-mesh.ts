@@ -24,7 +24,8 @@ import {
     Object3D
    } from 'three';
 
-   import { createSortWorker } from './workers/SortWorker';
+import { createSortWorker } from './workers/SortWorker';
+import { PointCloudMaterial } from './materials';
  
 const DELAYED_FRAMES = 1;
 
@@ -134,12 +135,14 @@ export class SplatsMesh extends Object3D{
                     harmonicsTexture1:{value: null},
                     harmonicsTexture2:{value: null},
                     harmonicsTexture3:{value: null},
+                    visibleNodes: {value: null},
                     cameraPosition:{value: new Vector3(0, 0, 0)},
                     harmonicsDegree:{value: 3},
                     renderIds:{value: false},
                     debugMode: {value: false},
                     renderOnlyHarmonics: {value: false},
-                    harmonicsScale: {value: 4}
+                    harmonicsScale: {value: 4},
+                    octreeSize: {value: 0},
                 }
         });
 
@@ -241,6 +244,10 @@ export class SplatsMesh extends Object3D{
         let mat =  mesh.material as RawShaderMaterial;
         mat.visible = false;
 
+        //Passing the visible nodes to the material
+        this.material.uniforms.visibleNodes.value = mat.uniforms.visibleNodes.value;
+        this.material.uniforms.octreeSize.value = mat.uniforms.octreeSize.value;
+
         let material = this.material as RawShaderMaterial;
 
         material.uniforms.basisViewport.value.set(
@@ -297,7 +304,12 @@ export class SplatsMesh extends Object3D{
                 let m = el as Mesh;
                 let g = m.geometry as BufferGeometry;
 
-                let nodeInfo = [m.position.x, m.position.y, m.position.z, m.name.length];
+                let pointCloudMaterial = mesh.material as PointCloudMaterial;
+                const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(el.name) || 0;
+                const level =  m.name.length - 1;
+                const packedData = 100000 * level + vnStart;
+
+                let nodeInfo = [m.position.x, m.position.y, m.position.z, packedData];
                 this.bufferNodes.set(nodeInfo, nodesCount * 4);
 
                 this.bufferNodesIndices.set(new Uint32Array(g.drawRange.count).fill(nodesCount), instanceCount);
