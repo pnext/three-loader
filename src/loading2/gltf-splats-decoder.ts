@@ -19,9 +19,6 @@ export class GltfSplatDecoder implements GeometryDecoder {
 
 	async decode(node: OctreeGeometryNode, worker: Worker): Promise<DecodedGeometry | undefined> {
 
-		node.loading = true;
-		node.octreeGeometry.numNodesLoading++;
-
 		const { byteOffset, byteSize } = node;
 		if (byteOffset === undefined || byteSize === undefined) {
 			throw new Error('byteOffset and byteSize are required');
@@ -174,8 +171,6 @@ export class GltfSplatDecoder implements GeometryDecoder {
         const numPoints = node.numPoints;
 
         const offset = this._metadata.offset;
-
-        console.log(node.name);
 
         const message = {
             name: node.name,
