@@ -110,11 +110,12 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
             pco.position.set(0, 0, 0);
 
-            pco.rotateX(-Math.PI * 0.5);
-            //camera.up.set(0, 0, 1);
+            //pco.rotateX(-Math.PI * 0.5);
+            
 
 
             const camera = viewer.camera;
+            camera.up.set(0, 0, 1);
             camera.far = 1000;
             camera.updateProjectionMatrix();
             camera.position.set(-4, 4, 16);

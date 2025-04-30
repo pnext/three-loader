@@ -25,7 +25,9 @@
     "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\"",
     "prepare-release": "standard-version"
   },
-  "dependencies": {},
+  "dependencies": {
+    "wasm2js": "^0.2.0"
+  },
   "peerDependencies": {
     "three": "~0.160.0"
   },

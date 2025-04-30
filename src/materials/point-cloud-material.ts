@@ -625,7 +625,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     const maxScale = Math.max(octree.scale.x, octree.scale.y, octree.scale.z);
     this.spacing = octree.pcoGeometry.spacing * maxScale;
     this.octreeSize = octree.pcoGeometry.boundingBox.getSize(PointCloudMaterial.helperVec3).x;
-
     if (
       this.pointSizeType === PointSizeType.ADAPTIVE ||
       this.pointColorType === PointColorType.LOD

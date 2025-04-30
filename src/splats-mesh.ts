@@ -21,7 +21,8 @@ import {
     ShaderMaterial,
     DoubleSide,
     GLSL3,
-    Object3D
+    Object3D,
+    NearestFilter
    } from 'three';
 
 import { createSortWorker } from './workers/SortWorker';
@@ -40,11 +41,14 @@ export class SplatsMesh extends Object3D{
     private textureCovariance0: any;
     private textureCovariance1: any;
     private textureNode: any;
+    private textureNode2: any;
     private textureNodeIndices: any;
 
     private textureHarmonics1: any;
     private textureHarmonics2: any;
     private textureHarmonics3: any;
+
+    private textureVisibilityNodes: any;
 
     private bufferCenters: any;
     private bufferPositions: any;
@@ -54,11 +58,14 @@ export class SplatsMesh extends Object3D{
     private bufferCovariance0: any;
     private bufferCovariance1: any;
     private bufferNodes: any;
+    private bufferNodes2: any;
     private bufferNodesIndices: any;
 
     private bufferHarmonics1: any;
     private bufferHarmonics2: any;
     private bufferHarmonics3: any;
+
+    private bufferVisibilityNodes: any;
 
     private sorter: any;
     private lastSortViewDir = new Vector3(0, 0, -1);
@@ -130,6 +137,7 @@ export class SplatsMesh extends Object3D{
                     covarianceTexture1:{value: null},
                     posColorTexture:{value: null},
                     nodeTexture:{value: null},
+                    nodeTexture2:{value: null},
                     nodeIndicesTexture:{value: null},
                     indicesTexture:{value: null},
                     harmonicsTexture1:{value: null},
@@ -141,6 +149,7 @@ export class SplatsMesh extends Object3D{
                     renderIds:{value: false},
                     debugMode: {value: false},
                     renderOnlyHarmonics: {value: false},
+                    adaptiveSize: {value: true},
                     harmonicsScale: {value: 4},
                     octreeSize: {value: 0},
                 }
@@ -168,8 +177,13 @@ export class SplatsMesh extends Object3D{
         this.bufferPosColor = new Uint32Array(size * size * 4);
         this.bufferCovariance0 = new Float32Array(size * size * 4);
         this.bufferCovariance1 = new Float32Array(size * size * 2);
+
         this.bufferNodes = new Float32Array(100 * 100 * 4);
+        this.bufferNodes2 = new Uint32Array(100 * 100 * 2);
+
+
         this.bufferNodesIndices = new Uint32Array(size * size);
+        this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
     
     
         //For the harmonics
@@ -186,6 +200,9 @@ export class SplatsMesh extends Object3D{
         
         //This should be able to save up to 10000 nodes
         this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
+        this.textureNode2 = new DataTexture(this.bufferNodes2, 100, 100, RGFormat, UnsignedIntType);
+        this.textureNode2.internalFormat = 'RG32UI';
+
     
         this.textureNodeIndices = new DataTexture(this.bufferNodesIndices, size, size, RedIntegerFormat, UnsignedIntType);
         this.textureNodeIndices.internalFormat = 'R32UI';
@@ -203,6 +220,9 @@ export class SplatsMesh extends Object3D{
         this.textureHarmonics3 = new DataTexture(this.bufferHarmonics3, degree3Size, degree3Size, RedIntegerFormat, UnsignedIntType);
         this.textureHarmonics3.internalFormat = 'R32UI';
 
+        this.textureVisibilityNodes = new DataTexture(this.bufferVisibilityNodes, 2048, 1, RGBAFormat);
+        this.textureVisibilityNodes.magFilter = NearestFilter;
+
         this.textures.push(this.textureNode);
         this.textures.push(this.textureNodeIndices);
         this.textures.push(this.textureCovariance0);
@@ -211,6 +231,8 @@ export class SplatsMesh extends Object3D{
         this.textures.push(this.textureHarmonics1);
         this.textures.push(this.textureHarmonics2);
         this.textures.push(this.textureHarmonics3);
+        this.textures.push(this.textureNode2);
+        this.textures.push(this.textureVisibilityNodes);
 
         this.textures.map(text => text.needsUpdate = true);
 
@@ -218,11 +240,13 @@ export class SplatsMesh extends Object3D{
         this.material.uniforms["covarianceTexture0"].value = this.textureCovariance0;
         this.material.uniforms["covarianceTexture1"].value = this.textureCovariance1;
         this.material.uniforms["nodeTexture"].value = this.textureNode;
+        this.material.uniforms["nodeTexture2"].value = this.textureNode2;
         this.material.uniforms["nodeIndicesTexture"].value = this.textureNodeIndices;
-    
         this.material.uniforms["harmonicsTexture1"].value = this.textureHarmonics1;
         this.material.uniforms["harmonicsTexture2"].value = this.textureHarmonics2;
         this.material.uniforms["harmonicsTexture3"].value = this.textureHarmonics3;
+
+        this.material.uniforms.visibleNodes.value = this.textureVisibilityNodes;
 
         this.enabled = true;
     }
@@ -245,7 +269,6 @@ export class SplatsMesh extends Object3D{
         mat.visible = false;
 
         //Passing the visible nodes to the material
-        this.material.uniforms.visibleNodes.value = mat.uniforms.visibleNodes.value;
         this.material.uniforms.octreeSize.value = mat.uniforms.octreeSize.value;
 
         let material = this.material as RawShaderMaterial;
@@ -284,13 +307,18 @@ export class SplatsMesh extends Object3D{
             instanceCount += g.drawRange.count;
         });
 
-        totalMemoryUsed = instanceCount * 56;
+        totalMemoryUsed = instanceCount * (this.harmonicsEnabled ? 236 : 56);
 
         mesh.traverseVisible(el => {
             nodesAsString += el.name;
         });
 
         this.forceSorting = false;
+
+
+        //Copy the data from the visibility nodes, it uses a separated texture to sync when
+        //it is updated in relationship with the other textures.
+        this.bufferVisibilityNodes.set(mat.uniforms.visibleNodes.value.image.data);
       
         if((nodesAsString != this.nodesAsString) && this.enableSorting) {
         
@@ -299,18 +327,22 @@ export class SplatsMesh extends Object3D{
             instanceCount = 0;
             nodesCount = 0;
 
+            let maxLevel = 0;
             mesh.traverseVisible(el => {
 
                 let m = el as Mesh;
                 let g = m.geometry as BufferGeometry;
 
                 let pointCloudMaterial = mesh.material as PointCloudMaterial;
-                const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(el.name) || 0;
+                const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(el.name)!;
                 const level =  m.name.length - 1;
-                const packedData = 100000 * level + vnStart;
+                maxLevel = Math.max(maxLevel, level);
 
-                let nodeInfo = [m.position.x, m.position.y, m.position.z, packedData];
+                let nodeInfo = [m.position.x, m.position.y, m.position.z, 1];
+                let nodeInfo2 = [level, vnStart];
                 this.bufferNodes.set(nodeInfo, nodesCount * 4);
+                this.bufferNodes2.set(nodeInfo2, nodesCount * 2);
+
 
                 this.bufferNodesIndices.set(new Uint32Array(g.drawRange.count).fill(nodesCount), instanceCount);
 
@@ -339,12 +371,13 @@ export class SplatsMesh extends Object3D{
             })
 
 
-            totalMemoryInDisplay = instanceCount * 56;
+            totalMemoryInDisplay = instanceCount * (this.harmonicsEnabled ? 236 : 56);
 
             if(this.debugMode) {
                 console.log("----------------------------");
                 console.log("total memory in usage: " + Math.ceil(totalMemoryUsed / 1000000) + " MB");
                 console.log("total memory displayed: " + Math.ceil(totalMemoryInDisplay / 1000000) + " MB");
+                console.log("max level displayed: " + maxLevel);
                 console.log("----------------------------");
             }
 
@@ -431,9 +464,13 @@ export class SplatsMesh extends Object3D{
                         indexAttribute.needsUpdate = true;
 
                         if(this.texturesNeedUpdate) {
+
                             this.textures.map(text => text.needsUpdate = true);
                             this.texturesNeedUpdate = false;
+
                         }
+
+                        
     
                         this.mesh.geometry.instanceCount = this.instanceCount;
     

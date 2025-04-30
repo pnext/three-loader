@@ -112,8 +112,8 @@ export class Viewer {
     this.raycastSplatDebug = new Mesh(sphereGeo, mat2);
     this.raycastSplatDebug.renderOrder = 10000;
     
-    this.scene.add(this.raycastSplat);
-    this.scene.add(this.raycastSplatDebug);
+    // this.scene.add(this.raycastSplat);
+    // this.scene.add(this.raycastSplatDebug);
 
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
@@ -128,7 +128,7 @@ export class Viewer {
       this.elapsedTime = Date.now();
     })
 
-    targetEl.addEventListener("mousemove", this.updateCameraTarget.bind(this));
+    targetEl.addEventListener("mouseup", this.updateCameraTarget.bind(this));
 
     requestAnimationFrame(this.loop);
   }
@@ -140,7 +140,7 @@ export class Viewer {
     let clickTime = Date.now();
     let deltaTime = clickTime - this.elapsedTime;
 
-    if(deltaTime > -1) {
+    if(deltaTime < 200) {
 
       const rgba = new Float32Array(4);
       const DPR = this.renderer?.getPixelRatio() || 1;
@@ -184,9 +184,9 @@ export class Viewer {
         if (intersects.length > 0) {
           center = intersects[0].point;
           this.raycastSplatDebug.position.copy(center);
-          //this.cameraControls.target.copy(center);
+          this.cameraControls.target.copy(center);
         } else {
-          //this.cameraControls.target.copy(splatData.position);
+          this.cameraControls.target.copy(splatData.position);
         }
     
         deltaTime = clickTime;

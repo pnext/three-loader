@@ -1,6 +1,14 @@
 
 function sortWorker(self: any) {
 
+    function toUint8Array (s: any) {
+      return new Uint8Array(atob(s).split('').map(charCodeAt))
+    }
+    
+    function charCodeAt (c : string) {
+      return c.charCodeAt(0)
+    }
+
     const MemoryPageSize = 65536;
     const BytesPerFloat = 4;
     const BytesPerInt = 4;
@@ -116,9 +124,29 @@ function sortWorker(self: any) {
             },
           };
     
-        //Setup the loading url for this!  
-        const response = await fetch("https://mdbm.es/sorter_test.wasm");
-        const buffer = await response.arrayBuffer();
+        /*
+
+        USED WASM2JS (https://github.com/thlorenz/wasm2js) to extract the base64 file required for the sorter.
+
+
+                    The process goes as follows
+                                |
+                                |
+                                v
+           sorter_test.cpp file (original C sorter file) 
+                                |
+                                |
+                                v   
+      sorter_test.wasm file (compiled WASM file from the original C file)
+                                |
+                                |
+                                v
+      buffer string with base64 (obtained from sorter_test.wasm using WASM2JS)
+
+
+        */
+
+        const buffer = toUint8Array('AGFzbQEAAAAADwhkeWxpbmsuMAEEAAAAAAEPAmAAAGAIf39/f39/f38AAg8BA2VudgZtZW1vcnkCAAADAwIAAQcjAhFfX3dhc21fY2FsbF9jdG9ycwAAC3NvcnRJbmRleGVzAAEKhgMCAwABC/8CAgN/A30gBwRAIAQqAighCyAEKgIYIQwgBCoCCCENQfj///8HIQlBiICAgHghBANAIAIgCkECdCIIaiALIAEgACAIaigCAEEEdGoiCCoCCJQgDSAIKgIAlCAMIAgqAgSUkpJDAACARZT8ACIINgIAIAkgCCAIIAlKGyEJIAQgCCAEIAhKGyEEIApBAWoiCiAHRw0ACyAGQQFrsyAEsiAJspOVIQtBACEEA0AgAiAEQQJ0aiIBIAsgASgCACAJa7KU/AAiATYCACADIAFBAnRqIgEgASgCAEEBajYCACAEQQFqIgQgB0cNAAsLIAZBAk8EQCADKAIAIQlBASEEA0AgAyAEQQJ0aiIBIAEoAgAgCWoiCTYCACAEQQFqIgQgBkcNAAsLIAdBAEoEQCAHIQQDQCAFIAcgAyACIARBAWsiAUECdCIGaigCAEECdGoiCSgCACIIa0ECdGogACAGaigCADYCACAJIAhBAWs2AgAgBEEBSyEGIAEhBCAGDQALCws=')
         const result = await WebAssembly.instantiate(buffer, sorterWasmImport);
 
         //Save the instance of the WASM to use

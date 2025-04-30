@@ -9,6 +9,7 @@ uniform float splatScale;
 uniform vec2 basisViewport;
 uniform float harmonicsDegree;
 uniform bool renderIds;
+uniform bool adaptiveSize;
 
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
@@ -18,6 +19,9 @@ uniform highp usampler2D nodeIndicesTexture;
 uniform highp usampler2D harmonicsTexture1;
 uniform highp usampler2D harmonicsTexture2;
 uniform highp usampler2D harmonicsTexture3;
+
+uniform highp usampler2D nodeTexture2;
+
 
 uniform bool renderOnlyHarmonics;
 uniform float harmonicsScale;
@@ -164,7 +168,6 @@ float getLOD(vec3 pos, int vnStart, float level) {
 }
 
 float getPointSizeAttenuation(vec3 pos, int vnStart, float level) {
-	//return getLOD(pos, vnStart, level);
     return 0.5 * pow(2.0, getLOD(pos, vnStart, level));
 }
 
@@ -196,9 +199,9 @@ void main() {
 
     vec4 nodeData = texelFetch(nodeTexture, samplerUV, 0);
 
-    float levelAndVnStart = nodeData.a;
-    float level = floor(levelAndVnStart / 100000.);
-    float vnStart = floor(levelAndVnStart - level * 100000.);
+    ivec2 levelAndVnStart =  ivec2(texelFetch(nodeTexture2, samplerUV, 0).rg);
+    int vnStart = levelAndVnStart.r;
+    int level = levelAndVnStart.g;
 
     instancePosition += nodeData.rgb;
 
@@ -245,11 +248,13 @@ void main() {
     // since the eigen vectors are orthogonal, we derive the second one from the first
     vec2 eigenVector2 = vec2(eigenVector1.y, -eigenVector1.x);
 
-    
     //Get the adaptive size
-    float adaptive = getPointSizeAttenuation(instancePosition, int(vnStart), float(level));
-    float renderScale = clamp(splatScale * 10. / adaptive, 1., 2.);
-    renderScale = 1.;
+    float renderScale = 1.;
+    if(adaptiveSize) {
+        float adaptive = getPointSizeAttenuation( instancePosition, vnStart, float(level) );
+        renderScale = clamp(splatScale * 10. / adaptive, 1., 4.);
+    }
+
     float cameraDistance = length(cameraPosition - instancePosition);
 
     // We use sqrt(8) standard deviations instead of 3 to eliminate more of the splat with a very low opacity.
@@ -388,6 +393,52 @@ void main() {
     }
     
     vColor.rgb = clamp(vColor.rgb, vec3(0.), vec3(1.));
+
+/*
+    //Test the LOD
+    int LOD = int(getLOD( instancePosition, int(vnStart), float(level) ));
+    switch ( LOD ) {
+        case 0:
+            vColor.rgb = vec3(1., 0., 0.);
+        break;
+        case 1:
+            vColor.rgb = vec3(0., 1., 0.);
+        break;
+        case 2:
+            vColor.rgb = vec3(0., 0., 1.);
+        break;
+        case 3:
+            vColor.rgb = vec3(1., 0., 1.);
+        break;
+        case 4:
+            vColor.rgb = vec3(1., 1., 0.);
+        break;
+        case 5:
+            vColor.rgb = vec3(0., 1., 1.);
+        break;
+        case 6:
+            vColor.rgb = vec3(0.5, 0., 0.);
+        break;
+        case 7:
+            vColor.rgb = vec3(0., 0.5, 0.);
+        break;
+        case 8:
+            vColor.rgb = vec3(0.0, 0., 0.5);
+        break;
+        case 9:
+            vColor.rgb = vec3(0.5, 0., 0.5);
+        break;
+        case 10:
+            vColor.rgb = vec3(0.5, 0.5, 0.0);
+        break;
+        case 11:
+            vColor.rgb = vec3(0.0, 0.5, 0.5);
+        break;
+        case 12:
+            vColor.rgb = vec3(1., 1., 1.);
+        break;
+    }
+    */
 
 	vOpacity = colorData.a;
 }
