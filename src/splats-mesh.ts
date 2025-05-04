@@ -152,6 +152,10 @@ export class SplatsMesh extends Object3D{
                     adaptiveSize: {value: true},
                     harmonicsScale: {value: 4},
                     octreeSize: {value: 0},
+                    fov: {value: 1},
+                    maxSplatScale: {value: 4},
+                    screenHeight: {value: 1},
+                    spacing: {value: 1}
                 }
         });
 
@@ -268,8 +272,13 @@ export class SplatsMesh extends Object3D{
         let mat =  mesh.material as RawShaderMaterial;
         mat.visible = false;
 
-        //Passing the visible nodes to the material
+
+        //Passing the uniforms from the point cloud material to the splats material.
         this.material.uniforms.octreeSize.value = mat.uniforms.octreeSize.value;
+        this.material.uniforms.fov.value = mat.uniforms.fov.value;
+        this.material.uniforms.spacing.value = mat.uniforms.spacing.value;
+        this.material.uniforms.screenHeight.value = mat.uniforms.screenHeight.value;
+        
 
         let material = this.material as RawShaderMaterial;
 

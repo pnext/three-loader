@@ -21,6 +21,10 @@ uniform highp usampler2D harmonicsTexture2;
 uniform highp usampler2D harmonicsTexture3;
 
 uniform highp usampler2D nodeTexture2;
+uniform float fov;
+uniform float spacing;
+uniform float screenHeight;
+uniform float maxSplatScale;
 
 
 uniform bool renderOnlyHarmonics;
@@ -250,9 +254,18 @@ void main() {
 
     //Get the adaptive size
     float renderScale = 1.;
+
     if(adaptiveSize) {
-        float adaptive = getPointSizeAttenuation( instancePosition, vnStart, float(level) );
-        renderScale = clamp(splatScale * 10. / adaptive, 1., 4.);
+
+        float slope = tan(fov / 2.0);
+	    float projFactor =  -0.5 * screenHeight / (slope * viewCenter.z);
+        float worldSpaceSize = 2.0 * spacing / getPointSizeAttenuation( instancePosition, vnStart, float(level) );
+        renderScale = worldSpaceSize * projFactor;
+
+        //the splats should be at least the default size.
+        renderScale = max(1., renderScale);
+        renderScale = min(renderScale, maxSplatScale);
+
     }
 
     float cameraDistance = length(cameraPosition - instancePosition);
