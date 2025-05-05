@@ -80,9 +80,9 @@ function createHarmonicsSlider(): HTMLInputElement {
     slider.max = '3';
     slider.value = "0";
     slider.className = 'harmonics-slider';
-    // slider.addEventListener('change', () => {
-    //     viewer.splatsManager.mesh.material.uniforms.harmonicsDegree.value = slider.value;
-    // });
+    slider.addEventListener('change', () => {
+        viewer.pointClouds[0].material.uniforms.harmonicsDegree.value = slider.value;
+    });
     return slider;
 }
 

@@ -53,7 +53,7 @@ export class Viewer {
   /**
    * Array of point clouds which are in the scene and need to be updated.
    */
-  private pointClouds: PointCloudOctree[] = [];
+  pointClouds: PointCloudOctree[] = [];
   /**
    * The time (milliseconds) when `loop()` was last called.
    */
@@ -111,9 +111,6 @@ export class Viewer {
     const sphereGeo = new SphereGeometry(0.005);
     this.raycastSplatDebug = new Mesh(sphereGeo, mat2);
     this.raycastSplatDebug.renderOrder = 10000;
-    
-    // this.scene.add(this.raycastSplat);
-    // this.scene.add(this.raycastSplatDebug);
 
     this.targetEl = targetEl;
     targetEl.appendChild(this.renderer.domElement);
