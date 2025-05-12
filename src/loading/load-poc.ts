@@ -49,10 +49,8 @@ interface POCJson {
 export function loadPOC(
   url: string,
   getUrl: GetUrlFn,
-  xhrRequest: XhrRequest,
-  loadGaussians: boolean = false
+  xhrRequest: XhrRequest
 ): Promise<PointCloudOctreeGeometry> {
-  if(loadGaussians) console.warn("splats need to be loaded with V2");
   return Promise.resolve(getUrl(url)).then(transformedUrl => {
     return xhrRequest(transformedUrl, { mode: 'cors' })
       .then(res => handleFailedRequest(res))

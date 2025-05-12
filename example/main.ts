@@ -13,19 +13,24 @@ viewer.initialize(targetEl);
 interface PointCloudsConfig {
     file: string;
     url: string;
-    version: 'v1' | 'v2';
+    version: 'v1' | 'v2' | 'splats';
 }
 
 const examplePointClouds: PointCloudsConfig[] = [
     {
-        file: 'metadata.json',
-        url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
+        file: 'cloud.js',
+        url: 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
         version: 'v1',
     },
     {
         file: 'metadata.json',
-        url: 'https://www.mdbm.es/alamedilla/',
+        url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
         version: 'v2',
+    },
+    {
+        file: 'metadata.json',
+        url: 'https://www.mdbm.es/alamedilla/',
+        version: 'splats',
     }
 ];
 
@@ -39,12 +44,14 @@ interface LoadedState {
 
 const pointClouds: PointClouds = {
     v1: undefined,
-    v2: undefined
+    v2: undefined,
+    splats: undefined
 };
 
 const loaded: LoadedState = {
     v1: false,
-    v2: false
+    v2: false,
+    splats: false
 };
 
 function createButton(text: string, onClick: (e: MouseEvent) => void): HTMLButtonElement {
@@ -73,21 +80,7 @@ function createSlider(version: string): HTMLInputElement {
     return slider;
 }
 
-function createHarmonicsSlider(): HTMLInputElement {
-    const slider: HTMLInputElement = document.createElement('input');
-    slider.type = 'range';
-    slider.min = '0';
-    slider.max = '3';
-    slider.value = "0";
-    slider.className = 'harmonics-slider';
-    slider.addEventListener('change', () => {
-        viewer.pointClouds[0].material.uniforms.harmonicsDegree.value = slider.value;
-    });
-    return slider;
-}
-
-
-function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
+function setupPointCloud(version: 'v1' | 'v2' | 'splats', file: string, url: string): void {
     if (loaded[version]) {
         return;
     }
@@ -99,7 +92,7 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
         return ua.indexOf('iPhone') > 0 || ua.indexOf('iPad') > 0;
     }
 
-    viewer.load(file, url, 'v2', !isIOS())
+    viewer.load(file, url, version == 'splats' ? 'v2' : version, !isIOS())
         .then(pco => {
             pointClouds[version] = pco;
             pco.material.size = 1.0;
@@ -109,10 +102,6 @@ function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void 
             pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
             pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
             pco.position.set(0, 0, 0);
-
-            //pco.rotateX(-Math.PI * 0.5);
-            
-
 
             const camera = viewer.camera;
             camera.up.set(0, 0, 1);
@@ -136,7 +125,6 @@ function setupUI(cfg: PointCloudsConfig): void {
     updateBtn.style.backgroundColor ="#00ff00";
 
     const slider = createSlider(cfg.version);
-    const harmonincsSlider = createHarmonicsSlider();
 
     const unloadBtn = createButton('Unload', () => {
         if (!loaded[cfg.version]) {
@@ -153,7 +141,6 @@ function setupUI(cfg: PointCloudsConfig): void {
 
         viewer.enableUpdate = true;
         updateBtn.style.backgroundColor ="#00ff00";
-        harmonincsSlider.value = "0";
     });
 
     const loadBtn = createButton('Load', (e: MouseEvent) => {
@@ -169,7 +156,6 @@ function setupUI(cfg: PointCloudsConfig): void {
     btnContainer.appendChild(loadBtn);
     btnContainer.append(updateBtn);
     btnContainer.appendChild(slider);
-    btnContainer.appendChild(harmonincsSlider);
 
 }
 
