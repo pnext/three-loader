@@ -11,6 +11,7 @@ import { getIndexFromName, handleFailedRequest } from '../utils/utils';
 import { Version } from '../version';
 import { BinaryLoader } from './binary-loader';
 import { GetUrlFn, XhrRequest } from './types';
+import { LasLazLoader } from './lazlaz/las-laz-loader';
 
 interface BoundingBoxData {
   lx: number;
@@ -28,7 +29,7 @@ interface POCJson {
   points: number;
   boundingBox: BoundingBoxData;
   tightBoundingBox?: BoundingBoxData;
-  pointAttributes: PointAttributeStringName[];
+  pointAttributes: PointAttributeStringName[] | 'LAS' | 'LAZ';
   spacing: number;
   scale: number;
   hierarchyStepSize: number;
@@ -63,13 +64,8 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
   return (data: POCJson): Promise<PointCloudOctreeGeometry> => {
     const { offset, boundingBox, tightBoundingBox } = getBoundingBoxes(data);
 
-    const loader = new BinaryLoader({
-      getUrl,
-      version: data.version,
-      boundingBox,
-      scale: data.scale,
-      xhrRequest,
-    });
+    let loader = getLoader(data, getUrl, xhrRequest, boundingBox);
+    let pointAttributes = getPointAttributes(data.pointAttributes);
 
     const pco = new PointCloudOctreeGeometry(
       loader,
@@ -86,7 +82,7 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
     pco.hierarchyStepSize = data.hierarchyStepSize;
     pco.projection = data.projection;
     pco.offset = offset;
-    pco.pointAttributes = new PointAttributes(data.pointAttributes);
+    pco.pointAttributes = new PointAttributes(pointAttributes as PointAttributeStringName[]);
 
     const nodes: Record<string, PointCloudOctreeGeometryNode> = {};
 
@@ -101,6 +97,47 @@ function parse(url: string, getUrl: GetUrlFn, xhrRequest: XhrRequest) {
       return pco;
     });
   };
+}
+
+function getLoader(data: POCJson, getUrl: GetUrlFn, xhrRequest: XhrRequest, boundingBox: Box3) {
+  let loader;
+
+  if (typeof data.pointAttributes === 'string' && data.pointAttributes === 'LAS') {
+    loader = new LasLazLoader({
+      getUrl,
+      extension: 'las',
+      version: data.version,
+      boundingBox,
+      scale: data.scale,
+      xhrRequest,
+    });
+  } else if (typeof data.pointAttributes === 'string' && data.pointAttributes === 'LAZ') {
+    loader = new LasLazLoader({
+      getUrl,
+      extension: 'laz',
+      version: data.version,
+      boundingBox,
+      scale: data.scale,
+      xhrRequest,
+    });
+  } else {
+    loader = new BinaryLoader({
+      getUrl,
+      version: data.version,
+      boundingBox,
+      scale: data.scale,
+      xhrRequest,
+    });
+  }
+
+  return loader;
+}
+
+function getPointAttributes(pointAttributes: PointAttributeStringName[] | 'LAS' | 'LAZ') {
+  const isLasLaz =
+    typeof pointAttributes === 'string' && (pointAttributes === 'LAS' || pointAttributes === 'LAZ');
+
+  return isLasLaz ? defaultLasLazAttributes() : pointAttributes;
 }
 
 function getBoundingBoxes(
@@ -181,4 +218,16 @@ function parseName(name: string): { index: number; parentName: string; level: nu
     parentName: name.substring(0, name.length - 1),
     level: name.length - 1,
   };
+}
+
+function defaultLasLazAttributes() {
+  return [
+    'RGBA_PACKED',
+    'INTENSITY',
+    'CLASSIFICATION',
+    'GPS_TIME',
+    'NUMBER_OF_RETURNS',
+    'RETURN_NUMBER',
+    'SOURCE_ID',
+  ] as PointAttributeStringName[];
 }

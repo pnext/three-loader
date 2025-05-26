@@ -2,6 +2,7 @@ import { Box3, Vector3 } from 'three';
 import { BinaryLoader, XhrRequest } from './loading';
 import { PointAttributes } from './point-attributes';
 import { PointCloudOctreeGeometryNode } from './point-cloud-octree-geometry-node';
+import { LasLazLoader } from 'loading/lazlaz/las-laz-loader';
 
 export class PointCloudOctreeGeometry {
   disposed: boolean = false;
@@ -18,7 +19,7 @@ export class PointCloudOctreeGeometry {
   url: string | null = null;
 
   constructor(
-    public loader: BinaryLoader,
+    public loader: BinaryLoader | LasLazLoader,
     public boundingBox: Box3,
     public tightBoundingBox: Box3,
     public offset: Vector3,

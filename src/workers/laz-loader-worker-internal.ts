@@ -1,22 +1,29 @@
-/* global onmessage:true postMessage:false Module */
-/* exported onmessage */
-// laz-loader-worker.js
-//
+/**
+ * Adapted from Potree.js http://potree.org
+ * Potree License: https://github.com/potree/potree/blob/1.8.2/LICENSE
+ */
 
-// importScripts('laz-perf.js');
+import Module from './laz-perf.js';
 
-let instance = null; // laz-perf instance
+type RelativeIndexableConstrutor =
+  | Uint8ArrayConstructor
+  | Uint16ArrayConstructor
+  | Uint32ArrayConstructor
+  | Float32ArrayConstructor
+  | Float64ArrayConstructor;
 
-function readAs(buf, Type, offset, count) {
+let instance: any = null;
+
+function readAs(buf: ArrayBuffer, Type: RelativeIndexableConstrutor, offset: any, count?: any) {
   count = count === undefined || count === 0 ? 1 : count;
-  let sub = buf.slice(offset, offset + Type.BYTES_PER_ELEMENT * count);
+  const sub = buf.slice(offset, offset + Type.BYTES_PER_ELEMENT * count);
 
-  let r = new Type(sub);
+  const r = new Type(sub);
   if (count === undefined || count === 1) {
     return r[0];
   }
 
-  let ret = [];
+  const ret = [];
   for (let i = 0; i < count; i++) {
     ret.push(r[i]);
   }
@@ -24,8 +31,8 @@ function readAs(buf, Type, offset, count) {
   return ret;
 }
 
-function parseLASHeader(arraybuffer) {
-  let o = {};
+function parseLASHeader(arraybuffer: any) {
+  const o: any = {};
 
   o.pointsOffset = readAs(arraybuffer, Uint32Array, 32 * 3);
   o.pointsFormatId = readAs(arraybuffer, Uint8Array, 32 * 3 + 8);
@@ -38,7 +45,7 @@ function parseLASHeader(arraybuffer) {
   o.offset = readAs(arraybuffer, Float64Array, start, 3);
   start += 24;
 
-  let bounds = readAs(arraybuffer, Float64Array, start, 6);
+  const bounds = readAs(arraybuffer, Float64Array, start, 6) as number[];
   start += 48; // 8*6;
   o.maxs = [bounds[0], bounds[2], bounds[4]];
   o.mins = [bounds[1], bounds[3], bounds[5]];
@@ -46,13 +53,14 @@ function parseLASHeader(arraybuffer) {
   return o;
 }
 
-function handleEvent(msg) {
+function handleEvent(msg: any) {
   switch (msg.type) {
     case 'open':
       try {
+        console.log(Module);
         instance = new Module.LASZip();
-        let abInt = new Uint8Array(msg.arraybuffer);
-        let buf = Module._malloc(msg.arraybuffer.byteLength);
+        const abInt = new Uint8Array(msg.arraybuffer);
+        const buf = Module._malloc(msg.arraybuffer.byteLength);
 
         instance.arraybuffer = msg.arraybuffer;
         instance.buf = buf;
@@ -69,55 +77,44 @@ function handleEvent(msg) {
 
     case 'header':
       if (!instance) {
-        if (PRODUCTION) {
-          throw new Error();
-        } else {
-          throw new Error('You need to open the file before trying to read header');
-        }
+        throw new Error('You need to open the file before trying to read header');
       }
 
-      let header = parseLASHeader(instance.arraybuffer);
+      const header = parseLASHeader(instance.arraybuffer);
       header.pointsFormatId &= 0x3f;
       instance.header = header;
+
       postMessage({ type: 'header', status: 1, header: header });
       break;
 
     case 'read':
       if (!instance) {
-        if (PRODUCTION) {
-          throw new Error();
-        } else {
-          throw new Error('You need to open the file before trying to read stuff');
-        }
+        throw new Error('You need to open the file before trying to read stuff');
       }
 
       // msg.start
-      let count = msg.count;
-      let skip = msg.skip;
-      let o = instance;
+      const count = msg.count;
+      const skip = msg.skip;
+      const o = instance;
 
       if (!o.header) {
-        if (PRODUCTION) {
-          throw new Error();
-        } else {
-          throw new Error(
-            'You need to query header before reading, I maintain state that way, sorry :(',
-          );
-        }
+        throw new Error(
+          'You need to query header before reading, I maintain state that way, sorry :(',
+        );
       }
 
-      let pointsToRead = Math.min(count * skip, o.header.pointsCount - o.readOffset);
-      let bufferSize = Math.ceil(pointsToRead / skip);
+      const pointsToRead = Math.min(count * skip, o.header.pointsCount - o.readOffset);
+      const bufferSize = Math.ceil(pointsToRead / skip);
       let pointsRead = 0;
 
-      let thisBuf = new Uint8Array(bufferSize * o.header.pointsStructSize);
-      let bufRead = Module._malloc(o.header.pointsStructSize);
+      const thisBuf = new Uint8Array(bufferSize * o.header.pointsStructSize);
+      const bufRead = Module._malloc(o.header.pointsStructSize);
       for (let i = 0; i < pointsToRead; i++) {
         o.getPoint(bufRead);
 
         if (i % skip === 0) {
-          let a = new Uint8Array(Module.HEAPU8.buffer, bufRead, o.header.pointsStructSize);
-          thisBuf.set(a, pointsRead * o.header.pointsStructSize, o.header.pointsStructSize);
+          const a = new Uint8Array(Module.HEAPU8.buffer, bufRead, o.header.pointsStructSize);
+          thisBuf.set(a, pointsRead * o.header.pointsStructSize);
           pointsRead++;
         }
 
@@ -144,10 +141,10 @@ function handleEvent(msg) {
   }
 }
 
-onmessage = function(event) {
+export function handleMessage(event: any) {
   try {
     handleEvent(event.data);
   } catch (e) {
     postMessage({ type: event.data.type, status: 0, details: e });
   }
-};
+}

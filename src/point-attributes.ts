@@ -14,6 +14,12 @@ export enum PointAttributeName {
   NORMAL_SPHEREMAPPED = 8,
   NORMAL_OCT16 = 9,
   NORMAL = 10,
+  RETURN_NUMBER = 11,
+  NUMBER_OF_RETURNS = 12,
+  SOURCE_ID = 13,
+  INDICES = 14,
+  SPACING = 15,
+  GPS_TIME = 16,
 }
 
 export interface PointAttributeType {
@@ -110,6 +116,32 @@ export const POINT_ATTRIBUTES = {
     2,
   ),
   NORMAL: makePointAttribute(PointAttributeName.NORMAL, POINT_ATTRIBUTE_TYPES.DATA_TYPE_FLOAT, 3),
+  RETURN_NUMBER: makePointAttribute(
+    PointAttributeName.RETURN_NUMBER,
+    POINT_ATTRIBUTE_TYPES.DATA_TYPE_UINT8,
+    1,
+  ),
+  NUMBER_OF_RETURNS: makePointAttribute(
+    PointAttributeName.NUMBER_OF_RETURNS,
+    POINT_ATTRIBUTE_TYPES.DATA_TYPE_UINT8,
+    1,
+  ),
+  SOURCE_ID: makePointAttribute(
+    PointAttributeName.SOURCE_ID,
+    POINT_ATTRIBUTE_TYPES.DATA_TYPE_UINT16,
+    1,
+  ),
+  INDICES: makePointAttribute(
+    PointAttributeName.INDICES,
+    POINT_ATTRIBUTE_TYPES.DATA_TYPE_UINT32,
+    1,
+  ),
+  SPACING: makePointAttribute(PointAttributeName.SPACING, POINT_ATTRIBUTE_TYPES.DATA_TYPE_FLOAT, 1),
+  GPS_TIME: makePointAttribute(
+    PointAttributeName.GPS_TIME,
+    POINT_ATTRIBUTE_TYPES.DATA_TYPE_DOUBLE,
+    1,
+  ),
 };
 
 export type PointAttributeStringName = keyof typeof POINT_ATTRIBUTES;

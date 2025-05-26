@@ -1,8 +1,12 @@
 import { AutoTerminatingWorker, WorkerQueue } from './worker-queue';
 
 export enum WorkerType {
-  // Potree 1 workers
+  // Potree 1 loader workers
+  LAZ_LOADER_WORKER = 'LAZ_LOADER_WORKER',
+
+  // Potree 2 decoder workers
   BINARY_DECODER_WORKER = 'BINARY_DECODER_WORKER',
+  LAS_DECODER_WORKER = 'LAS_DECODER_WORKER',
 
   // Potree 2 workers
   DECODER_WORKER = 'DECODER_WORKER',
@@ -18,9 +22,17 @@ export class WorkerPool {
   private constructor() {}
 
   private pool: { [key in WorkerType]: WorkerQueue } = {
+    LAZ_LOADER_WORKER: new WorkerQueue(
+      this._maxWorkersPerPool,
+      require('../workers/laz-loader.worker.js').default,
+    ),
     BINARY_DECODER_WORKER: new WorkerQueue(
       this._maxWorkersPerPool,
       require('../workers/binary-decoder.worker.js').default,
+    ),
+    LAS_DECODER_WORKER: new WorkerQueue(
+      this._maxWorkersPerPool,
+      require('../workers/las-decoder.worker.js').default,
     ),
     DECODER_WORKER: new WorkerQueue(
       this._maxWorkersPerPool,
