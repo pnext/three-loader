@@ -8,7 +8,7 @@ import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-nod
 import { handleEmptyBuffer, handleFailedRequest } from '../utils/utils';
 import { WorkerPool, WorkerType } from '../utils/worker-pool';
 import { Version } from '../version';
-import { GetUrlFn, XhrRequest } from './types';
+import { Callback, GetUrlFn, XhrRequest } from './types';
 
 interface AttributeData {
   attribute: {
@@ -36,8 +36,6 @@ interface BinaryLoaderOptions {
   scale: number;
   xhrRequest: XhrRequest;
 }
-
-type Callback = (node: PointCloudOctreeGeometryNode) => void;
 
 export class BinaryLoader {
   version: Version;
