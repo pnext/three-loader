@@ -26,11 +26,6 @@ const examplePointClouds: PointCloudsConfig[] = [
         file: 'metadata.json',
         url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
         version: 'v2',
-    },
-    {
-        file: 'metadata.json',
-        url: 'https://www.mdbm.es/alamedilla/',
-        version: 'splats',
     }
 ];
 
