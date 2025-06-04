@@ -1,7 +1,7 @@
 precision highp float;
 precision highp int;
 
-#define max_clip_boxes 30
+#define max_clip_boxes 1000
 
 attribute vec3 position;
 attribute vec3 color;
@@ -31,10 +31,6 @@ uniform float screenWidth;
 uniform float screenHeight;
 uniform float fov;
 uniform float spacing;
-
-#if defined use_clip_box
-	uniform mat4 clipBoxes[max_clip_boxes];
-#endif
 
 uniform float heightMin;
 uniform float heightMax;
@@ -73,6 +69,7 @@ uniform sampler2D visibleNodes;
 uniform sampler2D gradient;
 uniform sampler2D classificationLUT;
 uniform sampler2D depthMap;
+uniform highp sampler2D clipBoxesTexture;
 
 #ifdef use_texture_blending
 	uniform sampler2D backgroundMap;
@@ -572,7 +569,17 @@ void main() {
 				break;
 			}
 
-			vec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);
+			float tx = mod(float(i) * 4.0, 256.0);
+			float ty = floor(float(i) * 4.0 / 256.0);
+
+			mat4 clipBox = mat4(
+				texture2D(clipBoxesTexture, vec2((tx + 0.0) / 256.0 , ty / 256.0)),
+				texture2D(clipBoxesTexture, vec2((tx + 1.0) / 256.0, ty / 256.0)),
+				texture2D(clipBoxesTexture, vec2((tx + 2.0) / 256.0, ty / 256.0)),
+				texture2D(clipBoxesTexture, vec2((tx + 3.0) / 256.0, ty / 256.0))
+			);
+
+			vec4 clipPosition = clipBox * modelMatrix * vec4(position, 1.0);
 			bool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;
 			inside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;
 			inside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;
