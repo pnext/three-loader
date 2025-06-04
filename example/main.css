@@ -20,6 +20,12 @@ body,
   left: 20px;
 }
 
+.btn-container-splats {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+}
+
 .btn-container-v1 button {
   margin-right: 10px;
 }
@@ -27,3 +33,9 @@ body,
 .btn-container-v2 button {
   margin-right: 10px;
 }
+
+.btn-container-splats button {
+  margin-right: 10px;
+}
+
+

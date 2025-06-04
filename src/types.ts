@@ -57,12 +57,13 @@ export interface IPotree {
   maxNumNodesLoading: number;
   lru: LRU;
 
-  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
+  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest, loadHarmonics?: boolean): Promise<PointCloudOctree>;
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    callback?: any
   ): IVisibilityUpdateResult;
 }
 

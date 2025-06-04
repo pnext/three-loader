@@ -88,6 +88,7 @@ export class OctreeGeometryNode implements IPointCloudGeometryNode {
 
 	dispose(): void {
 		if (this.geometry && this.parent != null) {
+
 			this.geometry.dispose();
 			this.geometry = undefined;
 			this.loaded = false;

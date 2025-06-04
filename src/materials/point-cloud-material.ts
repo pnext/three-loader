@@ -112,6 +112,8 @@ export interface IPointCloudMaterialUniforms {
   stripeDivisorX: IUniform<number>;
   stripeDivisorY: IUniform<number>;
   pointCloudMixingMode: IUniform<number>;
+  renderDepth: IUniform<boolean>;
+
 }
 
 const TREE_TYPE_DEFS = {
@@ -177,7 +179,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
   visibleNodesTexture: Texture | undefined;
-  private visibleNodeTextureOffsets = new Map<string, number>();
+  visibleNodeTextureOffsets = new Map<string, number>();
 
   private _gradient = SPECTRAL;
   private gradientTexture: Texture | undefined = generateGradientTexture(this._gradient);
@@ -246,6 +248,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     stripeDivisorX: makeUniform('f', 2),
     stripeDivisorY: makeUniform('f', 2),
     pointCloudMixAngle: makeUniform('f', 31),
+    renderDepth: makeUniform("bool", false)
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -292,6 +295,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('stripeDivisorX') stripeDivisorX!: number;
   @uniform('stripeDivisorY') stripeDivisorY!: number;
   @uniform('pointCloudMixAngle') pointCloudMixAngle!: number;
+  @uniform('renderDepth') renderDepth!: boolean;
+  
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;
@@ -625,7 +630,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     const maxScale = Math.max(octree.scale.x, octree.scale.y, octree.scale.z);
     this.spacing = octree.pcoGeometry.spacing * maxScale;
     this.octreeSize = octree.pcoGeometry.boundingBox.getSize(PointCloudMaterial.helperVec3).x;
-
     if (
       this.pointSizeType === PointSizeType.ADAPTIVE ||
       this.pointColorType === PointColorType.LOD

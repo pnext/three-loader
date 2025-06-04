@@ -67,6 +67,8 @@ uniform float wClassification;
 uniform float wReturnNumber;
 uniform float wSourceID;
 
+uniform bool renderDepth;
+
 uniform sampler2D visibleNodes;
 uniform sampler2D gradient;
 uniform sampler2D classificationLUT;
@@ -589,4 +591,14 @@ void main() {
 			#endif
 		}
 	#endif
+
+
+	// ---------------------
+	// For Depth purposes
+	// ---------------------
+
+	if(renderDepth) {
+		vColor = vec3(1. - gl_Position.z / gl_Position.w);
+	}
+
 }

@@ -38,7 +38,7 @@ export class QueueItem {
   ) { }
 }
 
-type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>) => Promise<PCOGeometry>
+type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>, loadHarmonics: boolean) => Promise<PCOGeometry>
 
 const GEOMETRY_LOADERS = {
   v1: loadPOC,
@@ -66,14 +66,16 @@ export class Potree implements IPotree {
     url: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+    loadHarmonics: boolean = false
   ): Promise<PointCloudOctree> {
-    return this.loadGeometry(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(geometry => new PointCloudOctree(this, geometry, undefined, loadHarmonics));
   }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    callback = () => {}
   ): IVisibilityUpdateResult {
     const result = this.updateVisibility(pointClouds, camera, renderer);
 
@@ -86,6 +88,11 @@ export class Potree implements IPotree {
       pointCloud.material.updateMaterial(pointCloud, pointCloud.visibleNodes, camera, renderer);
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
+
+      //For the splats
+      renderer.getSize(this._rendererSize);
+      pointCloud.updateSplats(camera, this._rendererSize, callback);
+      
     }
 
     this.lru.freeMemory();
