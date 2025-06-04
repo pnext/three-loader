@@ -588,6 +588,8 @@ void main() {
 		} else {
 			#if defined clip_highlight_inside
 				vColor.r += 0.5;
+			#elif defined clip_inside
+				gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
 			#endif
 		}
 	#endif
