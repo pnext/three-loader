@@ -27,39 +27,47 @@ export class GltfSplatDecoder implements GeometryDecoder {
 		let urls: Record<string, string>;
 		let buffer: ArrayBuffer;
 
+		let dataUri = this.metadata;
+		let retrieveURL = function(name: string) {
+			let el = dataUri.attributes.filter( (att: any)=> att.name === name)[0];
+			return el.bufferView.uri;
+		}
+
 		urls = {
-			positions: await this.getUrl(this.gltfPositionsPath),
-			colors: await this.getUrl('sh_band_0.glbin'),
-			opacities: await this.getUrl('opacity.glbin'),
-			scales: await this.getUrl('scale.glbin'),
-			rotations: await this.getUrl('rotation.glbin'),
+			positions: await this.getUrl(retrieveURL("position")),
+			colors: await this.getUrl(retrieveURL("sh_band_0")),
+			opacities: await this.getUrl(retrieveURL("opacity")),
+			scales: await this.getUrl(retrieveURL("scale")),
+			rotations: await this.getUrl(retrieveURL("rotation")),
 		};
 
 		if (this.harmonicsEnabled) {
 
 			urls = {
-				positions: await this.getUrl(this.gltfPositionsPath),
-				colors: await this.getUrl('sh_band_0.glbin'),
-				opacities: await this.getUrl('opacity.glbin'),
-				scales: await this.getUrl('scale.glbin'),
-				rotations: await this.getUrl('rotation.glbin'),
-				shBand1_0: await this.getUrl('sh_band_1_triplet_0.glbin'),
-				shBand1_1: await this.getUrl('sh_band_1_triplet_1.glbin'),
-				shBand1_2: await this.getUrl('sh_band_1_triplet_2.glbin'),
+				positions: await this.getUrl(retrieveURL("position")),
+				colors: await this.getUrl(retrieveURL("sh_band_0")),
+				opacities: await this.getUrl(retrieveURL("opacity")),
+				scales: await this.getUrl(retrieveURL("scale")),
+				rotations: await this.getUrl(retrieveURL("rotation")),
 
-				shBand2_0: await this.getUrl('sh_band_2_triplet_0.glbin'),
-				shBand2_1: await this.getUrl('sh_band_2_triplet_1.glbin'),
-				shBand2_2: await this.getUrl('sh_band_2_triplet_2.glbin'),
-				shBand2_3: await this.getUrl('sh_band_2_triplet_3.glbin'),
-				shBand2_4: await this.getUrl('sh_band_2_triplet_4.glbin'),
+				shBand1_0: await this.getUrl(retrieveURL("sh_band_1_triplet_0")),
+				shBand1_1: await this.getUrl(retrieveURL("sh_band_1_triplet_1")),
+				shBand1_2: await this.getUrl(retrieveURL("sh_band_1_triplet_2")),
 
-				shBand3_0: await this.getUrl('sh_band_3_triplet_0.glbin'),
-				shBand3_1: await this.getUrl('sh_band_3_triplet_1.glbin'),
-				shBand3_2: await this.getUrl('sh_band_3_triplet_2.glbin'),
-				shBand3_3: await this.getUrl('sh_band_3_triplet_3.glbin'),
-				shBand3_4: await this.getUrl('sh_band_3_triplet_4.glbin'),
-				shBand3_5: await this.getUrl('sh_band_3_triplet_5.glbin'),
-				shBand3_6: await this.getUrl('sh_band_3_triplet_6.glbin'),
+				shBand2_0: await this.getUrl(retrieveURL("sh_band_2_triplet_0")),
+				shBand2_1: await this.getUrl(retrieveURL("sh_band_2_triplet_1")),
+				shBand2_2: await this.getUrl(retrieveURL("sh_band_2_triplet_2")),
+				shBand2_3: await this.getUrl(retrieveURL("sh_band_2_triplet_3")),
+				shBand2_4: await this.getUrl(retrieveURL("sh_band_2_triplet_4")),
+
+				shBand3_0: await this.getUrl(retrieveURL("sh_band_3_triplet_0")),
+				shBand3_1: await this.getUrl(retrieveURL("sh_band_3_triplet_1")),
+				shBand3_2: await this.getUrl(retrieveURL("sh_band_3_triplet_2")),
+				shBand3_3: await this.getUrl(retrieveURL("sh_band_3_triplet_3")),
+				shBand3_4: await this.getUrl(retrieveURL("sh_band_3_triplet_4")),
+				shBand3_5: await this.getUrl(retrieveURL("sh_band_3_triplet_5")),
+				shBand3_6: await this.getUrl(retrieveURL("sh_band_3_triplet_6")),
+
 			};
 
 		}
@@ -245,10 +253,6 @@ export class GltfSplatDecoder implements GeometryDecoder {
 		}
 
 		return { data, buffer, geometry };
-	}
-
-	private get gltfPositionsPath() {
-		return this.context.gltfPositionsPath;
 	}
 
 	private get getUrl(): GetUrlFn {
