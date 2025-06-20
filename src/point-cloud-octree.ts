@@ -1,11 +1,29 @@
-import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, Vector2, WebGLRenderer, Mesh, BufferGeometry } from 'three';
+import {
+  Box3,
+  Camera,
+  Object3D,
+  Points,
+  Ray,
+  Sphere,
+  Vector3,
+  Vector2,
+  WebGLRenderer,
+  Mesh,
+  BufferGeometry,
+} from 'three';
 import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudMaterial, PointSizeType } from './materials';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
+import {
+  IPointCloudGeometryNode,
+  IPointCloudTreeNode,
+  IPotree,
+  PCOGeometry,
+  PickPoint,
+} from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { SplatsMesh } from './splats-mesh';
 
@@ -42,7 +60,7 @@ export class PointCloudOctree extends PointCloudTree {
     potree: IPotree,
     pcoGeometry: PCOGeometry,
     material?: PointCloudMaterial,
-    loadHarmonics: boolean = false
+    loadHarmonics: boolean = false,
   ) {
     super();
 
@@ -62,7 +80,6 @@ export class PointCloudOctree extends PointCloudTree {
         : new PointCloudMaterial();
 
     this.initMaterial(this.material);
-
   }
 
   private initMaterial(material: PointCloudMaterial): void {
@@ -83,7 +100,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.root.dispose();
     }
 
-    this.pcoGeometry.root.traverse(n => this.potree.lru.remove(n));
+    this.pcoGeometry.root.traverse((n) => this.potree.lru.remove(n));
     this.pcoGeometry.dispose();
     this.material.dispose();
 
@@ -138,51 +155,39 @@ export class PointCloudOctree extends PointCloudTree {
   }
 
   updateSplats(camera: Camera, size: Vector2, callback = () => {}) {
-
     let mesh = this.children[0] as Mesh;
-    if(!mesh) return;
+    if (!mesh) return;
 
     //Parse the nodes to see if they contain splats information.
-    if(this.renderAsSplats === null) {
-      
+    if (this.renderAsSplats === null) {
       this.renderAsSplats = false;
-      mesh.traverse(el => {
+      mesh.traverse((el) => {
         let m = el as Mesh;
         let g = m.geometry as BufferGeometry;
-        if(g.hasAttribute("COVARIANCE0")) this.renderAsSplats = true;
+        if (g.hasAttribute('COVARIANCE0')) this.renderAsSplats = true;
       });
 
       //Initialise the splats mesh if the nodes contain splats information
-      if(this.renderAsSplats) {
+      if (this.renderAsSplats) {
         this.splatsMesh.initialize(this.potree.pointBudget, this.loadHarmonics);
         this.add(this.splatsMesh);
       }
-      
     }
 
-    if(this.renderAsSplats && this.splatsMesh.splatsEnabled) {
-
+    if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
       let positionDiff = this.updateViewOffset
-      .copy(camera.position)
-      .sub(this.lastUpdateViewPos)
-      .length();
-  
-      if(positionDiff < .01) {
+        .copy(camera.position)
+        .sub(this.lastUpdateViewPos)
+        .length();
 
+      if (positionDiff < 0.01) {
         this.splatsMesh.update(mesh, camera, size, callback);
-
-      } 
-      
-      else {
-
-        if(this.splatsMesh.splatsEnabled) this.splatsMesh.sortSplats(camera, callback);
-
+      } else {
+        if (this.splatsMesh.splatsEnabled) this.splatsMesh.sortSplats(camera, callback);
       }
 
       this.lastUpdateViewPos.copy(camera.position);
-
     }
-
   }
 
   updateVisibleBounds() {

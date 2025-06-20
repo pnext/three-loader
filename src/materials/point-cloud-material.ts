@@ -113,7 +113,6 @@ export interface IPointCloudMaterialUniforms {
   stripeDivisorY: IUniform<number>;
   pointCloudMixingMode: IUniform<number>;
   renderDepth: IUniform<boolean>;
-
 }
 
 const TREE_TYPE_DEFS = {
@@ -249,7 +248,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     stripeDivisorX: makeUniform('f', 2),
     stripeDivisorY: makeUniform('f', 2),
     pointCloudMixAngle: makeUniform('f', 31),
-    renderDepth: makeUniform("bool", false)
+    renderDepth: makeUniform('bool', false),
   };
 
   @uniform('bbSize') bbSize!: [number, number, number];
@@ -297,7 +296,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('stripeDivisorY') stripeDivisorY!: number;
   @uniform('pointCloudMixAngle') pointCloudMixAngle!: number;
   @uniform('renderDepth') renderDepth!: boolean;
-  
 
   @requiresShaderUpdate() useClipBox: boolean = false;
   @requiresShaderUpdate() weighted: boolean = false;

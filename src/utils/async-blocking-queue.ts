@@ -24,7 +24,7 @@ export class AsyncBlockingQueue<T> {
 
   private add(): void {
     this.promises.push(
-      new Promise(resolve => {
+      new Promise((resolve) => {
         this.resolvers.push(resolve);
       }),
     );

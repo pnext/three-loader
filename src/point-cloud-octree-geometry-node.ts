@@ -17,7 +17,10 @@ export interface NodeData {
 
 const NODE_STRIDE = 5;
 
-export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPointCloudGeometryNode {
+export class PointCloudOctreeGeometryNode
+  extends EventDispatcher
+  implements IPointCloudGeometryNode
+{
   id: number = PointCloudOctreeGeometryNode.idCount++;
   name: string;
   pcoGeometry: PointCloudOctreeGeometry;
@@ -72,7 +75,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     this.geometry = undefined;
     this.loaded = false;
 
-    this.oneTimeDisposeHandlers.forEach(handler => handler());
+    this.oneTimeDisposeHandlers.forEach((handler) => handler());
     this.oneTimeDisposeHandlers = [];
   }
 
@@ -159,7 +162,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
       promise = this.loadPoints();
     }
 
-    return promise.catch(reason => {
+    return promise.catch((reason) => {
       this.loading = false;
       this.failed = true;
       this.pcoGeometry.numNodesLoading--;
@@ -188,11 +191,11 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     }
 
     return Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
-      .then(url => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
-      .then(res => handleFailedRequest(res))
-      .then(okRes => okRes.arrayBuffer())
-      .then(buffer => handleEmptyBuffer(buffer))
-      .then(okBuffer => this.loadHierarchy(this, okBuffer));
+      .then((url) => this.pcoGeometry.xhrRequest(url, { mode: 'cors' }))
+      .then((res) => handleFailedRequest(res))
+      .then((okRes) => okRes.arrayBuffer())
+      .then((buffer) => handleEmptyBuffer(buffer))
+      .then((okBuffer) => this.loadHierarchy(this, okBuffer));
   }
 
   /**
@@ -248,7 +251,7 @@ export class PointCloudOctreeGeometryNode extends EventDispatcher implements IPo
     // Map containing all the nodes.
     const nodes = new Map<string, PointCloudOctreeGeometryNode>();
     nodes.set(node.name, node);
-    decoded.forEach(nodeData => this.addNode(nodeData, node.pcoGeometry, nodes));
+    decoded.forEach((nodeData) => this.addNode(nodeData, node.pcoGeometry, nodes));
 
     node.loadPoints();
   }

@@ -1,9 +1,9 @@
-import { 
+import {
   Mesh,
-  PerspectiveCamera, 
-  Scene, 
-  Vector2, 
-  WebGLRenderer, 
+  PerspectiveCamera,
+  Scene,
+  Vector2,
+  WebGLRenderer,
   Raycaster,
   WebGLRenderTarget,
   NearestFilter,
@@ -11,16 +11,14 @@ import {
   MeshBasicMaterial,
   FloatType,
   RGFormat,
-  Vector3
- } from 'three';
+  Vector3,
+} from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree, PotreeVersion } from '../src';
 
-
 export class Viewer {
-
   public enableUpdate: boolean = true;
 
   /**
@@ -105,7 +103,6 @@ export class Viewer {
     this.raycastSplat = new Mesh(planeGeo, mat);
     this.raycastSplat.renderOrder = 100;
 
-
     const mat2 = new MeshBasicMaterial({ color: '#ff0000' });
     mat.transparent = true;
     const sphereGeo = new SphereGeometry(0.005);
@@ -121,24 +118,22 @@ export class Viewer {
     this.resize();
     window.addEventListener('resize', this.resize);
 
-    targetEl.addEventListener("mousedown", _=> {
+    targetEl.addEventListener('mousedown', (_) => {
       this.elapsedTime = Date.now();
-    })
+    });
 
-    targetEl.addEventListener("mouseup", this.updateCameraTarget.bind(this));
+    targetEl.addEventListener('mouseup', this.updateCameraTarget.bind(this));
 
     requestAnimationFrame(this.loop);
   }
 
   updateCameraTarget(e: any) {
-
-    if(!this.pointClouds[0]?.splatsMesh?.splatsEnabled) return;
+    if (!this.pointClouds[0]?.splatsMesh?.splatsEnabled) return;
 
     let clickTime = Date.now();
     let deltaTime = clickTime - this.elapsedTime;
 
-    if(deltaTime < 200) {
-
+    if (deltaTime < 200) {
       const rgba = new Float32Array(4);
       const DPR = this.renderer?.getPixelRatio() || 1;
       this.renderer?.readRenderTargetPixels(
@@ -154,30 +149,31 @@ export class Viewer {
 
       const splatData = this.pointClouds[0].splatsMesh.getSplatData(globalID, nodeID);
 
-      if(splatData != null) {
+      if (splatData != null) {
         let scale = splatData.scale;
         if (scale.x === 0) scale.x = 0.0001;
         if (scale.y === 0) scale.y = 0.0001;
         if (scale.z === 0) scale.z = 0.0001;
         scale.multiplyScalar(2.82842712475);
 
-  
         this.raycastSplat.position.copy(splatData.position);
         this.raycastSplat.scale.copy(scale);
         this.raycastSplat.quaternion.copy(splatData.orientation);
 
-  
         this.raycastSplat.updateMatrix();
         this.raycastSplat.updateMatrixWorld();
-  
-        let mousePosition = new Vector2(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
+
+        let mousePosition = new Vector2(
+          e.clientX / window.innerWidth,
+          e.clientY / window.innerHeight,
+        );
         mousePosition.x = 2 * mousePosition.x - 1;
         mousePosition.y = -2 * mousePosition.y + 1;
         this.raycaster.setFromCamera(mousePosition, this.camera);
-  
+
         const intersects = this.raycaster.intersectObject(this.raycastSplat);
-  
-       let center = new Vector3(Infinity, Infinity, Infinity);
+
+        let center = new Vector3(Infinity, Infinity, Infinity);
         if (intersects.length > 0) {
           center = intersects[0].point;
           this.raycastSplatDebug.position.copy(center);
@@ -185,12 +181,10 @@ export class Viewer {
         } else {
           this.cameraControls.target.copy(splatData.position);
         }
-    
+
         deltaTime = clickTime;
       }
-
     }
-
   }
 
   /**
@@ -219,17 +213,22 @@ export class Viewer {
    * @param baseUrl
    *    The url where the point cloud is located and from where we should load the octree nodes.
    */
-  async load(fileName: string, baseUrl: string, version: PotreeVersion = "v1", loadHarmonics: boolean = false): Promise<PointCloudOctree> {
+  async load(
+    fileName: string,
+    baseUrl: string,
+    version: PotreeVersion = 'v1',
+    loadHarmonics: boolean = false,
+  ): Promise<PointCloudOctree> {
     const loader = version === 'v1' ? this.potree_v1 : this.potree_v2;
 
     return loader.loadPointCloud(
       // The file name of the point cloud which is to be loaded.
       fileName,
       // Given the relative URL of a file, should return a full URL.
-      url => `${baseUrl}${url}`,
+      (url) => `${baseUrl}${url}`,
       undefined,
       //Load the harmonics if necessary (for desktop only)
-      loadHarmonics
+      loadHarmonics,
     );
   }
 
@@ -241,11 +240,10 @@ export class Viewer {
   disposePointCloud(pointCloud: PointCloudOctree): void {
     this.scene.remove(pointCloud);
     pointCloud.dispose();
-    this.pointClouds = this.pointClouds.filter(pco => pco !== pointCloud);
+    this.pointClouds = this.pointClouds.filter((pco) => pco !== pointCloud);
   }
 
   async renderAsSplats(): Promise<Viewer> {
-
     return this;
   }
 
@@ -256,7 +254,6 @@ export class Viewer {
    *    The time, in milliseconds, since the last update.
    */
   update(_: number): void {
-
     // Alternatively, you could use Three's OrbitControls or any other
     // camera control system.
     this.cameraControls.update();
@@ -268,21 +265,18 @@ export class Viewer {
 
     this.potree_v1.updatePointClouds(this.pointClouds, this.camera, this.renderer);
     this.potree_v2.updatePointClouds(this.pointClouds, this.camera, this.renderer);
-
   }
 
   /**
    * Renders the scene into the canvas.
    */
   render(): void {
-
     this.renderer.clear();
 
     //This is used to setup the different nodes of the Octree from Potree
     this.renderer.render(this.scene, this.camera);
 
-    if(this.pointClouds[0]?.splatsMesh?.splatsEnabled) {
-
+    if (this.pointClouds[0]?.splatsMesh?.splatsEnabled) {
       const h = this.renderer.domElement.height || 1;
       const w = this.renderer.domElement.width || 1;
       this.IDRenderTarget.setSize(w, h);
@@ -298,7 +292,6 @@ export class Viewer {
       this.pointClouds[0].splatsMesh.renderSplatsIDs(false);
       this.renderer.setRenderTarget(null);
     }
-
   }
 
   /**
@@ -332,7 +325,5 @@ export class Viewer {
 
     const size = new Vector2();
     this.renderer.getSize(size);
-
   };
-
 }

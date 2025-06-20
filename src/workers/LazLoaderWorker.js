@@ -144,7 +144,7 @@ function handleEvent(msg) {
   }
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   try {
     handleEvent(event.data);
   } catch (e) {

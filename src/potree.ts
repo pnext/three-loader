@@ -24,7 +24,14 @@ import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { isGeometryNode, isTreeNode } from './type-predicates';
-import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PCOGeometry, PickPoint } from './types';
+import {
+  IPointCloudGeometryNode,
+  IPointCloudTreeNode,
+  IPotree,
+  IVisibilityUpdateResult,
+  PCOGeometry,
+  PickPoint,
+} from './types';
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
@@ -35,14 +42,19 @@ export class QueueItem {
     public weight: number,
     public node: IPointCloudTreeNode,
     public parent?: IPointCloudTreeNode | null,
-  ) { }
+  ) {}
 }
 
-type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>, loadHarmonics: boolean) => Promise<PCOGeometry>
+type GeometryLoader = (
+  url: string,
+  getUrl: GetUrlFn,
+  xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
+  loadHarmonics: boolean,
+) => Promise<PCOGeometry>;
 
 const GEOMETRY_LOADERS = {
   v1: loadPOC,
-  v2: loadOctree
+  v2: loadOctree,
 } satisfies Record<string, GeometryLoader>;
 
 export type PotreeVersion = keyof typeof GEOMETRY_LOADERS;
@@ -56,26 +68,28 @@ export class Potree implements IPotree {
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  private readonly loadGeometry: GeometryLoader
+  private readonly loadGeometry: GeometryLoader;
 
-  constructor(version: PotreeVersion = "v1") {
-    this.loadGeometry = GEOMETRY_LOADERS[version]
+  constructor(version: PotreeVersion = 'v1') {
+    this.loadGeometry = GEOMETRY_LOADERS[version];
   }
 
   loadPointCloud(
     url: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-    loadHarmonics: boolean = false
+    loadHarmonics: boolean = false,
   ): Promise<PointCloudOctree> {
-    return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(geometry => new PointCloudOctree(this, geometry, undefined, loadHarmonics));
+    return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(
+      (geometry) => new PointCloudOctree(this, geometry, undefined, loadHarmonics),
+    );
   }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
-    callback = () => {}
+    callback = () => {},
   ): IVisibilityUpdateResult {
     const result = this.updateVisibility(pointClouds, camera, renderer);
 
@@ -92,7 +106,6 @@ export class Potree implements IPotree {
       //For the splats
       renderer.getSize(this._rendererSize);
       pointCloud.updateSplats(camera, this._rendererSize, callback);
-      
     }
 
     this.lru.freeMemory();
@@ -352,7 +365,7 @@ export class Potree implements IPotree {
     } => {
       const frustums: Frustum[] = [];
       const cameraPositions: Vector3[] = [];
-      const priorityQueue = new BinaryHeap<QueueItem>(x => 1 / x.weight);
+      const priorityQueue = new BinaryHeap<QueueItem>((x) => 1 / x.weight);
 
       for (let i = 0; i < pointClouds.length; i++) {
         const pointCloud = pointClouds[i];
@@ -379,10 +392,7 @@ export class Potree implements IPotree {
 
         // Camera position in object space
         inverseWorldMatrix.copy(worldMatrix).invert();
-        cameraMatrix
-          .identity()
-          .multiply(inverseWorldMatrix)
-          .multiply(camera.matrixWorld);
+        cameraMatrix.identity().multiply(inverseWorldMatrix).multiply(camera.matrixWorld);
         cameraPositions.push(new Vector3().setFromMatrixPosition(cameraMatrix));
 
         if (pointCloud.visible && pointCloud.root !== null) {

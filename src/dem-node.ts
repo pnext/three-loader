@@ -7,7 +7,11 @@ export class DEMNode {
   mipMap: Float32Array[];
   mipMapNeedsUpdate: boolean = true;
 
-  constructor(public name: string, public box: Box3, public tileSize: number) {
+  constructor(
+    public name: string,
+    public box: Box3,
+    public tileSize: number,
+  ) {
     this.level = this.name.length - 1;
     this.data = new Float32Array(tileSize * tileSize);
     this.data.fill(-Infinity);
@@ -150,6 +154,8 @@ export class DEMNode {
   traverse(handler: (node: DEMNode, level: number) => void, level = 0) {
     handler(this, level);
 
-    this.children.filter(c => c !== undefined).forEach(child => child.traverse(handler, level + 1));
+    this.children
+      .filter((c) => c !== undefined)
+      .forEach((child) => child.traverse(handler, level + 1));
   }
 }

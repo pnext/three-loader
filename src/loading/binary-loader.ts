@@ -54,7 +54,7 @@ export class BinaryLoader {
   );
 
   constructor({
-    getUrl = s => Promise.resolve(s),
+    getUrl = (s) => Promise.resolve(s),
     version,
     boundingBox,
     scale,
@@ -83,12 +83,12 @@ export class BinaryLoader {
     }
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
-      .then(url => this.xhrRequest(url, { mode: 'cors' }))
-      .then(res => handleFailedRequest(res))
-      .then(okRes => okRes.arrayBuffer())
-      .then(buffer => handleEmptyBuffer(buffer))
-      .then(okBuffer => {
-        return new Promise(resolve => this.parse(node, okBuffer, resolve));
+      .then((url) => this.xhrRequest(url, { mode: 'cors' }))
+      .then((res) => handleFailedRequest(res))
+      .then((okRes) => okRes.arrayBuffer())
+      .then((buffer) => handleEmptyBuffer(buffer))
+      .then((okBuffer) => {
+        return new Promise((resolve) => this.parse(node, okBuffer, resolve));
       });
   }
 
@@ -111,7 +111,7 @@ export class BinaryLoader {
       return;
     }
 
-    BinaryLoader.WORKER_POOL.getWorker().then(autoTerminatingWorker => {
+    BinaryLoader.WORKER_POOL.getWorker().then((autoTerminatingWorker) => {
       const pointAttributes = node.pcoGeometry.pointAttributes;
       const numPoints = buffer.byteLength / pointAttributes.byteSize;
 
@@ -143,7 +143,7 @@ export class BinaryLoader {
         node.pcoGeometry.numNodesLoading--;
         node.pcoGeometry.needsUpdate = true;
 
-        this.callbacks.forEach(callback => callback(node));
+        this.callbacks.forEach((callback) => callback(node));
         resolve();
         BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
       };
@@ -175,7 +175,7 @@ export class BinaryLoader {
     geometry: BufferGeometry,
     buffers: { [name: string]: { buffer: ArrayBuffer } },
   ): void {
-    Object.keys(buffers).forEach(property => {
+    Object.keys(buffers).forEach((property) => {
       const buffer = buffers[property].buffer;
 
       if (this.isAttribute(property, PointAttributeName.POSITION_CARTESIAN)) {

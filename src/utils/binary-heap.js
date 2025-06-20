@@ -9,14 +9,14 @@ export function BinaryHeap(scoreFunction) {
 }
 
 BinaryHeap.prototype = {
-  push: function(element) {
+  push: function (element) {
     // Add the new element to the end of the array.
     this.content.push(element);
     // Allow it to bubble up.
     this.bubbleUp(this.content.length - 1);
   },
 
-  pop: function() {
+  pop: function () {
     // Store the first element so we can return it later.
     var result = this.content[0];
     // Get the element at the end of the array.
@@ -30,7 +30,7 @@ BinaryHeap.prototype = {
     return result;
   },
 
-  remove: function(node) {
+  remove: function (node) {
     var length = this.content.length;
     // To remove a value, we must search through the array to find
     // it.
@@ -51,11 +51,11 @@ BinaryHeap.prototype = {
     }
   },
 
-  size: function() {
+  size: function () {
     return this.content.length;
   },
 
-  bubbleUp: function(n) {
+  bubbleUp: function (n) {
     // Fetch the element that has to be moved.
     var element = this.content[n],
       score = this.scoreFunction(element);
@@ -76,7 +76,7 @@ BinaryHeap.prototype = {
     }
   },
 
-  sinkDown: function(n) {
+  sinkDown: function (n) {
     // Look up the target element and its score.
     var length = this.content.length,
       element = this.content[n],

@@ -4,7 +4,10 @@ export class AutoTerminatingWorker {
   private timeoutId: number | undefined = undefined;
   private terminated: boolean = false;
 
-  constructor(private wrappedWorker: Worker, private maxIdle: number) {}
+  constructor(
+    private wrappedWorker: Worker,
+    private maxIdle: number,
+  ) {}
 
   public get worker(): Worker {
     return this.wrappedWorker;
@@ -37,7 +40,10 @@ export class WorkerPool {
   private pool = new AsyncBlockingQueue<AutoTerminatingWorker>();
   private poolSize = 0;
 
-  constructor(public maxWorkers: number, private workerType: any) {}
+  constructor(
+    public maxWorkers: number,
+    private workerType: any,
+  ) {}
 
   /**
    * Returns a worker promise which is resolved when one is available.
@@ -51,7 +57,7 @@ export class WorkerPool {
         new AutoTerminatingWorker(new this.workerType(), WorkerPool.POOL_MAX_IDLE),
       );
     } else {
-      return this.pool.dequeue().then(worker => {
+      return this.pool.dequeue().then((worker) => {
         worker.markInUse();
         // If the dequeued worker has been terminated, decrease the pool size and make a recursive call to get a new worker
         if (worker.isTerminated) {

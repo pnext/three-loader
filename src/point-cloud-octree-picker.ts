@@ -186,7 +186,7 @@ export class PointCloudOctreePicker {
 
       renderer.render(pickState.scene, camera);
 
-      nodes.forEach(node => renderedNodes.push({ node, octree }));
+      nodes.forEach((node) => renderedNodes.push({ node, octree }));
     }
     return renderedNodes;
   }
