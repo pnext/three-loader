@@ -196,7 +196,6 @@ export async function createSortWorker(splatCount: number): Promise<Worker> {
           
           //pass the centers information
           if(e.data.sorterReady) {
-              console.log("wasm compiled");
               resolve(worker);
           }
 

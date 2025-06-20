@@ -10,7 +10,6 @@ export enum WorkerType {
 // EptZstandardDecoder_preamble.js', 'EptZstandardDecoderWorker.js', 'LASDecoderWorker.js', 'LASLAZWorker.js', 'LazLoaderWorker.js'
 
 function createWorker(type: WorkerType): Worker {
-	// console.log(type)
 	switch (type) {
 	case WorkerType.DECODER_WORKER: {
 		const DecoderWorker = require('./decoder.worker.js').default;

@@ -23,10 +23,7 @@ export class GltfDecoder implements GeometryDecoder {
     private _metadata: Metadata;
 
 	constructor(public metadata: Metadata, private context: LoadingContext) { 
-
         this._metadata = metadata;
-        console.log(this._metadata);
-
     }
 
 	async decode(node: OctreeGeometryNode, worker: Worker): Promise<DecodedGeometry | undefined> {
