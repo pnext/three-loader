@@ -22,7 +22,7 @@
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
     "start:example": "webpack-dev-server --config webpack.config.example.js --mode development --progress",
-    "build": "npm run clean && npm run lint && webpack --mode production --progress --config webpack.config.prod.js",
+    "build": "npm run clean && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
     "format": "prettier \"*.{ts,js}\"",
     "format:write": "npm run format -- --write",
