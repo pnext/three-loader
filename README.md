@@ -54,28 +54,46 @@ You can play with a live example here: https://codesandbox.io/s/yw2p3446j9?autor
 
 # Local Development
 
-To develop and contribute to the project, you need to start by cloning the repositry and then install all the dependencies with yarn:
+Before pushing your changes, you can run these checks locally:
 
 ```bash
-> yarn
+# Install dependencies
+npm install
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
 ```
+
+## Pre-commit Hooks
+
+This repository uses Husky and lint-staged to automatically format and lint your code before each commit.
+
+## Configuration
+
+- Linting rules are defined in `tslint.json`
+- Formatting rules are defined in `.prettierrc`
+- Files ignored by Prettier are listed in `.prettierignore`
+- lint-staged configuration is defined in `.lintstagedrc`
 
 Once that is done you can start a development server by running:
 
 ```bash
-> yarn start
+npm run start
 ```
 
 You can also start the example application (`/example`) by running:
 
 ```bash
-> yarn start:example
+npm run start:example
 ```
 
 To create a production-ready build of the library which can be published to NPM, you can run the following command:
 
 ```bash
-> yarn build
+npm run build
 ```
 
 # Thank You!

@@ -24,6 +24,9 @@
     "start:example": "webpack-dev-server --config webpack.config.example.js --mode development --progress",
     "build": "npm run clean && npm run lint && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
+    "format": "prettier \"*.{ts,js}\"",
+    "format:write": "npm run format -- --write",
+    "format:check": "npm run format -- --check",
     "prepare-release": "standard-version",
     "prepare": "husky"
   },
