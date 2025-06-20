@@ -36,6 +36,9 @@
   "devDependencies": {
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/types": "^19.8.1",
     "@types/node": "^17.0.23",
     "@types/three": "~0.160.0",
     "babel-loader": "^8.3.0",
