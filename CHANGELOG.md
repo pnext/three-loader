@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.5](https://github.com/pnext/three-loader/compare/v0.5.4...v0.5.5) (2025-06-20)
+
+
+### Dependencies updates
+
+* **deps-dev:** rimraf from 3.0.2 to 6.0.1 ([#198](https://github.com/pnext/three-loader/issues/198)) ([8c8d6dd](https://github.com/pnext/three-loader/commit/8c8d6dd37ee0effc9034447ab424afc65ecfff82))
+
 ### [0.5.4](https://github.com/pnext/three-loader/compare/v0.5.3...v0.5.4) (2025-06-20)
 
 ### [0.5.3](https://github.com/pnext/three-loader/compare/v0.5.2...v0.5.3) (2025-06-20)
