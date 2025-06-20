@@ -29,7 +29,8 @@
     "format:write": "npm run format -- --write",
     "format:check": "npm run format -- --check",
     "commit": "git-cz",
-    "prepare-release": "standard-version",
+    "prerelease": "npm run build",
+    "release": "standard-version",
     "prepare": "husky"
   },
   "dependencies": {

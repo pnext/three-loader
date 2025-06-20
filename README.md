@@ -27,9 +27,9 @@ potree
     // The name of the point cloud which is to be loaded.
     'cloud.js',
     // Given the relative URL of a file, should return a full URL (e.g. signed).
-    relativeUrl => `${baseUrl}${relativeUrl}`,
+    (relativeUrl) => `${baseUrl}${relativeUrl}`,
   )
-  .then(pco => {
+  .then((pco) => {
     pointClouds.push(pco);
     scene.add(pco); // Add the loaded point cloud to your ThreeJS scene.
 
@@ -102,15 +102,13 @@ To publish a new version of the library, follow these steps:
 
 1. Ensure all changes are committed and the codebase is in a clean state.
 
-2. Run the command `npm run build` to generate all necessary assets.
+2. Run the command `npm run release` in your terminal.
 
-3. Run the command `npm run prepare-release` in your terminal.
+- This command will handle the necessary steps to prepare the release, such as updating the version number, generating changelogs, and tagging the release.
 
-  - This command will handle the necessary steps to prepare the release, such as updating the version number, generating changelogs, and tagging the release.
+3. After the command completes successfully, push the changes and tags to the remote repository.
 
-4. After the command completes successfully, push the changes and tags to the remote repository.
-
-5. Finally run `npm publish`.
+4. Finally run `npm publish`.
 
 # Thank You!
 
