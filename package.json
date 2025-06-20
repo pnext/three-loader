@@ -2,6 +2,8 @@
   "name": "@pnext/three-loader",
   "private": false,
   "version": "0.5.2",
+  "author": "",
+  "homepage": "https://github.com/pnext/three-loader#readme",
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": [
     "Hugo Campos <hugo.campos@pix4d.com>"
@@ -22,8 +24,8 @@
     "start:example": "webpack-dev-server --config webpack.config.example.js --mode development --progress",
     "build": "npm run clean && npm run lint && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
-    "prettier": "prettier --write \"**/*.js\" \"**/*.jsx\" \"**/*.tsx\" \"**/*.ts\"",
-    "prepare-release": "standard-version"
+    "prepare-release": "standard-version",
+    "prepare": "husky"
   },
   "dependencies": {
     "wasm2js": "^0.2.0"
@@ -41,7 +43,9 @@
     "css-loader": "^6.7.3",
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.0",
+    "husky": "^9.1.7",
     "install": "^0.13.0",
+    "lint-staged": "^16.1.2",
     "prettier": "^3.5.3",
     "raw-loader": "^4.0.2",
     "rimraf": "^3.0.2",
@@ -72,7 +76,5 @@
     "geo",
     "gis",
     "photogrammetry"
-  ],
-  "homepage": "https://github.com/pnext/three-loader#readme",
-  "author": ""
+  ]
 }
