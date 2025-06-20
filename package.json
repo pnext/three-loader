@@ -42,7 +42,7 @@
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.0",
     "install": "^0.13.0",
-    "prettier": "^1.19.1",
+    "prettier": "^3.5.3",
     "raw-loader": "^4.0.2",
     "rimraf": "^3.0.2",
     "size-plugin": "^3.0.0",
