@@ -3,6 +3,7 @@ import {
   BufferGeometry,
   Camera,
   Color,
+  DataTexture,
   LessEqualDepth,
   Material,
   NearestFilter,
@@ -42,6 +43,7 @@ import {
 import { SPECTRAL } from './gradients';
 import {
   generateClassificationTexture,
+  generateClipboxTexture,
   generateDataTexture,
   generateGradientTexture,
 } from './texture-generation';
@@ -61,7 +63,7 @@ export interface IPointCloudMaterialUniforms {
   blendHardness: IUniform<number>;
   classificationLUT: IUniform<Texture>;
   clipBoxCount: IUniform<number>;
-  clipBoxes: IUniform<Float32Array>;
+  clipBoxesTexture: IUniform<Texture>;
   clipExtent: IUniform<[number, number, number, number]>;
   depthMap: IUniform<Texture | null>;
   diffuse: IUniform<[number, number, number]>;
@@ -176,8 +178,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
   lights = false;
   fog = false;
   colorRgba = false;
+
   numClipBoxes: number = 0;
   clipBoxes: IClipBox[] = [];
+  clipBoxesTexture: Texture | undefined;
+
   visibleNodesTexture: Texture | undefined;
   visibleNodeTextureOffsets = new Map<string, number>();
 
@@ -195,7 +200,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
     blendHardness: makeUniform('f', 2.0),
     classificationLUT: makeUniform('t', this.classificationTexture || new Texture()),
     clipBoxCount: makeUniform('f', 0),
-    clipBoxes: makeUniform('Matrix4fv', [] as any),
+    // @ts-ignore
+    clipBoxesTexture: makeUniform('t', this.clipBoxesTexture || new DataTexture()),
     clipExtent: makeUniform('fv', [0.0, 0.0, 1.0, 1.0] as [number, number, number, number]),
     depthMap: makeUniform('t', null),
     diffuse: makeUniform('fv', [1, 1, 1] as [number, number, number]),
@@ -331,6 +337,9 @@ export class PointCloudMaterial extends RawShaderMaterial {
     tex.magFilter = NearestFilter;
     this.setUniform('visibleNodes', tex);
 
+    const clipTexture = (this.clipBoxesTexture = generateClipboxTexture());
+    this.setUniform('clipBoxesTexture', clipTexture);
+
     this.treeType = getValid(parameters.treeType, TreeType.OCTREE);
     this.size = getValid(parameters.size, 1.0);
     this.minSize = getValid(parameters.minSize, 2.0);
@@ -376,6 +385,11 @@ export class PointCloudMaterial extends RawShaderMaterial {
     if (this.backgroundMap) {
       this.backgroundMap.dispose();
       this.backgroundMap = undefined;
+    }
+
+    if (this.clipBoxesTexture) {
+      this.clipBoxesTexture.dispose();
+      this.clipBoxesTexture = undefined;
     }
   }
 
@@ -501,10 +515,6 @@ export class PointCloudMaterial extends RawShaderMaterial {
     this.numClipBoxes = clipBoxes.length;
     this.setUniform('clipBoxCount', this.numClipBoxes);
 
-    if (doUpdate) {
-      this.updateShaderSource();
-    }
-
     const clipBoxesLength = this.numClipBoxes * 16;
     const clipBoxesArray = new Float32Array(clipBoxesLength);
 
@@ -518,7 +528,15 @@ export class PointCloudMaterial extends RawShaderMaterial {
       }
     }
 
-    this.setUniform('clipBoxes', clipBoxesArray);
+    const texture = this.clipBoxesTexture;
+    if (texture) {
+      texture.image.data.set(clipBoxesArray);
+      texture.needsUpdate = true;
+    }
+
+    if (doUpdate) {
+      this.updateShaderSource();
+    }
   }
 
   get gradient(): IGradient {
