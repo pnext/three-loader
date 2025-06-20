@@ -96,6 +96,22 @@ To create a production-ready build of the library which can be published to NPM,
 npm run build
 ```
 
+# Publishing a New Version of the Library
+
+To publish a new version of the library, follow these steps:
+
+1. Ensure all changes are committed and the codebase is in a clean state.
+
+2. Run the command `npm run build` to generate all necessary assets.
+
+3. Run the command `npm run prepare-release` in your terminal.
+
+  - This command will handle the necessary steps to prepare the release, such as updating the version number, generating changelogs, and tagging the release.
+
+4. After the command completes successfully, push the changes and tags to the remote repository.
+
+5. Finally run `npm publish`.
+
 # Thank You!
 
 Thank you to Markus Schütz for his work on Potree, on which this project is based.
