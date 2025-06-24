@@ -17,7 +17,7 @@ import {
   PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
-import { GetUrlFn, loadPOC } from './loading';
+import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
 import { loadOctree } from './loading2/load-octree';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
@@ -28,7 +28,6 @@ import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, IVisibilityUpdat
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
-import { WorkerPool } from './utils/worker-pool';
 
 export class QueueItem {
   constructor(
@@ -118,11 +117,11 @@ export class Potree implements IPotree {
   }
 
   static set maxLoaderWorkers(value: number) {
-    WorkerPool.getInstance().maxWorkersPerPool = value;
+    BinaryLoader.WORKER_POOL.maxWorkers = value;
   }
 
   static get maxLoaderWorkers(): number {
-    return WorkerPool.getInstance().maxWorkersPerPool;
+    return BinaryLoader.WORKER_POOL.maxWorkers;
   }
 
   private updateVisibility(

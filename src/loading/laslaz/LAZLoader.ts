@@ -3,33 +3,32 @@
  * Potree License: https://github.com/potree/potree/blob/1.8.2/LICENSE
  */
 
-import { WorkerPool, WorkerType } from '../../utils/worker-pool';
-import { AutoTerminatingWorker } from '../../utils/worker-queue';
+import { AutoTerminatingWorker, WorkerPool } from '../../utils/worker-pool';
 
 export class LAZLoader {
   arraybuffer: ArrayBuffer;
 
-  workerPool: WorkerPool;
-  workerType: WorkerType;
+  public static readonly WORKER_POOL = new WorkerPool(
+    32,
+    require('../../workers/LAZLoaderWorker.worker.js').default,
+  );
+
   worker: AutoTerminatingWorker | null;
 
   nextCB: Function | null;
 
-  constructor(arraybuffer: ArrayBuffer, workerPool: WorkerPool) {
+  constructor(arraybuffer: ArrayBuffer) {
     this.arraybuffer = arraybuffer;
-
-    this.workerPool = workerPool;
-    this.workerType = WorkerType.LAZ_LOADER_WORKER;
     this.worker = null;
 
     this.nextCB = null;
   }
 
   init() {
-    return new Promise<void>(resolve => {
-      this.workerPool.getWorker(this.workerType).then(autoTerminatingWorker => {
+    return new Promise<void>((resolve) => {
+      LAZLoader.WORKER_POOL.getWorker().then((autoTerminatingWorker) => {
         this.worker = autoTerminatingWorker;
-        this.worker.worker.onmessage = e => {
+        this.worker.worker.onmessage = (e) => {
           if (this.nextCB !== null) {
             this.nextCB(e.data);
             this.nextCB = null;
@@ -51,7 +50,7 @@ export class LAZLoader {
 
   open() {
     return new Promise((res, rej) => {
-      this.dorr({ type: 'open', arraybuffer: this.arraybuffer }, function(r: any) {
+      this.dorr({ type: 'open', arraybuffer: this.arraybuffer }, function (r: any) {
         if (r.status !== 1) return rej(new Error('Failed to open file'));
 
         res(true);
@@ -61,7 +60,7 @@ export class LAZLoader {
 
   getHeader() {
     return new Promise((res, rej) => {
-      this.dorr({ type: 'header' }, function(r: any) {
+      this.dorr({ type: 'header' }, function (r: any) {
         if (r.status !== 1) return rej(new Error('Failed to get header'));
 
         res(r.header);
@@ -71,7 +70,7 @@ export class LAZLoader {
 
   readData(count: number, offset: number, skip: number) {
     return new Promise((res, rej) => {
-      this.dorr({ type: 'read', count: count, offset: offset, skip: skip }, function(r: any) {
+      this.dorr({ type: 'read', count: count, offset: offset, skip: skip }, function (r: any) {
         if (r.status !== 1) return rej(new Error('Failed to read data'));
         res({
           buffer: r.buffer,
@@ -86,7 +85,7 @@ export class LAZLoader {
     return new Promise((res, rej) => {
       this.dorr({ type: 'close' }, (r: any) => {
         if (this.worker) {
-          this.workerPool.releaseWorker(this.workerType, this.worker);
+          LAZLoader.WORKER_POOL.releaseWorker(this.worker);
         }
 
         if (r.status !== 1) return rej(new Error('Failed to close file'));

@@ -1,4 +1,3 @@
-import { WorkerPool } from '../../utils/worker-pool';
 import { LASLoader } from './LASLoader';
 import { LAZLoader } from './LAZLoader';
 import { readAs, pointFormatReaders } from './helpers';
@@ -12,7 +11,7 @@ export class LASFile {
 
   loader: LASLoader | LAZLoader;
 
-  constructor(arraybuffer: ArrayBuffer, workerPool: WorkerPool) {
+  constructor(arraybuffer: ArrayBuffer) {
     this.arraybuffer = arraybuffer;
 
     const ver = new Int8Array(this.arraybuffer, 24, 2);
@@ -33,7 +32,7 @@ export class LASFile {
       throw new Error('The point format ID is not supported');
 
     this.loader = this.isCompressed
-      ? new LAZLoader(this.arraybuffer, workerPool)
+      ? new LAZLoader(this.arraybuffer)
       : new LASLoader(this.arraybuffer);
   }
 
