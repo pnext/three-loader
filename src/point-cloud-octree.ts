@@ -27,6 +27,8 @@ import {
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { SplatsMesh } from './splats-mesh';
 
+const MAX_SPLATS_RENDERED = 4000000;
+
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
   disposed: boolean = false;
@@ -36,7 +38,7 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
-  splatsMesh: SplatsMesh = new SplatsMesh(true);
+  splatsMesh: SplatsMesh = new SplatsMesh(false);
 
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
@@ -169,7 +171,7 @@ export class PointCloudOctree extends PointCloudTree {
 
       //Initialise the splats mesh if the nodes contain splats information
       if (this.renderAsSplats) {
-        this.splatsMesh.initialize(this.potree.pointBudget, this.loadHarmonics);
+        this.splatsMesh.initialize(MAX_SPLATS_RENDERED, this.loadHarmonics);
         this.add(this.splatsMesh);
       }
     }
