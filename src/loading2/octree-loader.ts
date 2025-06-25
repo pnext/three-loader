@@ -49,33 +49,32 @@ export class NodeLoader {
 				throw new Error('byteOffset and byteSize are required');
 			}
 
+			if (byteSize === BigInt(0)) {
+				throw new Error(`loaded node with 0 bytes: ${node.name}`);
+			}
+
 			let buffer;
 
 			if (this.metadata.encoding === "GLTF") {
 				const urlColors = await this.getUrl(this.gltfColorsPath);
 				const urlPositions = await this.getUrl(this.gltfPositionsPath);
 
-				if (byteSize === BigInt(0)) {
-					buffer = new ArrayBuffer(0);
-					console.warn(`loaded node with 0 bytes: ${node.name}`);
-				} else {
-					const firstPositions = byteOffset * 4n * 3n;
-					const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
+				const firstPositions = byteOffset * 4n * 3n;
+				const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
-					const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
-					const responsePositions = await this.xhrRequest(urlPositions, { headers: headersPositions });
+				const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
+				const responsePositions = await this.xhrRequest(urlPositions, { headers: headersPositions });
 
-					const bufferPositions = await responsePositions.arrayBuffer();
+				const bufferPositions = await responsePositions.arrayBuffer();
 
-					const firstColors = byteOffset * 4n;
-					const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
+				const firstColors = byteOffset * 4n;
+				const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
 
-					const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
-					const responseColors = await this.xhrRequest(urlColors, { headers: headersColors });
-					const bufferColors = await responseColors.arrayBuffer();
+				const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
+				const responseColors = await this.xhrRequest(urlColors, { headers: headersColors });
+				const bufferColors = await responseColors.arrayBuffer();
 
-					buffer = appendBuffer(bufferPositions, bufferColors);
-				}
+				buffer = appendBuffer(bufferPositions, bufferColors);
 			}
 			else {
 				const urlOctree = await this.getUrl(this.octreePath);
@@ -83,18 +82,13 @@ export class NodeLoader {
 				const first = byteOffset;
 				const last = byteOffset + byteSize - BigInt(1);
 
-				if (byteSize === BigInt(0)) {
-					buffer = new ArrayBuffer(0);
-					console.warn(`loaded node with 0 bytes: ${node.name}`);
-				} else {
-					// Add byte range as query param to enforce unique cacheable URI
-					const urlOctreeCacheable = `${urlOctree}?range=${first}to${last}`;
+				// Add byte range as query param to enforce unique cacheable URI
+				const urlOctreeCacheable = `${urlOctree}?range=${first}to${last}`;
 
-					const headers = { Range: `bytes=${first}-${last}`, 'content-type': 'multipart/byteranges' };
-					const response = await this.xhrRequest(urlOctreeCacheable, { headers });
+				const headers = { Range: `bytes=${first}-${last}`, 'content-type': 'multipart/byteranges' };
+				const response = await this.xhrRequest(urlOctreeCacheable, { headers });
 
-					buffer = await response.arrayBuffer();
-				}
+				buffer = await response.arrayBuffer();
 			}
 
 			const workerType =
@@ -179,8 +173,9 @@ export class NodeLoader {
 
 			autoTerminatingWorker.worker.postMessage(message, [message.buffer]);
 		} catch (e) {
-			node.loaded = false;
+			node.loaded = true;
 			node.loading = false;
+			node.geometry = new BufferGeometry();
 			node.octreeGeometry.numNodesLoading--;
 		}
 	}
