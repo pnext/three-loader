@@ -173,8 +173,9 @@ export class NodeLoader {
 
 			autoTerminatingWorker.worker.postMessage(message, [message.buffer]);
 		} catch (e) {
-			node.loaded = false;
+			node.loaded = true;
 			node.loading = false;
+			node.geometry = new BufferGeometry();
 			node.octreeGeometry.numNodesLoading--;
 		}
 	}
