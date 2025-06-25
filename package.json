@@ -33,9 +33,7 @@
     "release": "standard-version",
     "prepare": "husky"
   },
-  "dependencies": {
-    "wasm2js": "^0.2.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "three": "~0.160.0"
   },
