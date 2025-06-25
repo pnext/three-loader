@@ -41,8 +41,9 @@ export class Decoder implements GeometryDecoder {
       buffer = new ArrayBuffer(0);
       console.warn(`loaded node with 0 bytes: ${node.name}`);
     } else {
+      const urlOctreeCacheable = `${urlOctree}?range=${first}to${last}`;
       const headers = { Range: `bytes=${first}-${last}` };
-      const response = await fetch(urlOctree, { headers });
+      const response = await fetch(urlOctreeCacheable, { headers });
 
       buffer = await response.arrayBuffer();
     }
