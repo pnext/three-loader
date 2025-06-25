@@ -4,6 +4,7 @@ import {
   Camera,
   Color,
   DataTexture,
+  GLSL3,
   LessEqualDepth,
   Material,
   NearestFilter,
@@ -328,6 +329,8 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
   constructor(parameters: Partial<IPointCloudMaterialParameters> = {}) {
     super();
+
+    this.glslVersion = GLSL3;
 
     const tex = (this.visibleNodesTexture = generateDataTexture(2048, 1, new Color(0xffffff)));
     tex.minFilter = NearestFilter;
