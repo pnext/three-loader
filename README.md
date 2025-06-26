@@ -27,9 +27,9 @@ potree
     // The name of the point cloud which is to be loaded.
     'cloud.js',
     // Given the relative URL of a file, should return a full URL (e.g. signed).
-    relativeUrl => `${baseUrl}${relativeUrl}`,
+    (relativeUrl) => `${baseUrl}${relativeUrl}`,
   )
-  .then(pco => {
+  .then((pco) => {
     pointClouds.push(pco);
     scene.add(pco); // Add the loaded point cloud to your ThreeJS scene.
 
@@ -54,29 +54,61 @@ You can play with a live example here: https://codesandbox.io/s/yw2p3446j9?autor
 
 # Local Development
 
-To develop and contribute to the project, you need to start by cloning the repositry and then install all the dependencies:
+Before pushing your changes, you can run these checks locally:
 
 ```bash
-> npm install
+# Install dependencies
+npm install
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
 ```
+
+## Pre-commit Hooks
+
+This repository uses Husky and lint-staged to automatically format and lint your code before each commit.
+
+## Configuration
+
+- Linting rules are defined in `tslint.json`
+- Formatting rules are defined in `.prettierrc`
+- Files ignored by Prettier are listed in `.prettierignore`
+- lint-staged configuration is defined in `.lintstagedrc`
 
 Once that is done you can start a development server by running:
 
 ```bash
-> npm run start
+npm run start
 ```
 
 You can also start the example application (`/example`) by running:
 
 ```bash
-> npm run start:example
+npm run start:example
 ```
 
 To create a production-ready build of the library which can be published to NPM, you can run the following command:
 
 ```bash
-> npm run build
+npm run build
 ```
+
+# Publishing a New Version of the Library
+
+To publish a new version of the library, follow these steps:
+
+1. Ensure all changes are committed and the codebase is in a clean state.
+
+2. Run the command `npm run release` in your terminal.
+
+- This command will handle the necessary steps to prepare the release, such as updating the version number, generating changelogs, and tagging the release.
+
+3. After the command completes successfully, push the changes and tags to the remote repository.
+
+4. Finally run `npm publish`.
 
 # Thank You!
 

@@ -143,7 +143,7 @@ export class LRU {
   disposeSubtree(node: Node): void {
     // Collect all the nodes which are to be disposed and removed.
     const nodesToDispose: Node[] = [node];
-    node.traverse(n => {
+    node.traverse((n) => {
       if (n.loaded) {
         nodesToDispose.push(n);
       }

@@ -1,12 +1,33 @@
-import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, WebGLRenderer } from 'three';
+import {
+  Box3,
+  Camera,
+  Object3D,
+  Points,
+  Ray,
+  Sphere,
+  Vector3,
+  Vector2,
+  WebGLRenderer,
+  Mesh,
+  BufferGeometry,
+} from 'three';
 import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudMaterial, PointSizeType } from './materials';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
+import {
+  IPointCloudGeometryNode,
+  IPointCloudTreeNode,
+  IPotree,
+  PCOGeometry,
+  PickPoint,
+} from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
+import { SplatsMesh } from './splats-mesh';
+
+const MAX_SPLATS_RENDERED = 4000000;
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
@@ -17,6 +38,8 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
+  splatsMesh: SplatsMesh = new SplatsMesh(false);
+
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
    */
@@ -27,13 +50,19 @@ export class PointCloudOctree extends PointCloudTree {
   visibleGeometry: IPointCloudGeometryNode[] = [];
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
+
   private visibleBounds: Box3 = new Box3();
   private picker: PointCloudOctreePicker | undefined;
+  private renderAsSplats: boolean | null = null;
+  private lastUpdateViewPos = new Vector3();
+  private updateViewOffset = new Vector3();
+  private loadHarmonics: boolean = false;
 
   constructor(
     potree: IPotree,
     pcoGeometry: PCOGeometry,
     material?: PointCloudMaterial,
+    loadHarmonics: boolean = false,
   ) {
     super();
 
@@ -43,7 +72,7 @@ export class PointCloudOctree extends PointCloudTree {
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = pcoGeometry.boundingBox;
     this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
-
+    this.loadHarmonics = loadHarmonics;
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
 
@@ -73,7 +102,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.root.dispose();
     }
 
-    this.pcoGeometry.root.traverse(n => this.potree.lru.remove(n));
+    this.pcoGeometry.root.traverse((n) => this.potree.lru.remove(n));
     this.pcoGeometry.dispose();
     this.material.dispose();
 
@@ -84,6 +113,8 @@ export class PointCloudOctree extends PointCloudTree {
       this.picker.dispose();
       this.picker = undefined;
     }
+
+    this.splatsMesh.dispose();
 
     this.disposed = true;
   }
@@ -123,6 +154,42 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     return node;
+  }
+
+  updateSplats(camera: Camera, size: Vector2, callback = () => {}) {
+    let mesh = this.children[0] as Mesh;
+    if (!mesh) return;
+
+    //Parse the nodes to see if they contain splats information.
+    if (this.renderAsSplats === null) {
+      this.renderAsSplats = false;
+      mesh.traverse((el) => {
+        let m = el as Mesh;
+        let g = m.geometry as BufferGeometry;
+        if (g.hasAttribute('COVARIANCE0')) this.renderAsSplats = true;
+      });
+
+      //Initialise the splats mesh if the nodes contain splats information
+      if (this.renderAsSplats) {
+        this.splatsMesh.initialize(MAX_SPLATS_RENDERED, this.loadHarmonics);
+        this.add(this.splatsMesh);
+      }
+    }
+
+    if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
+      let positionDiff = this.updateViewOffset
+        .copy(camera.position)
+        .sub(this.lastUpdateViewPos)
+        .length();
+
+      if (positionDiff < 0.01) {
+        this.splatsMesh.update(mesh, camera, size, callback);
+      } else {
+        if (this.splatsMesh.splatsEnabled) this.splatsMesh.sortSplats(camera, callback);
+      }
+
+      this.lastUpdateViewPos.copy(camera.position);
+    }
   }
 
   updateVisibleBounds() {

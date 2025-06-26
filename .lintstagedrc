@@ -1,0 +1,3 @@
+{
+    "(*.jsx|*.js|*.ts|*.tsx)": ["prettier --write --ignore-unknown", "tslint"]
+}

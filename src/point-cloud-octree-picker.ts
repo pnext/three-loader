@@ -186,7 +186,7 @@ export class PointCloudOctreePicker {
 
       renderer.render(pickState.scene, camera);
 
-      nodes.forEach(node => renderedNodes.push({ node, octree }));
+      nodes.forEach((node) => renderedNodes.push({ node, octree }));
     }
     return renderedNodes;
   }
@@ -273,6 +273,7 @@ export class PointCloudOctreePicker {
       pickMaterial.clipMode = ClipMode.DISABLED;
     } else {
       pickMaterial.clipMode = nodeMaterial.clipMode;
+      pickMaterial.clipExtent = nodeMaterial.clipExtent;
       pickMaterial.setClipBoxes(
         nodeMaterial.clipMode === ClipMode.CLIP_OUTSIDE ? nodeMaterial.clipBoxes : [],
       );
