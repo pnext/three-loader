@@ -9,6 +9,7 @@ import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
 import { buildUrl, extractBasePath } from './utils';
 import { WorkerPool, WorkerType } from './worker-pool';
+import { BrotliDecoder } from './brotli-decoder';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
@@ -25,12 +26,16 @@ export class NodeLoader {
     public metadata: Metadata,
     private loadingContext: LoadingContext,
   ) {
-    if (this.metadata.encoding !== 'GLTF') {
-      this.decoder = new Decoder(metadata, loadingContext);
-    } else if (metadata.attributes.some((attr) => attr.name === 'sh_band_0')) {
-      this.decoder = new GltfSplatDecoder(metadata, loadingContext);
+    if (this.metadata.encoding === 'GLTF') {
+      if (metadata.attributes.some((attr) => attr.name === 'sh_band_0')) {
+        this.decoder = new GltfSplatDecoder(metadata, loadingContext);
+      } else {
+        this.decoder = new GltfDecoder(metadata, loadingContext);
+      }
+    } else if (this.metadata.encoding === 'BROTLI') {
+      this.decoder = new BrotliDecoder(metadata, loadingContext);
     } else {
-      this.decoder = new GltfDecoder(metadata, loadingContext);
+      this.decoder = new Decoder(metadata, loadingContext);
     }
   }
 
