@@ -3,8 +3,10 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const webpack = require('webpack');
 const baseConfig = require('./webpack.config');
 
-module.exports = Object.assign(baseConfig, {
+module.exports = {
+  ...baseConfig,
   stats: 'normal',
+  devtool: 'source-map', // Use production-rated source maps tool. See https://webpack.js.org/configuration/devtool/
   plugins: [
     ...baseConfig.plugins,
     new webpack.DefinePlugin({
@@ -17,4 +19,4 @@ module.exports = Object.assign(baseConfig, {
     }),
     new BundleAnalyzerPlugin({ analyzerMode: 'static' }),
   ],
-});
+};
