@@ -18,6 +18,9 @@
   "license": "MIT",
   "main": "build/potree.js",
   "typings": "build/declarations/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
   "scripts": {
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
