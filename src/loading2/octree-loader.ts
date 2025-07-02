@@ -87,10 +87,6 @@ export class NodeLoader {
     return this.loadingContext.getUrl;
   }
 
-  private get xhrRequest() {
-    return this.loadingContext.xhrRequest;
-  }
-
   private get hierarchyPath() {
     return this.loadingContext.hierarchyPath;
   }
@@ -181,7 +177,7 @@ export class NodeLoader {
     const last = first + hierarchyByteSize - BigInt(1);
 
     const headers = { Range: `bytes=${first}-${last}` };
-    const response = await this.xhrRequest(hierarchyUrl, { headers });
+    const response = await fetch(hierarchyUrl, { headers });
 
     const buffer = await response.arrayBuffer();
 
@@ -297,7 +293,6 @@ export interface LoadingContext {
   harmonicsEnabled: boolean;
 
   getUrl: GetUrlFn;
-  xhrRequest: XhrRequest;
 }
 
 export class OctreeLoader implements LoadingContext {
@@ -312,16 +307,9 @@ export class OctreeLoader implements LoadingContext {
   harmonicsEnabled: boolean = false;
 
   getUrl: GetUrlFn;
-  xhrRequest: XhrRequest;
 
-  constructor(
-    getUrl: GetUrlFn,
-    url: string,
-    xhrRequest: XhrRequest,
-    loadHarmonics: boolean = false,
-  ) {
+  constructor(getUrl: GetUrlFn, url: string, loadHarmonics: boolean = false) {
     this.getUrl = getUrl;
-    this.xhrRequest = xhrRequest;
     this.basePath = extractBasePath(url);
     this.hierarchyPath = buildUrl(this.basePath, HIERARCHY_FILE);
     this.octreePath = buildUrl(this.basePath, OCTREE_FILE);
@@ -386,8 +374,8 @@ export class OctreeLoader implements LoadingContext {
     return attributes;
   }
 
-  async load(url: string) {
-    const metadata = await this.fetchMetadata(url);
+  async load(url: string, xhrRequest: XhrRequest) {
+    const metadata = await this.fetchMetadata(url, xhrRequest);
     const attributes = OctreeLoader.parseAttributes(metadata.attributes);
 
     this.applyCustomBufferURI(metadata.encoding, attributes);
@@ -405,8 +393,8 @@ export class OctreeLoader implements LoadingContext {
     return { geometry: octree };
   }
 
-  private async fetchMetadata(url: string): Promise<Metadata> {
-    const response = await this.xhrRequest(url);
+  private async fetchMetadata(url: string, xhrRequest: XhrRequest): Promise<Metadata> {
+    const response = await xhrRequest(url);
     return response.json();
   }
 

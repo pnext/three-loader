@@ -3,7 +3,6 @@ import { GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { LoadingContext, Metadata } from './octree-loader';
 import { WorkerType } from './worker-pool';
-import { XhrRequest } from 'loading/types';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
@@ -43,7 +42,7 @@ export class Decoder implements GeometryDecoder {
       console.warn(`loaded node with 0 bytes: ${node.name}`);
     } else {
       const headers = { Range: `bytes=${first}-${last}` };
-      const response = await this.xhrRequest(urlOctree, { headers });
+      const response = await fetch(urlOctree, { headers });
 
       buffer = await response.arrayBuffer();
     }
@@ -82,10 +81,6 @@ export class Decoder implements GeometryDecoder {
 
   private get getUrl() {
     return this.context.getUrl;
-  }
-
-  private get xhrRequest(): XhrRequest {
-    return this.context.xhrRequest;
   }
 
   private get octreePath() {
