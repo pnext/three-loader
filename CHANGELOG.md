@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.8](https://github.com/pnext/three-loader/compare/v0.5.6...v0.5.8) (2025-07-03)
+
+
+### Features
+
+* **model:** modify the sorter for bundle ([648bbbc](https://github.com/pnext/three-loader/commit/648bbbc75bec5af6c9e651e3a01757beeac2c671))
+* **model:** update the function that checks if the splats are required ([f78a910](https://github.com/pnext/three-loader/commit/f78a910cf1a4fbb112262bf1a53d45b8a9a6cecb))
+* reduce artifact size ([d2fb6ed](https://github.com/pnext/three-loader/commit/d2fb6edae06e41f7bb3e3f8617d8d915d1ad83d6))
+* update pointcloud shaders to GLSL3 ([6ef3489](https://github.com/pnext/three-loader/commit/6ef3489346e9343272e8bb32a5a7d206aeda1fed))
+
+
+### Bug Fixes
+
+* fix wepback sourcemap annotations breaking stuff ([5c4e379](https://github.com/pnext/three-loader/commit/5c4e3794a6301597fdccb5e72554f0b4ac680999))
+* use xhrRequest for loading Potree2 hierarchy and octree ([eb29a17](https://github.com/pnext/three-loader/commit/eb29a1763b2dce8b18bacb35544ecbe26a6ad993))
+
 ### [0.5.6](https://github.com/pnext/three-loader/compare/v0.5.5...v0.5.6) (2025-06-25)
 
 ### [0.5.5](https://github.com/pnext/three-loader/compare/v0.5.4...v0.5.5) (2025-06-20)
