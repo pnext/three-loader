@@ -68,7 +68,7 @@ function sortWorker(self: any) {
     });
   }
 
-  async function startWasmModule(_splatCount: number) {
+  function startWasmModule(_splatCount: number) {
     splatCount = _splatCount;
 
     //Memory setup
@@ -130,34 +130,35 @@ function sortWorker(self: any) {
     const buffer = toUint8Array(
       'AGFzbQEAAAAADwhkeWxpbmsuMAEEAAAAAAEPAmAAAGAIf39/f39/f38AAg8BA2VudgZtZW1vcnkCAAADAwIAAQcjAhFfX3dhc21fY2FsbF9jdG9ycwAAC3NvcnRJbmRleGVzAAEKhgMCAwABC/8CAgN/A30gBwRAIAQqAighCyAEKgIYIQwgBCoCCCENQfj///8HIQlBiICAgHghBANAIAIgCkECdCIIaiALIAEgACAIaigCAEEEdGoiCCoCCJQgDSAIKgIAlCAMIAgqAgSUkpJDAACARZT8ACIINgIAIAkgCCAIIAlKGyEJIAQgCCAEIAhKGyEEIApBAWoiCiAHRw0ACyAGQQFrsyAEsiAJspOVIQtBACEEA0AgAiAEQQJ0aiIBIAsgASgCACAJa7KU/AAiATYCACADIAFBAnRqIgEgASgCAEEBajYCACAEQQFqIgQgB0cNAAsLIAZBAk8EQCADKAIAIQlBASEEA0AgAyAEQQJ0aiIBIAEoAgAgCWoiCTYCACAEQQFqIgQgBkcNAAsLIAdBAEoEQCAHIQQDQCAFIAcgAyACIARBAWsiAUECdCIGaigCAEECdGoiCSgCACIIa0ECdGogACAGaigCADYCACAJIAhBAWs2AgAgBEEBSyEGIAEhBCAGDQALCws=',
     );
-    const result = await WebAssembly.instantiate(buffer, sorterWasmImport);
 
-    //Save the instance of the WASM to use
-    wasmInstance = result.instance;
+    WebAssembly.instantiate(buffer, sorterWasmImport).then((result) => {
+      //Save the instance of the WASM to use
+      wasmInstance = result.instance;
 
-    //Retrieve the memory used in the C module.
-    wasmMemory = sorterWasmImport.env.memory.buffer;
+      //Retrieve the memory used in the C module.
+      wasmMemory = sorterWasmImport.env.memory.buffer;
 
-    indices = new Int32Array(splatCount);
-    for (let i = 0; i < splatCount; i++) {
-      indices[i] = i;
-    }
+      indices = new Int32Array(splatCount);
+      for (let i = 0; i < splatCount; i++) {
+        indices[i] = i;
+      }
 
-    //Define the offsets used to allocate the data inside memory.
-    indexesToSortOffset = 0;
-    centersOffset = indexesToSortOffset + memoryRequiredForIndexesToSort;
-    modelViewProjOffset = centersOffset + memoryRequiredForCenters;
-    mappedDistancesOffset = modelViewProjOffset + memoryRequiredForModelViewProjectionMatrix;
-    frequenciesOffset = mappedDistancesOffset + memoryRequiredForMappedDistances;
-    sortedIndexesOffset = frequenciesOffset + memoryRequiredForIntermediateSortBuffers;
+      //Define the offsets used to allocate the data inside memory.
+      indexesToSortOffset = 0;
+      centersOffset = indexesToSortOffset + memoryRequiredForIndexesToSort;
+      modelViewProjOffset = centersOffset + memoryRequiredForCenters;
+      mappedDistancesOffset = modelViewProjOffset + memoryRequiredForModelViewProjectionMatrix;
+      frequenciesOffset = mappedDistancesOffset + memoryRequiredForMappedDistances;
+      sortedIndexesOffset = frequenciesOffset + memoryRequiredForIntermediateSortBuffers;
 
-    self.postMessage({
-      sorterReady: true,
+      self.postMessage({
+        sorterReady: true,
+      });
     });
   }
 }
 
-export async function createSortWorker(splatCount: number): Promise<Worker> {
+export function createSortWorker(splatCount: number): Promise<Worker> {
   return new Promise((resolve) => {
     const worker = new Worker(
       URL.createObjectURL(

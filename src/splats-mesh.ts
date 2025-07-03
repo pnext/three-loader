@@ -92,194 +92,200 @@ export class SplatsMesh extends Object3D {
     this.debugMode = debug;
   }
 
-  async initialize(maxPointBudget: number, renderHamonics = false) {
+  initialize(maxPointBudget: number, renderHamonics = false) {
     this.harmonicsEnabled = renderHamonics;
 
-    this.sorter = await createSortWorker(maxPointBudget);
+    return createSortWorker(maxPointBudget).then((result) => {
+      this.sorter = result;
+      this.indexesBuffer = new Int32Array(maxPointBudget);
+      let indexesToSort = new Int32Array(maxPointBudget);
 
-    this.indexesBuffer = new Int32Array(maxPointBudget);
-    let indexesToSort = new Int32Array(maxPointBudget);
+      for (let i = 0; i < maxPointBudget; i++) {
+        this.indexesBuffer[i] = i;
+        indexesToSort[i] = i;
+      }
 
-    for (let i = 0; i < maxPointBudget; i++) {
-      this.indexesBuffer[i] = i;
-      indexesToSort[i] = i;
-    }
+      const quadVertices = new Float32Array([-1, -1, 0.0, 1, -1, 0.0, -1, 1, 0.0, 1, 1, 0.0]);
+      const quadIndices = new Uint16Array([0, 1, 2, 2, 1, 3]);
 
-    const quadVertices = new Float32Array([-1, -1, 0.0, 1, -1, 0.0, -1, 1, 0.0, 1, 1, 0.0]);
-    const quadIndices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+      //Global mesh used to setup the global rendering of the points
+      let shader = new ShaderMaterial({
+        glslVersion: GLSL3,
+        vertexShader: require('./materials/shaders/splats.vert').default,
+        fragmentShader: require('./materials/shaders/splats.frag').default,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+        side: DoubleSide,
+        uniforms: {
+          focal: { value: new Vector2(0, 0) },
+          inverseFocalAdjustment: { value: 1 },
+          splatScale: { value: 1 },
+          basisViewport: { value: new Vector2(0, 0) },
+          covarianceTexture0: { value: null },
+          covarianceTexture1: { value: null },
+          posColorTexture: { value: null },
+          nodeTexture: { value: null },
+          nodeTexture2: { value: null },
+          nodeIndicesTexture: { value: null },
+          indicesTexture: { value: null },
+          harmonicsTexture1: { value: null },
+          harmonicsTexture2: { value: null },
+          harmonicsTexture3: { value: null },
+          visibleNodes: { value: null },
+          cameraPosition: { value: new Vector3(0, 0, 0) },
+          harmonicsDegree: { value: 3 },
+          renderIds: { value: false },
+          debugMode: { value: false },
+          renderOnlyHarmonics: { value: false },
+          adaptiveSize: { value: false },
+          harmonicsScale: { value: 4 },
+          octreeSize: { value: 0 },
+          fov: { value: 1 },
+          maxSplatScale: { value: 1.2 },
+          screenHeight: { value: 1 },
+          spacing: { value: 1 },
+        },
+      });
 
-    //Global mesh used to setup the global rendering of the points
-    let shader = new ShaderMaterial({
-      glslVersion: GLSL3,
-      vertexShader: require('./materials/shaders/splats.vert').default,
-      fragmentShader: require('./materials/shaders/splats.frag').default,
-      transparent: true,
-      depthTest: true,
-      depthWrite: false,
-      side: DoubleSide,
-      uniforms: {
-        focal: { value: new Vector2(0, 0) },
-        inverseFocalAdjustment: { value: 1 },
-        splatScale: { value: 1 },
-        basisViewport: { value: new Vector2(0, 0) },
-        covarianceTexture0: { value: null },
-        covarianceTexture1: { value: null },
-        posColorTexture: { value: null },
-        nodeTexture: { value: null },
-        nodeTexture2: { value: null },
-        nodeIndicesTexture: { value: null },
-        indicesTexture: { value: null },
-        harmonicsTexture1: { value: null },
-        harmonicsTexture2: { value: null },
-        harmonicsTexture3: { value: null },
-        visibleNodes: { value: null },
-        cameraPosition: { value: new Vector3(0, 0, 0) },
-        harmonicsDegree: { value: 3 },
-        renderIds: { value: false },
-        debugMode: { value: false },
-        renderOnlyHarmonics: { value: false },
-        adaptiveSize: { value: false },
-        harmonicsScale: { value: 4 },
-        octreeSize: { value: 0 },
-        fov: { value: 1 },
-        maxSplatScale: { value: 1.2},
-        screenHeight: { value: 1 },
-        spacing: { value: 1 },
-      },
+      this.material = shader;
+
+      let geom = new InstancedBufferGeometry();
+
+      geom.setAttribute('position', new BufferAttribute(quadVertices, 3));
+      geom.setIndex(new BufferAttribute(quadIndices, 1));
+      geom.setAttribute('indexes_sorted', new InstancedBufferAttribute(indexesToSort, 1));
+
+      this.mesh = new Mesh(geom, shader);
+      this.mesh.frustumCulled = false;
+      this.add(this.mesh);
+
+      //Create the global textures
+      let size = Math.ceil(Math.sqrt(maxPointBudget));
+
+      this.bufferCenters = new Float32Array(size * size * 4);
+      this.bufferPositions = new Float32Array(size * size * 4);
+      this.bufferScale = new Float32Array(size * size * 3);
+      this.bufferOrientation = new Float32Array(size * size * 4);
+      this.bufferPosColor = new Uint32Array(size * size * 4);
+      this.bufferCovariance0 = new Float32Array(size * size * 4);
+      this.bufferCovariance1 = new Float32Array(size * size * 2);
+
+      this.bufferNodes = new Float32Array(100 * 100 * 4);
+      this.bufferNodes2 = new Uint32Array(100 * 100 * 2);
+
+      this.bufferNodesIndices = new Uint32Array(size * size);
+      this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
+
+      //For the harmonics
+      let degree1Size = Math.ceil(Math.sqrt(maxPointBudget * 3));
+      let degree2Size = Math.ceil(Math.sqrt(maxPointBudget * 5));
+      let degree3Size = Math.ceil(Math.sqrt(maxPointBudget * 7));
+
+      if (this.debugMode)
+        console.log('max texture size: ' + degree3Size + ' point budget: ' + maxPointBudget);
+
+      this.bufferHarmonics1 = new Uint32Array(degree1Size * degree1Size);
+      this.bufferHarmonics2 = new Uint32Array(degree2Size * degree2Size);
+      this.bufferHarmonics3 = new Uint32Array(degree3Size * degree3Size);
+
+      //This should be able to save up to 10000 nodes
+      this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
+      this.textureNode2 = new DataTexture(this.bufferNodes2, 100, 100, RGFormat, UnsignedIntType);
+      this.textureNode2.internalFormat = 'RG32UI';
+
+      this.textureNodeIndices = new DataTexture(
+        this.bufferNodesIndices,
+        size,
+        size,
+        RedIntegerFormat,
+        UnsignedIntType,
+      );
+      this.textureNodeIndices.internalFormat = 'R32UI';
+
+      this.textureCovariance0 = new DataTexture(
+        this.bufferCovariance0,
+        size,
+        size,
+        RGBAFormat,
+        FloatType,
+      );
+      this.textureCovariance1 = new DataTexture(
+        this.bufferCovariance1,
+        size,
+        size,
+        RGFormat,
+        FloatType,
+      );
+      this.texturePosColor = new DataTexture(
+        this.bufferPosColor,
+        size,
+        size,
+        RGBAIntegerFormat,
+        UnsignedIntType,
+      );
+      this.texturePosColor.internalFormat = 'RGBA32UI';
+
+      this.textureHarmonics1 = new DataTexture(
+        this.bufferHarmonics1,
+        degree1Size,
+        degree1Size,
+        RedIntegerFormat,
+        UnsignedIntType,
+      );
+      this.textureHarmonics1.internalFormat = 'R32UI';
+      this.textureHarmonics2 = new DataTexture(
+        this.bufferHarmonics2,
+        degree2Size,
+        degree2Size,
+        RedIntegerFormat,
+        UnsignedIntType,
+      );
+      this.textureHarmonics2.internalFormat = 'R32UI';
+      this.textureHarmonics3 = new DataTexture(
+        this.bufferHarmonics3,
+        degree3Size,
+        degree3Size,
+        RedIntegerFormat,
+        UnsignedIntType,
+      );
+      this.textureHarmonics3.internalFormat = 'R32UI';
+
+      this.textureVisibilityNodes = new DataTexture(
+        this.bufferVisibilityNodes,
+        2048,
+        1,
+        RGBAFormat,
+      );
+      this.textureVisibilityNodes.magFilter = NearestFilter;
+
+      this.textures.push(this.textureNode);
+      this.textures.push(this.textureNodeIndices);
+      this.textures.push(this.textureCovariance0);
+      this.textures.push(this.textureCovariance1);
+      this.textures.push(this.texturePosColor);
+      this.textures.push(this.textureHarmonics1);
+      this.textures.push(this.textureHarmonics2);
+      this.textures.push(this.textureHarmonics3);
+      this.textures.push(this.textureNode2);
+      this.textures.push(this.textureVisibilityNodes);
+
+      this.textures.map((text) => (text.needsUpdate = true));
+
+      this.material.uniforms['posColorTexture'].value = this.texturePosColor;
+      this.material.uniforms['covarianceTexture0'].value = this.textureCovariance0;
+      this.material.uniforms['covarianceTexture1'].value = this.textureCovariance1;
+      this.material.uniforms['nodeTexture'].value = this.textureNode;
+      this.material.uniforms['nodeTexture2'].value = this.textureNode2;
+      this.material.uniforms['nodeIndicesTexture'].value = this.textureNodeIndices;
+      this.material.uniforms['harmonicsTexture1'].value = this.textureHarmonics1;
+      this.material.uniforms['harmonicsTexture2'].value = this.textureHarmonics2;
+      this.material.uniforms['harmonicsTexture3'].value = this.textureHarmonics3;
+
+      this.material.uniforms.visibleNodes.value = this.textureVisibilityNodes;
+
+      this.enabled = true;
     });
-
-    this.material = shader;
-
-    let geom = new InstancedBufferGeometry();
-
-    geom.setAttribute('position', new BufferAttribute(quadVertices, 3));
-    geom.setIndex(new BufferAttribute(quadIndices, 1));
-    geom.setAttribute('indexes_sorted', new InstancedBufferAttribute(indexesToSort, 1));
-
-    this.mesh = new Mesh(geom, shader);
-    this.mesh.frustumCulled = false;
-    this.add(this.mesh);
-
-    //Create the global textures
-    let size = Math.ceil(Math.sqrt(maxPointBudget));
-
-    this.bufferCenters = new Float32Array(size * size * 4);
-    this.bufferPositions = new Float32Array(size * size * 4);
-    this.bufferScale = new Float32Array(size * size * 3);
-    this.bufferOrientation = new Float32Array(size * size * 4);
-    this.bufferPosColor = new Uint32Array(size * size * 4);
-    this.bufferCovariance0 = new Float32Array(size * size * 4);
-    this.bufferCovariance1 = new Float32Array(size * size * 2);
-
-    this.bufferNodes = new Float32Array(100 * 100 * 4);
-    this.bufferNodes2 = new Uint32Array(100 * 100 * 2);
-
-    this.bufferNodesIndices = new Uint32Array(size * size);
-    this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
-
-    //For the harmonics
-    let degree1Size = Math.ceil(Math.sqrt(maxPointBudget * 3));
-    let degree2Size = Math.ceil(Math.sqrt(maxPointBudget * 5));
-    let degree3Size = Math.ceil(Math.sqrt(maxPointBudget * 7));
-
-    if (this.debugMode)
-      console.log('max texture size: ' + degree3Size + ' point budget: ' + maxPointBudget);
-
-    this.bufferHarmonics1 = new Uint32Array(degree1Size * degree1Size);
-    this.bufferHarmonics2 = new Uint32Array(degree2Size * degree2Size);
-    this.bufferHarmonics3 = new Uint32Array(degree3Size * degree3Size);
-
-    //This should be able to save up to 10000 nodes
-    this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
-    this.textureNode2 = new DataTexture(this.bufferNodes2, 100, 100, RGFormat, UnsignedIntType);
-    this.textureNode2.internalFormat = 'RG32UI';
-
-    this.textureNodeIndices = new DataTexture(
-      this.bufferNodesIndices,
-      size,
-      size,
-      RedIntegerFormat,
-      UnsignedIntType,
-    );
-    this.textureNodeIndices.internalFormat = 'R32UI';
-
-    this.textureCovariance0 = new DataTexture(
-      this.bufferCovariance0,
-      size,
-      size,
-      RGBAFormat,
-      FloatType,
-    );
-    this.textureCovariance1 = new DataTexture(
-      this.bufferCovariance1,
-      size,
-      size,
-      RGFormat,
-      FloatType,
-    );
-    this.texturePosColor = new DataTexture(
-      this.bufferPosColor,
-      size,
-      size,
-      RGBAIntegerFormat,
-      UnsignedIntType,
-    );
-    this.texturePosColor.internalFormat = 'RGBA32UI';
-
-    this.textureHarmonics1 = new DataTexture(
-      this.bufferHarmonics1,
-      degree1Size,
-      degree1Size,
-      RedIntegerFormat,
-      UnsignedIntType,
-    );
-    this.textureHarmonics1.internalFormat = 'R32UI';
-    this.textureHarmonics2 = new DataTexture(
-      this.bufferHarmonics2,
-      degree2Size,
-      degree2Size,
-      RedIntegerFormat,
-      UnsignedIntType,
-    );
-    this.textureHarmonics2.internalFormat = 'R32UI';
-    this.textureHarmonics3 = new DataTexture(
-      this.bufferHarmonics3,
-      degree3Size,
-      degree3Size,
-      RedIntegerFormat,
-      UnsignedIntType,
-    );
-    this.textureHarmonics3.internalFormat = 'R32UI';
-
-    this.textureVisibilityNodes = new DataTexture(this.bufferVisibilityNodes, 2048, 1, RGBAFormat);
-    this.textureVisibilityNodes.magFilter = NearestFilter;
-
-    this.textures.push(this.textureNode);
-    this.textures.push(this.textureNodeIndices);
-    this.textures.push(this.textureCovariance0);
-    this.textures.push(this.textureCovariance1);
-    this.textures.push(this.texturePosColor);
-    this.textures.push(this.textureHarmonics1);
-    this.textures.push(this.textureHarmonics2);
-    this.textures.push(this.textureHarmonics3);
-    this.textures.push(this.textureNode2);
-    this.textures.push(this.textureVisibilityNodes);
-
-    this.textures.map((text) => (text.needsUpdate = true));
-
-    this.material.uniforms['posColorTexture'].value = this.texturePosColor;
-    this.material.uniforms['covarianceTexture0'].value = this.textureCovariance0;
-    this.material.uniforms['covarianceTexture1'].value = this.textureCovariance1;
-    this.material.uniforms['nodeTexture'].value = this.textureNode;
-    this.material.uniforms['nodeTexture2'].value = this.textureNode2;
-    this.material.uniforms['nodeIndicesTexture'].value = this.textureNodeIndices;
-    this.material.uniforms['harmonicsTexture1'].value = this.textureHarmonics1;
-    this.material.uniforms['harmonicsTexture2'].value = this.textureHarmonics2;
-    this.material.uniforms['harmonicsTexture3'].value = this.textureHarmonics3;
-
-    this.material.uniforms.visibleNodes.value = this.textureVisibilityNodes;
-
-    this.enabled = true;
   }
 
   renderSplatsIDs(status: boolean) {
