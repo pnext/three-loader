@@ -161,7 +161,7 @@ export class PointCloudOctree extends PointCloudTree {
     if (!mesh) return;
 
     //Parse the nodes to see if they contain splats information.
-    if (this.renderAsSplats === null) {
+    if (this.renderAsSplats === null || !this.renderAsSplats) {
       this.renderAsSplats = false;
       mesh.traverse((el) => {
         let m = el as Mesh;
