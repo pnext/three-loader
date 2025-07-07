@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.9](https://github.com/pnext/three-loader/compare/v0.5.8...v0.5.9) (2025-07-07)
+
+
+### Features
+
+* **model:** modify format for splats texture ([a57186d](https://github.com/pnext/three-loader/commit/a57186d90709ad861880d73e8619bbd7cdf5c868))
+
 ### [0.5.8](https://github.com/pnext/three-loader/compare/v0.5.6...v0.5.8) (2025-07-03)
 
 
