@@ -8,8 +8,8 @@ export async function loadOctree(
   loadHarmonics: boolean = false,
 ) {
   const trueUrl = await getUrl(url);
-  const loader = new OctreeLoader(getUrl, url, loadHarmonics);
-  const { geometry } = await loader.load(trueUrl, xhrRequest);
+  const loader = new OctreeLoader(getUrl, url, xhrRequest, loadHarmonics);
+  const { geometry } = await loader.load(trueUrl);
 
   return geometry;
 }
