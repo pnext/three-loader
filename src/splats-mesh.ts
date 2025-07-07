@@ -23,6 +23,7 @@ import {
   GLSL3,
   Object3D,
   NearestFilter,
+  RGIntegerFormat,
 } from 'three';
 
 import { createSortWorker } from './workers/SortWorker';
@@ -191,7 +192,13 @@ export class SplatsMesh extends Object3D {
 
       //This should be able to save up to 10000 nodes
       this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
-      this.textureNode2 = new DataTexture(this.bufferNodes2, 100, 100, RGFormat, UnsignedIntType);
+      this.textureNode2 = new DataTexture(
+        this.bufferNodes2,
+        100,
+        100,
+        RGIntegerFormat,
+        UnsignedIntType,
+      );
       this.textureNode2.internalFormat = 'RG32UI';
 
       this.textureNodeIndices = new DataTexture(
