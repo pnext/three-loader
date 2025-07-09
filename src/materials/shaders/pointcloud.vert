@@ -375,8 +375,8 @@ vec3 getSourceID() {
 }
 
 vec3 getCompositeColor() {
-	vec3 c;
-	float w;
+	vec3 c = vec3(0.0, 0.0, 0.0);
+	float w = 0.0;
 
 	c += wRGB * getRGB();
 	w += wRGB;
@@ -571,10 +571,10 @@ void main() {
 			float ty = floor(float(i) * 4.0 / 256.0);
 
 			mat4 clipBox = mat4(
-				texture2D(clipBoxesTexture, vec2((tx + 0.0) / 256.0 , ty / 256.0)),
-				texture2D(clipBoxesTexture, vec2((tx + 1.0) / 256.0, ty / 256.0)),
-				texture2D(clipBoxesTexture, vec2((tx + 2.0) / 256.0, ty / 256.0)),
-				texture2D(clipBoxesTexture, vec2((tx + 3.0) / 256.0, ty / 256.0))
+				texture(clipBoxesTexture, vec2((tx + 0.0) / 256.0 , ty / 256.0)),
+				texture(clipBoxesTexture, vec2((tx + 1.0) / 256.0, ty / 256.0)),
+				texture(clipBoxesTexture, vec2((tx + 2.0) / 256.0, ty / 256.0)),
+				texture(clipBoxesTexture, vec2((tx + 3.0) / 256.0, ty / 256.0))
 			);
 
 			vec4 clipPosition = clipBox * modelMatrix * vec4(position, 1.0);
