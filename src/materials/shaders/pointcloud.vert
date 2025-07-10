@@ -525,8 +525,13 @@ void main() {
 		float w = getIntensity();
 		vColor = vec3(w, w, w);
 	#elif defined color_type_intensity_gradient
-		float w = getIntensity();
-		vColor = texture(gradient, vec2(w, 1.0 - w)).rgb;
+		// VEERUM: If the intensity is 0, it should be grey
+		if(intensity == 0.0) {
+			vColor = vec3(0.5);	
+		} else {
+			float w = getIntensity();
+			vColor = texture(gradient, vec2(w, 1.0 - w)).rgb;
+		}
 	#elif defined color_type_color
 		vColor = uColor;
 	#elif defined color_type_lod
