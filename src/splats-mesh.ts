@@ -135,7 +135,7 @@ export class SplatsMesh extends Object3D {
           harmonicsTexture3: { value: null },
           visibleNodes: { value: null },
           cameraPosition: { value: new Vector3(0, 0, 0) },
-          harmonicsDegree: { value: 3 },
+          harmonicsDegree: { value: renderHamonics ? 3 : 0 },
           renderIds: { value: false },
           debugMode: { value: false },
           renderOnlyHarmonics: { value: false },
