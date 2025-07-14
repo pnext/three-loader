@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.10](https://github.com/pnext/three-loader/compare/v0.5.9...v0.5.10) (2025-07-14)
+
+
+### Features
+
+* **model:** disable harmonics in shader when required ([3eb7ad8](https://github.com/pnext/three-loader/commit/3eb7ad8eb5e21cfa3da09b3ca022b2c6e1c924d5))
+
 ### [0.5.9](https://github.com/pnext/three-loader/compare/v0.5.8...v0.5.9) (2025-07-07)
 
 
