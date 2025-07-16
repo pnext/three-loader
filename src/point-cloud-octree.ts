@@ -28,6 +28,7 @@ import { computeTransformedBoundingBox } from './utils/bounds';
 import { SplatsMesh } from './splats-mesh';
 
 const MAX_SPLATS_RENDERED = 4000000;
+const MAX_SPLATS_RENDERED_MOBILE = 600000;
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
@@ -171,7 +172,10 @@ export class PointCloudOctree extends PointCloudTree {
 
       //Initialise the splats mesh if the nodes contain splats information
       if (this.renderAsSplats) {
-        this.splatsMesh.initialize(MAX_SPLATS_RENDERED, this.loadHarmonics);
+        this.splatsMesh.initialize(
+          this.loadHarmonics ? MAX_SPLATS_RENDERED : MAX_SPLATS_RENDERED_MOBILE,
+          this.loadHarmonics,
+        );
         this.add(this.splatsMesh);
       }
     }

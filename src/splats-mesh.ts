@@ -179,9 +179,9 @@ export class SplatsMesh extends Object3D {
       this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
 
       //For the harmonics
-      let degree1Size = Math.ceil(Math.sqrt(maxPointBudget * 3));
-      let degree2Size = Math.ceil(Math.sqrt(maxPointBudget * 5));
-      let degree3Size = Math.ceil(Math.sqrt(maxPointBudget * 7));
+      let degree1Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 3)) : 1;
+      let degree2Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 5)) : 1;
+      let degree3Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 7)) : 1;
 
       if (this.debugMode)
         console.log('max texture size: ' + degree3Size + ' point budget: ' + maxPointBudget);
