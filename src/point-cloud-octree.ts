@@ -28,7 +28,7 @@ import { computeTransformedBoundingBox } from './utils/bounds';
 import { SplatsMesh } from './splats-mesh';
 
 const MAX_SPLATS_RENDERED = 4000000;
-const MAX_SPLATS_RENDERED_MOBILE = 600000;
+const MAX_SPLATS_RENDERED_MOBILE = 500000;
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
