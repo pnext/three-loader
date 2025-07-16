@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.12](https://github.com/pnext/three-loader/compare/v0.5.11...v0.5.12) (2025-07-16)
+
+
+### Features
+
+* **GS:** reduce max splats for mobile to 500K ([f2183b6](https://github.com/pnext/three-loader/commit/f2183b6449bb0b07f1ef96355ac2e88dcc65e1b2))
+
 ### [0.5.11](https://github.com/pnext/three-loader/compare/v0.5.10...v0.5.11) (2025-07-16)
 
 
