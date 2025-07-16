@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.11](https://github.com/pnext/three-loader/compare/v0.5.10...v0.5.11) (2025-07-16)
+
+
+### Features
+
+* **GS:** reduce memory footprint for mobile ([a14d551](https://github.com/pnext/three-loader/commit/a14d5510556c840660ea675c75bfa06b61cbf1c3))
+
 ### [0.5.10](https://github.com/pnext/three-loader/compare/v0.5.9...v0.5.10) (2025-07-14)
 
 
