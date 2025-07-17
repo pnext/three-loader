@@ -24,6 +24,7 @@ import {
   Object3D,
   NearestFilter,
   RGIntegerFormat,
+  Vector4,
 } from 'three';
 
 import { createSortWorker } from './workers/SortWorker';
@@ -146,6 +147,9 @@ export class SplatsMesh extends Object3D {
           maxSplatScale: { value: 1.2 },
           screenHeight: { value: 1 },
           spacing: { value: 1 },
+          useClipping: { value: false },
+          screenWidth: { value: 0 },
+          clipExtent: { value: new Vector4(0, 0, 1, 1) },
         },
       });
 
@@ -315,6 +319,7 @@ export class SplatsMesh extends Object3D {
     this.material.uniforms.fov.value = mat.uniforms.fov.value;
     this.material.uniforms.spacing.value = mat.uniforms.spacing.value;
     this.material.uniforms.screenHeight.value = mat.uniforms.screenHeight.value;
+    this.material.uniforms.screenWidth.value = mat.uniforms.screenWidth.value;
 
     let material = this.material as RawShaderMaterial;
 
