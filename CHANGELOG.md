@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.13](https://github.com/pnext/three-loader/compare/v0.5.12...v0.5.13) (2025-07-17)
+
+
+### Features
+
+* **GS:** include the clipping for the splats ([57b39b8](https://github.com/pnext/three-loader/commit/57b39b89ecbce8d7d5e32cc395b6206f9c3c7746))
+
 ### [0.5.12](https://github.com/pnext/three-loader/compare/v0.5.11...v0.5.12) (2025-07-16)
 
 
