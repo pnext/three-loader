@@ -11,7 +11,7 @@ import {
   Mesh,
   BufferGeometry,
 } from 'three';
-import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
+import { DEFAULT_MIN_NODE_PIXEL_SIZE, MAX_AMOUNT_OF_SPLATS } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudMaterial, PointSizeType } from './materials';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
@@ -26,9 +26,6 @@ import {
 } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { SplatsMesh } from './splats-mesh';
-
-const MAX_SPLATS_RENDERED = 4000000;
-const MAX_SPLATS_RENDERED_MOBILE = 500000;
 
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
@@ -58,14 +55,14 @@ export class PointCloudOctree extends PointCloudTree {
   private lastUpdateViewPos = new Vector3();
   private updateViewOffset = new Vector3();
   private loadHarmonics: boolean = false;
-  private splatsMobile: boolean = false;
+  private maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS;
 
   constructor(
     potree: IPotree,
     pcoGeometry: PCOGeometry,
     material?: PointCloudMaterial,
     loadHarmonics: boolean = false,
-    splatsMobile: boolean = false,
+    maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS,
   ) {
     super();
 
@@ -76,7 +73,7 @@ export class PointCloudOctree extends PointCloudTree {
     this.boundingBox = pcoGeometry.boundingBox;
     this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
     this.loadHarmonics = loadHarmonics;
-    this.splatsMobile = splatsMobile;
+    this.maxAmountOfSplats = maxAmountOfSplats;
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
 
@@ -175,10 +172,7 @@ export class PointCloudOctree extends PointCloudTree {
 
       //Initialise the splats mesh if the nodes contain splats information
       if (this.renderAsSplats) {
-        this.splatsMesh.initialize(
-          this.splatsMobile ? MAX_SPLATS_RENDERED_MOBILE : MAX_SPLATS_RENDERED,
-          this.loadHarmonics,
-        );
+        this.splatsMesh.initialize(this.maxAmountOfSplats, this.loadHarmonics);
         this.add(this.splatsMesh);
       }
     }
@@ -303,5 +297,9 @@ export class PointCloudOctree extends PointCloudTree {
     return this.visibleGeometry.length === 0
       ? 0
       : this.visibleNodes.length / this.visibleGeometry.length;
+  }
+
+  get maxAmountOfSplatsToRender() {
+    return this.maxAmountOfSplats;
   }
 }

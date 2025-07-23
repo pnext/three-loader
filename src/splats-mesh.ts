@@ -140,6 +140,7 @@ export class SplatsMesh extends Object3D {
           renderIds: { value: false },
           debugMode: { value: false },
           renderOnlyHarmonics: { value: false },
+          renderLoD: { value: false },
           adaptiveSize: { value: false },
           harmonicsScale: { value: 4 },
           octreeSize: { value: 0 },

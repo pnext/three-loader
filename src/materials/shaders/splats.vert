@@ -10,6 +10,7 @@ uniform vec2 basisViewport;
 uniform float harmonicsDegree;
 uniform bool renderIds;
 uniform bool adaptiveSize;
+uniform bool renderLoD;
 
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
@@ -255,11 +256,13 @@ void main() {
     //Get the adaptive size
     float renderScale = 1.;
 
+    float attenuation = getPointSizeAttenuation( instancePosition, vnStart, float(level) );
+
     if(adaptiveSize) {
 
         float slope = tan(fov / 2.0);
 	    float projFactor =  -0.5 * screenHeight / (slope * viewCenter.z);
-        float worldSpaceSize = 2.0 * spacing / getPointSizeAttenuation( instancePosition, vnStart, float(level) );
+        float worldSpaceSize = 2.0 * spacing / attenuation;
         renderScale = worldSpaceSize * projFactor;
 
         //the splats should be at least the default size.
@@ -407,51 +410,51 @@ void main() {
     
     vColor.rgb = clamp(vColor.rgb, vec3(0.), vec3(1.));
 
-/*
-    //Test the LOD
-    int LOD = int(getLOD( instancePosition, int(vnStart), float(level) ));
-    switch ( LOD ) {
-        case 0:
-            vColor.rgb = vec3(1., 0., 0.);
-        break;
-        case 1:
-            vColor.rgb = vec3(0., 1., 0.);
-        break;
-        case 2:
-            vColor.rgb = vec3(0., 0., 1.);
-        break;
-        case 3:
-            vColor.rgb = vec3(1., 0., 1.);
-        break;
-        case 4:
-            vColor.rgb = vec3(1., 1., 0.);
-        break;
-        case 5:
-            vColor.rgb = vec3(0., 1., 1.);
-        break;
-        case 6:
-            vColor.rgb = vec3(0.5, 0., 0.);
-        break;
-        case 7:
-            vColor.rgb = vec3(0., 0.5, 0.);
-        break;
-        case 8:
-            vColor.rgb = vec3(0.0, 0., 0.5);
-        break;
-        case 9:
-            vColor.rgb = vec3(0.5, 0., 0.5);
-        break;
-        case 10:
-            vColor.rgb = vec3(0.5, 0.5, 0.0);
-        break;
-        case 11:
-            vColor.rgb = vec3(0.0, 0.5, 0.5);
-        break;
-        case 12:
-            vColor.rgb = vec3(1., 1., 1.);
-        break;
+    if(renderLoD) {
+        //Test the LOD
+        int LOD = int(getLOD( instancePosition, int(vnStart), float(level) ));
+        switch ( LOD ) {
+            case 0:
+                vColor.rgb = vec3(1., 0., 0.);
+            break;
+            case 1:
+                vColor.rgb = vec3(0., 1., 0.);
+            break;
+            case 2:
+                vColor.rgb = vec3(0., 0., 1.);
+            break;
+            case 3:
+                vColor.rgb = vec3(1., 0., 1.);
+            break;
+            case 4:
+                vColor.rgb = vec3(1., 1., 0.);
+            break;
+            case 5:
+                vColor.rgb = vec3(0., 1., 1.);
+            break;
+            case 6:
+                vColor.rgb = vec3(0.5, 0., 0.);
+            break;
+            case 7:
+                vColor.rgb = vec3(0., 0.5, 0.);
+            break;
+            case 8:
+                vColor.rgb = vec3(0.0, 0., 0.5);
+            break;
+            case 9:
+                vColor.rgb = vec3(0.5, 0., 0.5);
+            break;
+            case 10:
+                vColor.rgb = vec3(0.5, 0.5, 0.0);
+            break;
+            case 11:
+                vColor.rgb = vec3(0.0, 0.5, 0.5);
+            break;
+            case 12:
+                vColor.rgb = vec3(1., 1., 1.);
+            break;
+        }
     }
-    */
 
 	vOpacity = colorData.a;
 }

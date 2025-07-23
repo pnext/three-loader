@@ -62,7 +62,7 @@ export interface IPotree {
     getUrl: GetUrlFn,
     xhrRequest?: XhrRequest,
     loadHarmonics?: boolean,
-    splatsMobile?: boolean,
+    maxAmountOfSplats?: number,
   ): Promise<PointCloudOctree>;
 
   updatePointClouds(

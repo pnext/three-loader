@@ -14,6 +14,7 @@ import {
   DEFAULT_POINT_BUDGET,
   MAX_LOADS_TO_GPU,
   MAX_NUM_NODES_LOADING,
+  MAX_AMOUNT_OF_SPLATS,
   PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
@@ -79,10 +80,11 @@ export class Potree implements IPotree {
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
     loadHarmonics: boolean = false,
-    splatsMobile: boolean = false,
+    maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS,
   ): Promise<PointCloudOctree> {
     return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(
-      (geometry) => new PointCloudOctree(this, geometry, undefined, loadHarmonics, splatsMobile),
+      (geometry) =>
+        new PointCloudOctree(this, geometry, undefined, loadHarmonics, maxAmountOfSplats),
     );
   }
 

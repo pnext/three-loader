@@ -8,6 +8,7 @@ export const DEFAULT_MIN_NODE_PIXEL_SIZE = 200;
 export const DEFAULT_MIN_POINT_SIZE = 2;
 export const DEFAULT_PICK_WINDOW_SIZE = 15;
 export const DEFAULT_POINT_BUDGET = 1_000_000;
+export const MAX_AMOUNT_OF_SPLATS = 4000000;
 export const MAX_LOADS_TO_GPU = 3;
 export const MAX_NUM_NODES_LOADING = 4;
 export const PERSPECTIVE_CAMERA = 'PerspectiveCamera';
