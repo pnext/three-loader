@@ -79,9 +79,10 @@ export class Potree implements IPotree {
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
     loadHarmonics: boolean = false,
+    splatsMobile: boolean = false,
   ): Promise<PointCloudOctree> {
     return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(
-      (geometry) => new PointCloudOctree(this, geometry, undefined, loadHarmonics),
+      (geometry) => new PointCloudOctree(this, geometry, undefined, loadHarmonics, splatsMobile),
     );
   }
 

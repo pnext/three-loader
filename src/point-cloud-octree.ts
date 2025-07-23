@@ -58,12 +58,14 @@ export class PointCloudOctree extends PointCloudTree {
   private lastUpdateViewPos = new Vector3();
   private updateViewOffset = new Vector3();
   private loadHarmonics: boolean = false;
+  private splatsMobile: boolean = false;
 
   constructor(
     potree: IPotree,
     pcoGeometry: PCOGeometry,
     material?: PointCloudMaterial,
     loadHarmonics: boolean = false,
+    splatsMobile: boolean = false,
   ) {
     super();
 
@@ -74,6 +76,7 @@ export class PointCloudOctree extends PointCloudTree {
     this.boundingBox = pcoGeometry.boundingBox;
     this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
     this.loadHarmonics = loadHarmonics;
+    this.splatsMobile = splatsMobile;
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
 
@@ -173,7 +176,7 @@ export class PointCloudOctree extends PointCloudTree {
       //Initialise the splats mesh if the nodes contain splats information
       if (this.renderAsSplats) {
         this.splatsMesh.initialize(
-          this.loadHarmonics ? MAX_SPLATS_RENDERED : MAX_SPLATS_RENDERED_MOBILE,
+          this.splatsMobile ? MAX_SPLATS_RENDERED_MOBILE : MAX_SPLATS_RENDERED,
           this.loadHarmonics,
         );
         this.add(this.splatsMesh);
