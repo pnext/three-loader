@@ -466,10 +466,7 @@ export class SplatsMesh extends Object3D {
     angleDiff = this.sortViewDir.dot(this.lastSortViewDir);
     positionDiff = this.sortViewOffset.copy(camera.position).sub(this.lastSortViewPos).length();
 
-    if (
-      (this.forceSorting || angleDiff <= 0.99 || positionDiff >= 1.0 || true) &&
-      this.enableSorting
-    ) {
+    if ((this.forceSorting || angleDiff <= 0.99) && this.enableSorting) {
       let sortMessage = {
         indices: this.indexesBuffer,
         centers: this.bufferCenters,
