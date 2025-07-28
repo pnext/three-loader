@@ -17,6 +17,7 @@ export class OctreeGeometry {
   root!: OctreeGeometryNode;
   scale!: [number, number, number];
   spacing: number = 0;
+  maxDepth: number = Infinity;
   url: string | null = null;
 
   constructor(

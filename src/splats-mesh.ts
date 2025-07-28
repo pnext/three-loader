@@ -141,16 +141,17 @@ export class SplatsMesh extends Object3D {
           debugMode: { value: false },
           renderOnlyHarmonics: { value: false },
           renderLoD: { value: false },
-          adaptiveSize: { value: false },
+          adaptiveSize: { value: true },
           harmonicsScale: { value: 4 },
           octreeSize: { value: 0 },
           fov: { value: 1 },
-          maxSplatScale: { value: 1.2 },
+          maxSplatScale: { value: 3 },
           screenHeight: { value: 1 },
           spacing: { value: 1 },
           useClipping: { value: false },
           screenWidth: { value: 0 },
           clipExtent: { value: new Vector4(0, 0, 1, 1) },
+          maxDepth: { value: 1 },
         },
       });
 
@@ -270,6 +271,7 @@ export class SplatsMesh extends Object3D {
         RGBAFormat,
       );
       this.textureVisibilityNodes.magFilter = NearestFilter;
+      this.textureVisibilityNodes.minFilter = NearestFilter;
 
       this.textures.push(this.textureNode);
       this.textures.push(this.textureNodeIndices);
@@ -353,28 +355,32 @@ export class SplatsMesh extends Object3D {
 
     this.forceSorting = false;
 
-    //Copy the data from the visibility nodes, it uses a separated texture to sync when
-    //it is updated in relationship with the other textures.
-    this.bufferVisibilityNodes.set(mat.uniforms.visibleNodes.value.image.data);
-
     if (nodesAsString != this.nodesAsString && this.enableSorting) {
       this.nodesAsString = nodesAsString;
 
       instanceCount = 0;
       nodesCount = 0;
-
       let maxLevel = 0;
+
+      //Copy the data from the visibility nodes, it uses a separated texture to sync when
+      //it is updated in relationship with the other textures.
+      this.bufferVisibilityNodes.set(mat.uniforms.visibleNodes.value.image.data);
+
       mesh.traverseVisible((el) => {
         let m = el as Mesh;
         let g = m.geometry as BufferGeometry;
 
+        if (this.material) {
+          this.material.uniforms.maxDepth.value = g.userData.maxDepth;
+          this.material.uniforms.maxSplatScale.value = g.userData.maxDepth - 1;
+        }
+
         let pointCloudMaterial = mesh.material as PointCloudMaterial;
         const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(el.name)!;
         const level = m.name.length - 1;
-        maxLevel = Math.max(maxLevel, level);
 
         let nodeInfo = [m.position.x, m.position.y, m.position.z, 1];
-        let nodeInfo2 = [level, vnStart];
+        let nodeInfo2 = [vnStart, level];
         this.bufferNodes.set(nodeInfo, nodesCount * 4);
         this.bufferNodes2.set(nodeInfo2, nodesCount * 2);
 
@@ -460,7 +466,10 @@ export class SplatsMesh extends Object3D {
     angleDiff = this.sortViewDir.dot(this.lastSortViewDir);
     positionDiff = this.sortViewOffset.copy(camera.position).sub(this.lastSortViewPos).length();
 
-    if ((this.forceSorting || angleDiff <= 0.99 || positionDiff >= 1.0) && this.enableSorting) {
+    if (
+      (this.forceSorting || angleDiff <= 0.99 || positionDiff >= 1.0 || true) &&
+      this.enableSorting
+    ) {
       let sortMessage = {
         indices: this.indexesBuffer,
         centers: this.bufferCenters,
