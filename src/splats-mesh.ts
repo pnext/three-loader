@@ -73,7 +73,6 @@ export class SplatsMesh extends Object3D {
   private sortViewDir = new Vector3(0, 0, -1);
   private lastSortViewPos = new Vector3();
 
-  private sortViewOffset = new Vector3();
   private enableSorting = true;
 
   private indexesBuffer: any;
@@ -460,11 +459,9 @@ export class SplatsMesh extends Object3D {
     mvpMatrix.multiply(this.mesh.matrixWorld);
 
     let angleDiff = 0;
-    let positionDiff = 0;
 
     this.sortViewDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
     angleDiff = this.sortViewDir.dot(this.lastSortViewDir);
-    positionDiff = this.sortViewOffset.copy(camera.position).sub(this.lastSortViewPos).length();
 
     if ((this.forceSorting || angleDiff <= 0.99) && this.enableSorting) {
       let sortMessage = {
