@@ -372,7 +372,7 @@ export class SplatsMesh extends Object3D {
 
         if (this.material) {
           this.material.uniforms.maxDepth.value = g.userData.maxDepth;
-          this.material.uniforms.maxSplatScale.value = g.userData.maxDepth - 1;
+          this.material.uniforms.maxSplatScale.value = g.userData.maxDepth;
         }
 
         let pointCloudMaterial = mesh.material as PointCloudMaterial;
