@@ -14,12 +14,6 @@ All notable changes to this project will be documented in this file. See [standa
 * **GS:** include the position change for the conditions of sorting ([88c958e](https://github.com/pnext/three-loader/commit/88c958e9013d5d2abf40b1ea6a68789e36db8fb9))
 * **GS:** remove the testing true in the sorter ([86188a8](https://github.com/pnext/three-loader/commit/86188a83ffc17dc68f0d5fd2ff9171d838dff316))
 * **GS:** remove unused variables ([a4710db](https://github.com/pnext/three-loader/commit/a4710db054d9687098845a4eabf9bd969ff9ce15))
-* let an xhr override ([#211](https://github.com/pnext/three-loader/issues/211)) ([6609df4](https://github.com/pnext/three-loader/commit/6609df48342a7b747a027c8ba5893ce4d182d8ae))
-
-
-### Dependencies updates
-
-* bump on-headers and compression ([#213](https://github.com/pnext/three-loader/issues/213)) ([a69eefb](https://github.com/pnext/three-loader/commit/a69eefbd2162260d86fbb1941135212d88ef19b2))
 
 ### [0.5.13](https://github.com/pnext/three-loader/compare/v0.5.12...v0.5.13) (2025-07-17)
 
