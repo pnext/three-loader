@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry } from 'three';
-import { GetUrlFn } from '../loading/types';
+import { GetUrlFn, XhrRequest } from '../loading/types';
 import { DecodedGeometry, GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { LoadingContext, Metadata } from './octree-loader';
@@ -46,7 +46,7 @@ export class GltfDecoder implements GeometryDecoder {
       const lastPositions = byteOffset * 4n * 3n + byteSize * 4n * 3n - 1n;
 
       const headersPositions = { Range: `bytes=${firstPositions}-${lastPositions}` };
-      const responsePositions = await fetch(urlPositions, { headers: headersPositions });
+      const responsePositions = await this.xhrRequest(urlPositions, { headers: headersPositions });
 
       const bufferPositions = await responsePositions.arrayBuffer();
 
@@ -54,7 +54,7 @@ export class GltfDecoder implements GeometryDecoder {
       const lastColors = byteOffset * 4n + byteSize * 4n - 1n;
 
       const headersColors = { Range: `bytes=${firstColors}-${lastColors}` };
-      const responseColors = await fetch(urlColors, { headers: headersColors });
+      const responseColors = await this.xhrRequest(urlColors, { headers: headersColors });
       const bufferColors = await responseColors.arrayBuffer();
 
       buffer = appendBuffer(bufferPositions, bufferColors);
@@ -134,5 +134,9 @@ export class GltfDecoder implements GeometryDecoder {
 
   public get getUrl(): GetUrlFn {
     return this.context.getUrl;
+  }
+
+  private get xhrRequest(): XhrRequest {
+    return this.context.xhrRequest;
   }
 }

@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry } from 'three';
-import { GetUrlFn } from '../loading/types';
+import { GetUrlFn, XhrRequest } from '../loading/types';
 import { DecodedGeometry, GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { LoadingContext, Metadata } from './octree-loader';
@@ -103,7 +103,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
         const firstByte = byteOffset * 4n * offsetMultiplier;
         const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
         const headers: Record<string, string> = { Range: `bytes=${firstByte}-${lastByte}` };
-        const response = await fetch(url, { headers });
+        const response = await this.xhrRequest(url, { headers });
         return response.arrayBuffer();
       };
 
@@ -239,6 +239,10 @@ export class GltfSplatDecoder implements GeometryDecoder {
 
   private get getUrl(): GetUrlFn {
     return this.context.getUrl;
+  }
+
+  private get xhrRequest(): XhrRequest {
+    return this.context.xhrRequest;
   }
 
   private get harmonicsEnabled(): boolean {
