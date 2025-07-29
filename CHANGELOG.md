@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.14](https://github.com/pnext/three-loader/compare/v0.5.13...v0.5.14) (2025-07-29)
+
+
+### Features
+
+* **gaussians:** modify the load function for gaussians to obtain the max amount of splats ([7307cac](https://github.com/pnext/three-loader/commit/7307cac45578d023ba83bf3848914af4aab1a38e))
+* **gaussians:** separate the harmonics from mobile ([9a84904](https://github.com/pnext/three-loader/commit/9a849040c579d539bf19fc4c58456cd3b9c88dd7))
+* **GS:** correcting adaptive LOD scaling ([5ec79c5](https://github.com/pnext/three-loader/commit/5ec79c5b252b97d83026053fe25a5f5d7a1af9b1))
+* **GS:** define the maxDepth only in geometry ([217317c](https://github.com/pnext/three-loader/commit/217317c12bfddbeda92a190ae9c697e14222d793))
+* **GS:** include the position change for the conditions of sorting ([88c958e](https://github.com/pnext/three-loader/commit/88c958e9013d5d2abf40b1ea6a68789e36db8fb9))
+* **GS:** remove the testing true in the sorter ([86188a8](https://github.com/pnext/three-loader/commit/86188a83ffc17dc68f0d5fd2ff9171d838dff316))
+* **GS:** remove unused variables ([a4710db](https://github.com/pnext/three-loader/commit/a4710db054d9687098845a4eabf9bd969ff9ce15))
+
 ### [0.5.13](https://github.com/pnext/three-loader/compare/v0.5.12...v0.5.13) (2025-07-17)
 
 
