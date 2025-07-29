@@ -21,18 +21,19 @@ uniform highp usampler2D harmonicsTexture1;
 uniform highp usampler2D harmonicsTexture2;
 uniform highp usampler2D harmonicsTexture3;
 
-uniform highp usampler2D nodeTexture2;
 uniform float fov;
 uniform float spacing;
 uniform float screenHeight;
 uniform float maxSplatScale;
+
+uniform float maxDepth;
 
 
 uniform bool renderOnlyHarmonics;
 uniform float harmonicsScale;
 
 //To read the LOD for each point
-uniform highp usampler2D vnStartTexture;
+uniform highp usampler2D nodeTexture2;
 uniform sampler2D visibleNodes;
 uniform float octreeSize;
 
@@ -42,6 +43,7 @@ out vec2 vPosition;
 out float vZ;
 out float backfaseCulling;
 out vec2 vID;
+out float vRenderScale;
 
 const float sqrt8 = sqrt(8.0);
 const float minAlpha = 1.0 / 255.0;
@@ -77,6 +79,14 @@ const float[7] SH_C3 = float[](-0.5900435899266435,
                                 -0.4570457994644658, 
                                 1.445305721320277, 
                                 -0.5900435899266435);
+
+/**
+ * Rounds the specified number to the closest integer.
+ */
+float safeRound(float number){
+	return floor(number + 0.5);
+}
+
 
 /**
  * Gets the number of 1-bits up to inclusive index position.
@@ -147,15 +157,15 @@ float getLOD(vec3 pos, int vnStart, float level) {
 
 		vec3 index3d = (pos-offset) / nodeSizeAtLevel;
 		index3d = floor(index3d + 0.5);
-		int index = int(round(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));
+		int index = int(safeRound(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));
 
 		vec4 value = texture2D(visibleNodes, vec2(float(iOffset) / 2048.0, 0.0));
-		int mask = int(round(value.r * 255.0));
+		int mask = int(safeRound(value.r * 255.0));
 
 		if (isBitSet(mask, index)) {
 			// there are more visible child nodes at this position
-			int advanceG = int(round(value.g * 255.0)) * 256;
-			int advanceB = int(round(value.b * 255.0));
+			int advanceG = int(safeRound(value.g * 255.0)) * 256;
+			int advanceB = int(safeRound(value.b * 255.0));
 			int advanceChild = numberOfOnes(mask, index - 1);
 			int advance = advanceG + advanceB + advanceChild;
 
@@ -170,10 +180,6 @@ float getLOD(vec3 pos, int vnStart, float level) {
 	}
 
 	return depth;
-}
-
-float getPointSizeAttenuation(vec3 pos, int vnStart, float level) {
-    return 0.5 * pow(2.0, getLOD(pos, vnStart, level));
 }
 
 
@@ -191,6 +197,7 @@ void main() {
 
     uvec4 sampledCenterColor = texelFetch(posColorTexture, samplerUV, 0);
     vec3 instancePosition = uintBitsToFloat(uvec3(sampledCenterColor.gba));
+    vec3 instaceRawPosition = instancePosition;
 
     uint nodeIndex = texelFetch(nodeIndicesTexture, samplerUV, 0).r;
 
@@ -256,20 +263,12 @@ void main() {
     //Get the adaptive size
     float renderScale = 1.;
 
-    float attenuation = getPointSizeAttenuation( instancePosition, vnStart, float(level) );
-
     if(adaptiveSize) {
-
-        float slope = tan(fov / 2.0);
-	    float projFactor =  -0.5 * screenHeight / (slope * viewCenter.z);
-        float worldSpaceSize = 2.0 * spacing / attenuation;
-        renderScale = worldSpaceSize * projFactor;
-
-        //the splats should be at least the default size.
-        renderScale = max(1., renderScale);
-        renderScale = min(renderScale, maxSplatScale);
-
+        float lodSplatScale = clamp(getLOD( instaceRawPosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
+        renderScale = mix(maxSplatScale, 1., lodSplatScale);
     }
+
+    vRenderScale = renderScale;
 
     float cameraDistance = length(cameraPosition - instancePosition);
 
@@ -412,7 +411,7 @@ void main() {
 
     if(renderLoD) {
         //Test the LOD
-        int LOD = int(getLOD( instancePosition, int(vnStart), float(level) ));
+        int LOD = int(getLOD( instaceRawPosition, int(vnStart), float(level) ));
         switch ( LOD ) {
             case 0:
                 vColor.rgb = vec3(1., 0., 0.);

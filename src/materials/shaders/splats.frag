@@ -15,6 +15,7 @@ in float vOpacity;
 in vec2 vPosition;
 in float backfaseCulling;
 in vec2 vID;
+in float vRenderScale;
 
 out vec4 color_data;
 
@@ -62,7 +63,7 @@ void main() {
 
 	if(renderIds) {
 		if(opacity < 0.1) discard;
-		color_data = vec4(vID, 0., 1.);
+		color_data = vec4(vID, vRenderScale, 1.);
 	} 
 
 }
