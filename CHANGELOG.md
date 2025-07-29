@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.15](https://github.com/pnext/three-loader/compare/v0.5.14...v0.5.15) (2025-07-29)
+
+
+### Features
+
+* let an xhr override ([#211](https://github.com/pnext/three-loader/issues/211)) ([6609df4](https://github.com/pnext/three-loader/commit/6609df48342a7b747a027c8ba5893ce4d182d8ae))
+
+
+### Dependencies updates
+
+* bump on-headers and compression ([#213](https://github.com/pnext/three-loader/issues/213)) ([a69eefb](https://github.com/pnext/three-loader/commit/a69eefbd2162260d86fbb1941135212d88ef19b2))
+
 ### [0.5.14](https://github.com/pnext/three-loader/compare/v0.5.13...v0.5.14) (2025-07-29)
 
 
