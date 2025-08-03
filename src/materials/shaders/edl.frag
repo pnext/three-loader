@@ -1,52 +1,74 @@
-// 
-// adapted from the EDL shader code from Christian Boucheny in cloud compare:
-// https://github.com/cloudcompare/trunk/tree/master/plugins/qEDL/shaders/EDL
-//
+// Number of neighboring pixels to sample for EDL
+#define NEIGHBOUR_COUNT 8
+precision highp float;
 
+// Screen dimensions for scaling radius
 uniform float screenWidth;
 uniform float screenHeight;
+
+// Offsets for sampling neighboring pixels
 uniform vec2 neighbours[NEIGHBOUR_COUNT];
-uniform float edlStrength;
-uniform float radius;
-uniform float opacity;
 
-uniform sampler2D colorMap;
+// EDL parameters
+uniform float edlStrength; // Controls shading intensity
+uniform float radius;      // Sampling radius
+uniform float opacity;     // Final pixel opacity
 
+// Camera near/far planes for depth linearization
+uniform float near;
+uniform float far;
+
+// Input textures
+uniform sampler2D colorMap; // Rendered scene color
+uniform sampler2D depthMap; // Depth buffer
+
+// UV coordinates from vertex shader
 varying vec2 vUv;
 
-float response(float depth){
-	vec2 uvRadius = radius / vec2(screenWidth, screenHeight);
-	
-	float sum = 0.0;
-	
-	for(int i = 0; i < NEIGHBOUR_COUNT; i++){
-		vec2 uvNeighbor = vUv + uvRadius * neighbours[i];
-		
-		float neighbourDepth = texture2D(colorMap, uvNeighbor).a;
-
-		if(neighbourDepth != 0.0){
-			if(depth == 0.0){
-				sum += 100.0;
-			}else{
-				sum += max(0.0, depth - neighbourDepth);
-			}
-		}
-	}
-	
-	return sum / float(NEIGHBOUR_COUNT);
+// Converts non-linear depth to linear depth
+float linearizeDepth(float depth) {
+    float z = depth * 2.0 - 1.0; // Convert depth to NDC space
+    return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
-void main(){
-	vec4 color = texture2D(colorMap, vUv);
-	
-	float depth = color.a;
-	float res = response(depth);
-	float shade = exp(-res * 300.0 * edlStrength);
-	
-	if(color.a == 0.0 && res == 0.0){
-		discard;
-	}else{
-		gl_FragColor = vec4(color.rgb * shade, opacity);
-	}
-	
+// Computes depth variation around the current pixel
+uniform float depthFalloff; // New uniform to control depth weighting
+
+float response(float centerDepth) {
+    vec2 uvRadius = radius / vec2(screenWidth, screenHeight);
+    float sum = 0.0;
+    float weightSum = 0.0;
+
+    for (int i = 0; i < NEIGHBOUR_COUNT; i++) {
+        
+        vec2 uvNeighbor = vUv + uvRadius * neighbours[i];
+        float neighborRaw = texture2D(depthMap, uvNeighbor).r;
+
+
+        float neighborDepth = linearizeDepth(neighborRaw);
+
+        if (neighborDepth >= far * 0.99) continue;
+
+        float diff = abs(centerDepth - neighborDepth);
+        float weight = 1.0 / (1.0 + diff * depthFalloff); // Emphasize close depth differences
+
+        sum += diff * weight;
+        weightSum += weight;
+    }
+
+    return sum / weightSum;
 }
+
+void main() {
+    vec4 color = texture2D(colorMap, vUv);
+    float centerDepth = linearizeDepth(texture2D(depthMap, vUv).r);
+
+    float contrast = response(centerDepth); // Local depth contrast
+    float edgeStrength = clamp(contrast * edlStrength, 0.0, 1.0);
+//    gl_FragColor = vec4(vec3(edgeStrength), 1.0);
+
+    vec3 finalColor = mix(color.rgb, vec3(0.0), edgeStrength);
+
+    gl_FragColor = vec4(finalColor, opacity);
+}
+
