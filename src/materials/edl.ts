@@ -81,7 +81,7 @@ export class EDLPass {
   private material: EDLPostProcessMaterial;
   constructor(
     private renderer: WebGLRenderer,
-    private camera: PerspectiveCamera,
+    private camera: PerspectiveCamera|OrthographicCamera,
     width: number,
     height: number
   ) {
