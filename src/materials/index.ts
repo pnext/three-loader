@@ -5,3 +5,4 @@ export * from './point-cloud-material';
 export * from './texture-generation';
 export * from './types';
 export * from './gradients';
+export * from './edl';

@@ -7,8 +7,7 @@ import {
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import { PointCloudOctree, Potree, PotreeVersion } from '../src';
-import { EDLPass } from '../src/materials/edl';
+import { PointCloudOctree, Potree, PotreeVersion, EDLPass } from '../src';
 
 export class Viewer {
   private targetEl?: HTMLElement;
