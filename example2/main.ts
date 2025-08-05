@@ -10,24 +10,20 @@ document.body.appendChild(targetEl);
 const viewer: Viewer = new Viewer();
 viewer.initialize(targetEl);
 (window as any).viewer = viewer; // for debugging
-
+viewer.useEDL = true;
 interface PointCloudsConfig {
   file: string;
   url: string;
-  version: 'v1' | 'v2';
+  version:'edl test';
 }
 
 const examplePointClouds: PointCloudsConfig[] = [
   {
-    file: 'cloud.js',
-    url: 'https://raw.githubusercontent.com/potree/potree/develop/pointclouds/lion_takanawa/',
-    version: 'v1',
-  },
-  {
     file: 'metadata.json',
     url: 'https://test-pix4d-cloud-eu-central-1.s3.eu-central-1.amazonaws.com/lion_takanawa_converted/',
-    version: 'v2',
+    version: 'edl test',
   },
+  
 ];
 
 interface PointClouds {
@@ -39,13 +35,13 @@ interface LoadedState {
 }
 
 const pointClouds: PointClouds = {
-  v1: undefined,
-  v2: undefined,
+  edlOn: undefined,
+  edlOff: undefined,
 };
 
 const loaded: LoadedState = {
-  v1: false,
-  v2: false,
+  edlOn: false,
+  edlOff: false,
 };
 
 function createButton(text: string, onClick: () => void): HTMLButtonElement {
@@ -55,76 +51,86 @@ function createButton(text: string, onClick: () => void): HTMLButtonElement {
   return button;
 }
 
-function createSlider(version: string): HTMLInputElement {
-  const slider: HTMLInputElement = document.createElement('input');
+function createSlider(name : string, min: number, max: number, step: number, initial: number, onChange: (value: number) => void): HTMLDivElement {
+  const div = document.createElement('div');
+  const slider = document.createElement('input');
   slider.type = 'range';
-  slider.min = '10000';
-  slider.max = '500000';
-  slider.className = 'budget-slider';
-  slider.addEventListener('change', () => {
-    const cloud = pointClouds[version];
-    if (!cloud) {
-      return;
-    }
-    cloud.potree.pointBudget = parseInt(slider.value, 10);
-    console.log(cloud.potree.pointBudget);
-  });
-  return slider;
+  slider.min = min.toString();
+  slider.max = max.toString();
+  slider.step = step.toString();
+  slider.value = initial.toString();
+  slider.className = 'edl-slider';
+  slider.addEventListener('input', () => onChange(parseFloat(slider.value)));
+  div.appendChild(slider);
+  const label = document.createElement('label');
+  label.textContent = `EDL ${name}`;
+  label.className = 'edl-label';
+  div.appendChild(label);
+  
+  return div;
 }
 
-function setupPointCloud(version: 'v1' | 'v2', file: string, url: string): void {
-  if (loaded[version]) {
-    return;
-  }
+function setupPointCloud(version: 'edl test', file: string, url: string): void {
+  if (loaded[version]) return;
   loaded[version] = true;
+  
 
-viewer
-    .load(file, url, version == 'v1' ? 'v2' : version)
+  viewer.load(file, url, 'v2')
     .then((pco) => {
       pointClouds[version] = pco;
       pco.material.size = 1.0;
-
       pco.material.pointColorType = 0;
-
       pco.material.clipMode = ClipMode.CLIP_HORIZONTALLY;
       pco.material.clipExtent = [0.0, 0.0, 1.0, 1.0];
-      pco.position.set(0, 0, 0);
+      pco.position.set( 0, 0, 0);
 
       const camera = viewer.camera;
       camera.up.set(0, 0, 1);
       camera.far = 1000;
       camera.updateProjectionMatrix();
-      camera.position.set(-4, 4, 16);
+      camera.position.set(6, -4, 5);
+      viewer.cameraControls.target.set(2, 3, 2);
+
       viewer.add(pco);
     })
     .catch((err) => console.error(err));
 }
 
+const btnContainer: HTMLDivElement = document.createElement('div');
+btnContainer.className = 'btn-container';
+document.body.appendChild(btnContainer);
+
+
+const strengthSlider = createSlider( " Strength ", 0.1, 5.0, 0.1, 1.0, (val) => viewer.setEDLStrength(val));
+const radiusSlider = createSlider(" Radius ",0.1, 5.0, 0.1, 1.0, (val) => viewer.setEDLRadius(val));
+btnContainer.appendChild(strengthSlider);
+btnContainer.appendChild(radiusSlider);
+
+// Optional: toggle button for quick EDL switching
+const toggleBtn = createButton('Toggle EDL', () => viewer.toggleEDL());
+btnContainer.appendChild(toggleBtn);
+
+examplePointClouds.forEach(setupUI);
+
+
 function setupUI(cfg: PointCloudsConfig): void {
   const unloadBtn = createButton('Unload', () => {
-    if (!loaded[cfg.version]) {
-      return;
+    const pc = pointClouds[cfg.version];
+    if (pc) {
+      viewer.disposePointCloud(pc);
+      pointClouds[cfg.version] = undefined;
+      loaded[cfg.version] = false;
     }
-
-    const pointCloud = pointClouds[cfg.version];
-    if (!pointCloud) {
-      return;
-    }
-    viewer.disposePointCloud(pointCloud);
-    loaded[cfg.version] = false;
-    pointClouds[cfg.version] = undefined;
   });
 
   const loadBtn = createButton('Load', () => setupPointCloud(cfg.version, cfg.file, cfg.url));
+  const label = document.createElement('span');
+  label.textContent = `Point Cloud (${cfg.version})`;
+  const versionContainer: HTMLDivElement = document.createElement('div');
+  versionContainer.className = 'version-container';
+  versionContainer.appendChild(label);
+  versionContainer.appendChild(loadBtn);
+  versionContainer.appendChild(unloadBtn);
+  btnContainer.appendChild(versionContainer);
 
-  const slider = createSlider(cfg.version);
-
-  const btnContainer: HTMLDivElement = document.createElement('div');
-  btnContainer.className = 'btn-container-' + cfg.version;
-  document.body.appendChild(btnContainer);
-  btnContainer.appendChild(unloadBtn);
-  btnContainer.appendChild(loadBtn);
-  btnContainer.appendChild(slider);
 }
-
-examplePointClouds.forEach(setupUI);

@@ -1,6 +1,5 @@
 // Number of neighboring pixels to sample for EDL
 #define NEIGHBOUR_COUNT 8
-precision highp float;
 
 // Screen dimensions for scaling radius
 uniform float screenWidth;
@@ -31,8 +30,6 @@ float linearizeDepth(float depth) {
     return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
-// Computes depth variation around the current pixel
-uniform float depthFalloff; // New uniform to control depth weighting
 
 float response(float centerDepth) {
     vec2 uvRadius = radius / vec2(screenWidth, screenHeight);
@@ -50,7 +47,7 @@ float response(float centerDepth) {
         if (neighborDepth >= far * 0.99) continue;
 
         float diff = abs(centerDepth - neighborDepth);
-        float weight = 1.0 / (1.0 + diff * depthFalloff); // Emphasize close depth differences
+        float weight = 1.0 / (1.0 + diff); // Emphasize close depth differences
 
         sum += diff * weight;
         weightSum += weight;

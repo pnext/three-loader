@@ -8,7 +8,7 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { PointCloudOctree, Potree, PotreeVersion } from '../src';
-import { EDLPass } from '../src/edl';
+import { EDLPass } from '../src/materials/edl';
 
 export class Viewer {
   private targetEl?: HTMLElement;
@@ -26,7 +26,7 @@ export class Viewer {
 
   // Optional EDL pass
   public edlPass?: EDLPass;
-  private useEDL = true;
+  public useEDL = true;
 
   initialize(targetEl: HTMLElement) {
     if (this.targetEl) return;
@@ -112,4 +112,17 @@ export class Viewer {
       this.edlPass.setSize(width, height);
     }
   };
+  
+  setEDLStrength(value: number) {
+    if (this.edlPass) {
+      this.edlPass.setEDLStrength( value);
+    }
+  }
+
+  setEDLRadius(value: number) {
+    if (this.edlPass) {
+      this.edlPass.setEDLRadius(value);
+    }
+  }
+
 }
