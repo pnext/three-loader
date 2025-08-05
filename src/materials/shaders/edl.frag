@@ -24,11 +24,21 @@ uniform sampler2D depthMap; // Depth buffer
 // UV coordinates from vertex shader
 varying vec2 vUv;
 
+
+
 // Converts non-linear depth to linear depth
+
 float linearizeDepth(float depth) {
-    float z = depth * 2.0 - 1.0; // Convert depth to NDC space
-    return (2.0 * near * far) / (far + near - z * (far - near));
+    if (isOrthographic) {
+        // For orthographic cameras, depth is already linear
+        return depth * (far - near) + near;
+    } else {
+        // Perspective depth linearization
+        float z = depth * 2.0 - 1.0;
+        return (2.0 * near * far) / (far + near - z * (far - near));
+    }
 }
+
 
 
 float response(float centerDepth) {
