@@ -52,11 +52,10 @@ float response(float centerDepth) {
         
         vec2 uvNeighbor = vUv + uvRadius * neighbours[i];
         float neighborRaw = texture2D(depthMap, uvNeighbor).r;
-
+        if (neighborRaw >= 1.0) continue;
 
         float neighborDepth = linearizeDepth(neighborRaw);
 
-        if (neighborDepth >= far * 0.99) continue;
 
         float diff = abs(centerDepth - neighborDepth);
         float weight = 1.0 / (1.0 + diff); // Emphasize close depth differences
@@ -70,6 +69,13 @@ float response(float centerDepth) {
 
 void main() {
     vec4 color = texture2D(colorMap, vUv);
+    float rawDepth = texture2D(depthMap, vUv).r;
+
+    if (rawDepth >= 1.0) {
+        gl_FragColor = color;
+        return;
+    }
+
     float centerDepth = linearizeDepth(texture2D(depthMap, vUv).r);
 
     float contrast = response(centerDepth); // Local depth contrast
