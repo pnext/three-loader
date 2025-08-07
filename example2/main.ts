@@ -121,7 +121,7 @@ btnContainer.className = 'btn-container';
 document.body.appendChild(btnContainer);
 
 
-const strengthSlider = createSlider( " Strength ", 0.1, 5.0, 0.1, 1.0, (val) => viewer.setEDLStrength(val));
+const strengthSlider = createSlider( " Strength ", 0.1, 20.0, 0.1, 1.0, (val) => viewer.setEDLStrength(val));
 const radiusSlider = createSlider(" Radius ",0.1, 5.0, 0.1, 1.0, (val) => viewer.setEDLRadius(val));
 btnContainer.appendChild(strengthSlider);
 btnContainer.appendChild(radiusSlider);
@@ -174,6 +174,7 @@ function createEDLColorPicker(): HTMLDivElement {
   
   const input = document.createElement('input');
   input.type = 'color';
+  input.value='#777777';
   input.addEventListener('input', (event) => {
     const color = (event.target as HTMLInputElement).value;
     viewer.setEDLEdgeColor(color);

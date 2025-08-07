@@ -32,7 +32,7 @@ export class EDLPostProcessMaterial extends ShaderMaterial {
       screenWidth: { value: width },
       screenHeight:{ value: height },
       opacity:     { value: 1.0 },      
-      edgeColor: { value: new Color(0x0) }, // grey edge
+      edgeColor: { value: new Color(0x777777) }, // grey edge
       showEdgesOnly: { value: false },
       neighbours:  { value: [
         new Vector2(1, 0), new Vector2(-1, 0),
