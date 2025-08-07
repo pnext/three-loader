@@ -16,6 +16,7 @@ import {
   PerspectiveCamera,
   IUniform,
   Texture,
+  Color,
 } from 'three';
 
 export class EDLPostProcessMaterial extends ShaderMaterial {
@@ -30,7 +31,9 @@ export class EDLPostProcessMaterial extends ShaderMaterial {
       radius:      { value: 1.0 },
       screenWidth: { value: width },
       screenHeight:{ value: height },
-      opacity:     { value: 1.0 },
+      opacity:     { value: 1.0 },      
+      edgeColor: { value: new Color(0x0) }, // grey edge
+      showEdgesOnly: { value: false },
       neighbours:  { value: [
         new Vector2(1, 0), new Vector2(-1, 0),
         new Vector2(0, 1), new Vector2(0, -1),
@@ -126,6 +129,13 @@ export class EDLPass {
   }
   setEDLRadius(value: number) {
     this.material.uniforms.radius.value = value;
+  }
+  setEDLEdgeColor(color: string) {
+    this.material.uniforms.edgeColor.value.set(color);
+  }
+  setShowEdgesOnly(value: boolean) {
+    console.log(value);
+    this.material.uniforms.showEdgesOnly.value = value;
   }
 
 }

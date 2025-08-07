@@ -45,9 +45,8 @@ export class Viewer {
     this.loop();
   }
 
-  toggleEDL() {
-    this.useEDL = !this.useEDL;
-    console.log('EDL enabled:', this.useEDL);
+  setEDL(enabled: boolean) {
+    this.useEDL = enabled;
   }
 
   destroy() {
@@ -121,6 +120,17 @@ export class Viewer {
   setEDLRadius(value: number) {
     if (this.edlPass) {
       this.edlPass.setEDLRadius(value);
+    }
+  }
+
+  setEDLEdgeColor(color: string) {
+    if (this.edlPass) {
+      this.edlPass.setEDLEdgeColor(color);
+    }
+  }
+  setShowEdgesOnly(value: boolean) {
+    if (this.edlPass) {
+      this.edlPass.setShowEdgesOnly(value);
     }
   }
 

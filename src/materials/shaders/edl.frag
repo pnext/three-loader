@@ -24,6 +24,9 @@ uniform sampler2D depthMap; // Depth buffer
 // UV coordinates from vertex shader
 varying vec2 vUv;
 
+uniform vec3 edgeColor;       // Color to blend with edges
+uniform bool showEdgesOnly;   // If true, show only edge color
+
 
 
 // Converts non-linear depth to linear depth
@@ -72,9 +75,10 @@ void main() {
 
     float contrast = response(centerDepth); // Local depth contrast
     float edgeStrength = clamp(contrast * edlStrength, 0.0, 1.0);
-//    gl_FragColor = vec4(vec3(edgeStrength), 1.0);
 
-    vec3 finalColor = mix(color.rgb, vec3(0.0), edgeStrength);
+    vec3 blendedColor = mix(color.rgb, edgeColor, edgeStrength);
+
+    vec3 finalColor = showEdgesOnly ? mix(vec3(0.0), edgeColor, edgeStrength) : blendedColor;
 
     gl_FragColor = vec4(finalColor, opacity);
 }

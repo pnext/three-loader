@@ -44,12 +44,32 @@ const loaded: LoadedState = {
   edlOff: false,
 };
 
-function createButton(text: string, onClick: () => void): HTMLButtonElement {
+function createButton(text: string, onClick: (arg0: MouseEvent|undefined) => void): HTMLButtonElement {
   const button: HTMLButtonElement = document.createElement('button');
   button.textContent = text;
   button.addEventListener('click', onClick);
   return button;
 }
+function createCheck(labelText: string,checked :boolean, onChange: (event: Event) => void): HTMLLabelElement {
+  const label = document.createElement('label');
+  label.style.display = 'block';
+  label.style.margin = '4px 0';
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.addEventListener('change', onChange);
+  checkbox.checked = checked;
+
+  const span = document.createElement('span');
+  span.textContent = labelText;
+  span.style.marginLeft = '8px';
+
+  label.appendChild(checkbox);
+  label.appendChild(span);
+
+  return label;
+}
+
 
 function createSlider(name : string, min: number, max: number, step: number, initial: number, onChange: (value: number) => void): HTMLDivElement {
   const div = document.createElement('div');
@@ -107,8 +127,18 @@ btnContainer.appendChild(strengthSlider);
 btnContainer.appendChild(radiusSlider);
 
 // Optional: toggle button for quick EDL switching
-const toggleBtn = createButton('Toggle EDL', () => viewer.toggleEDL());
+const toggleBtn = createCheck('EDL', true, (event) => {
+  let target = event!.target as HTMLInputElement;  viewer.setEDL(target.checked);
+});
 btnContainer.appendChild(toggleBtn);
+const toggle2Btn = createCheck('Show EDL Edges only',false, (event) => {
+  let target = event!.target as HTMLInputElement;  
+  viewer.setShowEdgesOnly(target.checked);
+});
+btnContainer.appendChild(toggleBtn);
+btnContainer.appendChild(toggle2Btn);
+let colorPicker = createEDLColorPicker();
+btnContainer.appendChild(colorPicker);
 
 examplePointClouds.forEach(setupUI);
 
@@ -133,4 +163,23 @@ function setupUI(cfg: PointCloudsConfig): void {
   versionContainer.appendChild(unloadBtn);
   btnContainer.appendChild(versionContainer);
 
+}
+function createEDLColorPicker(): HTMLDivElement {
+  const div = document.createElement('div');
+  div.className = 'edl-color-picker';
+  
+  const label = document.createElement('label');
+  label.textContent = 'EDL Edge Color:';
+  div.appendChild(label);
+  
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.addEventListener('input', (event) => {
+    const color = (event.target as HTMLInputElement).value;
+    viewer.setEDLEdgeColor(color);
+  });
+  
+  div.appendChild(input);
+  
+  return div;
 }
