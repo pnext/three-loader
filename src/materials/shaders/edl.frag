@@ -1,4 +1,3 @@
-// Number of neighboring pixels to sample for EDL
 #define NEIGHBOUR_COUNT 8
 
 // Screen dimensions for scaling radius
@@ -82,4 +81,3 @@ void main() {
 
     gl_FragColor = vec4(finalColor, opacity);
 }
-
