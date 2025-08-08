@@ -107,7 +107,14 @@ export class EDLPass {
     this.material.setSize(width,height);
   }
 
-  render(scene: Scene) {
+  render(scene: Scene) {   
+
+    if (this.camera.near !== this.material.uniforms.near.value) {
+      this.material.uniforms.near.value = this.camera.near;
+    }
+    if (this.camera.far !== this.material.uniforms.far.value) {
+      this.material.uniforms.far.value = this.camera.far;
+    }
     this.renderer.setRenderTarget(this.rt);
     this.renderer.clear();
     this.renderer.render(scene, this.camera);
