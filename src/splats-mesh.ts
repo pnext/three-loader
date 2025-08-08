@@ -30,43 +30,39 @@ import {
 import { createSortWorker } from './workers/SortWorker';
 import { PointCloudMaterial } from './materials';
 
-const DELAYED_FRAMES = 1;
-
 export class SplatsMesh extends Object3D {
   public mesh: any;
   public material: ShaderMaterial | null = null;
   public forceSorting: boolean = true;
 
   private nodesAsString: string = '';
-  private texturePosColor: any;
-  private textureCovariance0: any;
-  private textureCovariance1: any;
-  private textureNode: any;
-  private textureNode2: any;
-  private textureNodeIndices: any;
 
-  private textureHarmonics1: any;
-  private textureHarmonics2: any;
-  private textureHarmonics3: any;
+  private texturePosColor_read: any;
+  private textureCovariance0_read: any;
+  private textureCovariance1_read: any;
+  private textureNode_read: any;
+  private textureNode2_read: any;
+  private textureNodeIndices_read: any;
+  private textureVisibilityNodes_read: any;
+  private textureHarmonics1_read: any;
+  private textureHarmonics2_read: any;
+  private textureHarmonics3_read: any;
 
-  private textureVisibilityNodes: any;
-
-  private bufferCenters: any;
-  private bufferPositions: any;
-  private bufferScale: any;
-  private bufferOrientation: any;
-  private bufferPosColor: any;
-  private bufferCovariance0: any;
-  private bufferCovariance1: any;
-  private bufferNodes: any;
-  private bufferNodes2: any;
-  private bufferNodesIndices: any;
-
-  private bufferHarmonics1: any;
-  private bufferHarmonics2: any;
-  private bufferHarmonics3: any;
-
+  private bufferOrientation_read: any;
+  private bufferPosColor_read: any;
+  private bufferCovariance0_read: any;
+  private bufferCovariance1_read: any;
+  private bufferNodes_read: any;
+  private bufferNodes2_read: any;
+  private bufferNodesIndices_read: any;
   private bufferVisibilityNodes: any;
+  private bufferHarmonics1_read: any;
+  private bufferHarmonics2_read: any;
+  private bufferHarmonics3_read: any;
+
+  private bufferCenters_read: any;
+  private bufferPositions_read: any;
+  private bufferScale_read: any;
 
   private sorter: any;
   private lastSortViewDir = new Vector3(0, 0, -1);
@@ -170,133 +166,137 @@ export class SplatsMesh extends Object3D {
       //Create the global textures
       let size = Math.ceil(Math.sqrt(maxPointBudget));
 
-      this.bufferCenters = new Float32Array(size * size * 4);
-      this.bufferPositions = new Float32Array(size * size * 4);
-      this.bufferScale = new Float32Array(size * size * 3);
-      this.bufferOrientation = new Float32Array(size * size * 4);
-      this.bufferPosColor = new Uint32Array(size * size * 4);
-      this.bufferCovariance0 = new Float32Array(size * size * 4);
-      this.bufferCovariance1 = new Float32Array(size * size * 2);
-
-      this.bufferNodes = new Float32Array(100 * 100 * 4);
-      this.bufferNodes2 = new Uint32Array(100 * 100 * 2);
-
-      this.bufferNodesIndices = new Uint32Array(size * size);
-      this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
-
       //For the harmonics
       let degree1Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 3)) : 1;
       let degree2Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 5)) : 1;
       let degree3Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 7)) : 1;
 
+      this.bufferCenters_read = new Float32Array(size * size * 4);
+      this.bufferPositions_read = new Float32Array(size * size * 4);
+      this.bufferScale_read = new Float32Array(size * size * 3);
+
+      this.bufferOrientation_read = new Float32Array(size * size * 4);
+      this.bufferPosColor_read = new Uint32Array(size * size * 4);
+      this.bufferCovariance0_read = new Float32Array(size * size * 4);
+      this.bufferCovariance1_read = new Float32Array(size * size * 2);
+      this.bufferNodes_read = new Float32Array(100 * 100 * 4);
+      this.bufferNodes2_read = new Uint32Array(100 * 100 * 2);
+      this.bufferNodesIndices_read = new Uint32Array(size * size);
+      this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
+      this.bufferHarmonics1_read = new Uint32Array(degree1Size * degree1Size);
+      this.bufferHarmonics2_read = new Uint32Array(degree2Size * degree2Size);
+      this.bufferHarmonics3_read = new Uint32Array(degree3Size * degree3Size);
+
       if (this.debugMode)
         console.log('max texture size: ' + degree3Size + ' point budget: ' + maxPointBudget);
 
-      this.bufferHarmonics1 = new Uint32Array(degree1Size * degree1Size);
-      this.bufferHarmonics2 = new Uint32Array(degree2Size * degree2Size);
-      this.bufferHarmonics3 = new Uint32Array(degree3Size * degree3Size);
-
       //This should be able to save up to 10000 nodes
-      this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
-      this.textureNode2 = new DataTexture(
-        this.bufferNodes2,
+      this.textureNode_read = new DataTexture(
+        this.bufferNodes_read,
+        100,
+        100,
+        RGBAFormat,
+        FloatType,
+      );
+      this.textureNode2_read = new DataTexture(
+        this.bufferNodes2_read,
         100,
         100,
         RGIntegerFormat,
         UnsignedIntType,
       );
-      this.textureNode2.internalFormat = 'RG32UI';
+      this.textureNode2_read.internalFormat = 'RG32UI';
 
-      this.textureNodeIndices = new DataTexture(
-        this.bufferNodesIndices,
+      this.textureNodeIndices_read = new DataTexture(
+        this.bufferNodesIndices_read,
         size,
         size,
         RedIntegerFormat,
         UnsignedIntType,
       );
-      this.textureNodeIndices.internalFormat = 'R32UI';
+      this.textureNodeIndices_read.internalFormat = 'R32UI';
 
-      this.textureCovariance0 = new DataTexture(
-        this.bufferCovariance0,
+      this.textureCovariance0_read = new DataTexture(
+        this.bufferCovariance0_read,
         size,
         size,
         RGBAFormat,
         FloatType,
       );
-      this.textureCovariance1 = new DataTexture(
-        this.bufferCovariance1,
+      this.textureCovariance1_read = new DataTexture(
+        this.bufferCovariance1_read,
         size,
         size,
         RGFormat,
         FloatType,
       );
-      this.texturePosColor = new DataTexture(
-        this.bufferPosColor,
+      this.texturePosColor_read = new DataTexture(
+        this.bufferPosColor_read,
         size,
         size,
         RGBAIntegerFormat,
         UnsignedIntType,
       );
-      this.texturePosColor.internalFormat = 'RGBA32UI';
+      this.texturePosColor_read.internalFormat = 'RGBA32UI';
 
-      this.textureHarmonics1 = new DataTexture(
-        this.bufferHarmonics1,
+      this.textureHarmonics1_read = new DataTexture(
+        this.bufferHarmonics1_read,
         degree1Size,
         degree1Size,
         RedIntegerFormat,
         UnsignedIntType,
       );
-      this.textureHarmonics1.internalFormat = 'R32UI';
-      this.textureHarmonics2 = new DataTexture(
-        this.bufferHarmonics2,
+      this.textureHarmonics1_read.internalFormat = 'R32UI';
+      this.textureHarmonics2_read = new DataTexture(
+        this.bufferHarmonics2_read,
         degree2Size,
         degree2Size,
         RedIntegerFormat,
         UnsignedIntType,
       );
-      this.textureHarmonics2.internalFormat = 'R32UI';
-      this.textureHarmonics3 = new DataTexture(
-        this.bufferHarmonics3,
+      this.textureHarmonics2_read.internalFormat = 'R32UI';
+      this.textureHarmonics3_read = new DataTexture(
+        this.bufferHarmonics3_read,
         degree3Size,
         degree3Size,
         RedIntegerFormat,
         UnsignedIntType,
       );
-      this.textureHarmonics3.internalFormat = 'R32UI';
+      this.textureHarmonics3_read.internalFormat = 'R32UI';
 
-      this.textureVisibilityNodes = new DataTexture(
+      this.textureVisibilityNodes_read = new DataTexture(
         this.bufferVisibilityNodes,
         2048,
         1,
         RGBAFormat,
       );
-      this.textureVisibilityNodes.magFilter = NearestFilter;
-      this.textureVisibilityNodes.minFilter = NearestFilter;
+      this.textureVisibilityNodes_read.magFilter = NearestFilter;
+      this.textureVisibilityNodes_read.minFilter = NearestFilter;
 
-      this.textures.push(this.textureNode);
-      this.textures.push(this.textureNodeIndices);
-      this.textures.push(this.textureCovariance0);
-      this.textures.push(this.textureCovariance1);
-      this.textures.push(this.texturePosColor);
-      this.textures.push(this.textureHarmonics1);
-      this.textures.push(this.textureHarmonics2);
-      this.textures.push(this.textureHarmonics3);
-      this.textures.push(this.textureNode2);
-      this.textures.push(this.textureVisibilityNodes);
+      this.textures.push(this.textureNode_read);
+      this.textures.push(this.textureNodeIndices_read);
+      this.textures.push(this.textureCovariance0_read);
+      this.textures.push(this.textureCovariance1_read);
+      this.textures.push(this.texturePosColor_read);
+      this.textures.push(this.textureHarmonics1_read);
+      this.textures.push(this.textureHarmonics2_read);
+      this.textures.push(this.textureHarmonics3_read);
+      this.textures.push(this.textureNode2_read);
+      this.textures.push(this.textureVisibilityNodes_read);
 
       this.textures.map((text) => (text.needsUpdate = true));
 
-      this.material.uniforms['posColorTexture'].value = this.texturePosColor;
-      this.material.uniforms['covarianceTexture0'].value = this.textureCovariance0;
-      this.material.uniforms['covarianceTexture1'].value = this.textureCovariance1;
-      this.material.uniforms['nodeTexture'].value = this.textureNode;
-      this.material.uniforms['nodeTexture2'].value = this.textureNode2;
-      this.material.uniforms['nodeIndicesTexture'].value = this.textureNodeIndices;
-      this.material.uniforms['harmonicsTexture1'].value = this.textureHarmonics1;
-      this.material.uniforms['harmonicsTexture2'].value = this.textureHarmonics2;
-      this.material.uniforms['harmonicsTexture3'].value = this.textureHarmonics3;
+      this.material.uniforms['posColorTexture'].value = this.texturePosColor_read;
+      this.material.uniforms['covarianceTexture0'].value = this.textureCovariance0_read;
+      this.material.uniforms['covarianceTexture1'].value = this.textureCovariance1_read;
+      this.material.uniforms['nodeTexture'].value = this.textureNode_read;
+      this.material.uniforms['nodeTexture2'].value = this.textureNode2_read;
+      this.material.uniforms['nodeIndicesTexture'].value = this.textureNodeIndices_read;
+      this.material.uniforms['harmonicsTexture1'].value = this.textureHarmonics1_read;
+      this.material.uniforms['harmonicsTexture2'].value = this.textureHarmonics2_read;
+      this.material.uniforms['harmonicsTexture3'].value = this.textureHarmonics3_read;
 
-      this.material.uniforms.visibleNodes.value = this.textureVisibilityNodes;
+      this.material.uniforms.visibleNodes.value = this.textureVisibilityNodes_read;
 
       this.enabled = true;
     });
@@ -381,31 +381,31 @@ export class SplatsMesh extends Object3D {
 
         let nodeInfo = [m.position.x, m.position.y, m.position.z, 1];
         let nodeInfo2 = [vnStart, level];
-        this.bufferNodes.set(nodeInfo, nodesCount * 4);
-        this.bufferNodes2.set(nodeInfo2, nodesCount * 2);
+        this.bufferNodes_read.set(nodeInfo, nodesCount * 4);
+        this.bufferNodes2_read.set(nodeInfo2, nodesCount * 2);
 
-        this.bufferNodesIndices.set(
+        this.bufferNodesIndices_read.set(
           new Uint32Array(g.drawRange.count).fill(nodesCount),
           instanceCount,
         );
 
         //Used for sorting
-        this.bufferCenters.set(g.getAttribute('raw_position').array, instanceCount * 4);
+        this.bufferCenters_read.set(g.getAttribute('raw_position').array, instanceCount * 4);
 
         //Used for raycasting
-        this.bufferPositions.set(g.getAttribute('centers').array, instanceCount * 4);
-        this.bufferScale.set(g.getAttribute('scale').array, instanceCount * 3);
-        this.bufferOrientation.set(g.getAttribute('orientation').array, instanceCount * 4);
+        this.bufferPositions_read.set(g.getAttribute('centers').array, instanceCount * 4);
+        this.bufferScale_read.set(g.getAttribute('scale').array, instanceCount * 3);
+        this.bufferOrientation_read.set(g.getAttribute('orientation').array, instanceCount * 4);
 
         //Used for rendering
-        this.bufferCovariance0.set(g.getAttribute('COVARIANCE0').array, instanceCount * 4);
-        this.bufferCovariance1.set(g.getAttribute('COVARIANCE1').array, instanceCount * 2);
-        this.bufferPosColor.set(g.getAttribute('POS_COLOR').array, instanceCount * 4);
+        this.bufferCovariance0_read.set(g.getAttribute('COVARIANCE0').array, instanceCount * 4);
+        this.bufferCovariance1_read.set(g.getAttribute('COVARIANCE1').array, instanceCount * 2);
+        this.bufferPosColor_read.set(g.getAttribute('POS_COLOR').array, instanceCount * 4);
 
         if (this.harmonicsEnabled) {
-          this.bufferHarmonics1.set(g.getAttribute('HARMONICS1').array, instanceCount * 3);
-          this.bufferHarmonics2.set(g.getAttribute('HARMONICS2').array, instanceCount * 5);
-          this.bufferHarmonics3.set(g.getAttribute('HARMONICS3').array, instanceCount * 7);
+          this.bufferHarmonics1_read.set(g.getAttribute('HARMONICS1').array, instanceCount * 3);
+          this.bufferHarmonics2_read.set(g.getAttribute('HARMONICS2').array, instanceCount * 5);
+          this.bufferHarmonics3_read.set(g.getAttribute('HARMONICS3').array, instanceCount * 7);
         }
 
         instanceCount += g.drawRange.count;
@@ -431,25 +431,6 @@ export class SplatsMesh extends Object3D {
     }
   }
 
-  defer() {
-    let promise = new Promise((resolve) => {
-      let counter = 0;
-
-      let frameCounter = () => {
-        let anim = requestAnimationFrame(frameCounter);
-        if (counter == DELAYED_FRAMES) {
-          resolve('true');
-          cancelAnimationFrame(anim);
-        }
-        counter++;
-      };
-
-      frameCounter();
-    });
-
-    return promise;
-  }
-
   sortSplats(camera: Camera, callback = () => {}) {
     if (this.mesh == null || this.instanceCount == 0) return;
 
@@ -469,7 +450,7 @@ export class SplatsMesh extends Object3D {
     if ((this.forceSorting || angleDiff <= 0.99 || positionDiff >= 1.0) && this.enableSorting) {
       let sortMessage = {
         indices: this.indexesBuffer,
-        centers: this.bufferCenters,
+        centers: this.bufferCenters_read,
         modelViewProj: mvpMatrix.elements,
         totalSplats: this.instanceCount,
       };
@@ -495,10 +476,8 @@ export class SplatsMesh extends Object3D {
 
             this.mesh.geometry.instanceCount = this.instanceCount;
 
-            this.defer().then((_) => {
-              callback();
-              this.enableSorting = true;
-            });
+            callback();
+            this.enableSorting = true;
           } else {
             this.enableSorting = true;
           }
@@ -519,22 +498,22 @@ export class SplatsMesh extends Object3D {
     let scale = new Vector3();
     let orientation = new Quaternion();
 
-    center.x = this.bufferPositions[4 * globalID + 0];
-    center.y = this.bufferPositions[4 * globalID + 1];
-    center.z = this.bufferPositions[4 * globalID + 2];
+    center.x = this.bufferPositions_read[4 * globalID + 0];
+    center.y = this.bufferPositions_read[4 * globalID + 1];
+    center.z = this.bufferPositions_read[4 * globalID + 2];
 
-    scale.x = this.bufferScale[3 * globalID + 0];
-    scale.y = this.bufferScale[3 * globalID + 1];
-    scale.z = this.bufferScale[3 * globalID + 2];
+    scale.x = this.bufferScale_read[3 * globalID + 0];
+    scale.y = this.bufferScale_read[3 * globalID + 1];
+    scale.z = this.bufferScale_read[3 * globalID + 2];
 
-    orientation.w = this.bufferOrientation[4 * globalID + 0];
-    orientation.x = this.bufferOrientation[4 * globalID + 1];
-    orientation.y = this.bufferOrientation[4 * globalID + 2];
-    orientation.z = this.bufferOrientation[4 * globalID + 3];
+    orientation.w = this.bufferOrientation_read[4 * globalID + 0];
+    orientation.x = this.bufferOrientation_read[4 * globalID + 1];
+    orientation.y = this.bufferOrientation_read[4 * globalID + 2];
+    orientation.z = this.bufferOrientation_read[4 * globalID + 3];
 
-    offset.x = this.bufferNodes[4 * nodeID + 0];
-    offset.y = this.bufferNodes[4 * nodeID + 1];
-    offset.z = this.bufferNodes[4 * nodeID + 2];
+    offset.x = this.bufferNodes_read[4 * nodeID + 0];
+    offset.y = this.bufferNodes_read[4 * nodeID + 1];
+    offset.z = this.bufferNodes_read[4 * nodeID + 2];
 
     center.add(offset);
 
@@ -566,15 +545,15 @@ export class SplatsMesh extends Object3D {
 
     //kill the buffers
     this.indexesBuffer = null;
-    this.bufferCenters = null;
-    this.bufferPositions = null;
-    this.bufferScale = null;
-    this.bufferOrientation = null;
-    this.bufferPosColor = null;
-    this.bufferCovariance0 = null;
-    this.bufferCovariance1 = null;
-    this.bufferNodes = null;
-    this.bufferNodesIndices = null;
+    this.bufferCenters_read = null;
+    this.bufferPositions_read = null;
+    this.bufferScale_read = null;
+    this.bufferOrientation_read = null;
+    this.bufferPosColor_read = null;
+    this.bufferCovariance0_read = null;
+    this.bufferCovariance1_read = null;
+    this.bufferNodes_read = null;
+    this.bufferNodesIndices_read = null;
 
     //kill the mesh
     this.mesh = null;
