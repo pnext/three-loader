@@ -111,6 +111,7 @@ export class SplatsMesh extends Object3D {
       });
 
       this.material = shader;
+      this.instanceCount = 0;
 
       //Create the global textures
       this.buffers = this.geometryData.buffers;

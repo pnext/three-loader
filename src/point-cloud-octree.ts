@@ -176,11 +176,8 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
-      if (
-        this.splatsMesh.splatsEnabled &&
-        this.progress > 0.99 &&
-        this.splatsMesh.update(mesh, camera, size, callback)
-      )
+      let runSort = this.splatsMesh.update(mesh, camera, size, callback);
+      if (this.splatsMesh.splatsEnabled && this.progress > 0.99 && runSort)
         this.splatsMesh.sortSplats(camera, callback);
     }
   }
