@@ -36,7 +36,7 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
-  splatsMesh: SplatsMesh = new SplatsMesh(false);
+  splatsMesh: SplatsMesh = new SplatsMesh(true);
 
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
@@ -52,8 +52,6 @@ export class PointCloudOctree extends PointCloudTree {
   private visibleBounds: Box3 = new Box3();
   private picker: PointCloudOctreePicker | undefined;
   private renderAsSplats: boolean | null = null;
-  private lastUpdateViewPos = new Vector3();
-  private updateViewOffset = new Vector3();
   private loadHarmonics: boolean = false;
   private maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS;
 
@@ -178,18 +176,12 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
-      let positionDiff = this.updateViewOffset
-        .copy(camera.position)
-        .sub(this.lastUpdateViewPos)
-        .length();
-
-      if (positionDiff < 0.01) {
-        this.splatsMesh.update(mesh, camera, size, callback);
-      } else {
-        if (this.splatsMesh.splatsEnabled) this.splatsMesh.sortSplats(camera, callback);
-      }
-
-      this.lastUpdateViewPos.copy(camera.position);
+      if (
+        this.splatsMesh.splatsEnabled &&
+        this.progress > 0.99 &&
+        this.splatsMesh.update(mesh, camera, size, callback)
+      )
+        this.splatsMesh.sortSplats(camera, callback);
     }
   }
 

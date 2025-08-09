@@ -1,8 +1,6 @@
 precision highp float;
 precision highp int;
 
-in int indexes_sorted;
-
 uniform vec2 focal;
 uniform float inverseFocalAdjustment;
 uniform float splatScale;
@@ -15,6 +13,8 @@ uniform bool renderLoD;
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
 uniform sampler2D nodeTexture;
+
+uniform highp usampler2D sortedTexture;
 uniform highp usampler2D posColorTexture;
 uniform highp usampler2D nodeIndicesTexture;
 uniform highp usampler2D harmonicsTexture1;
@@ -187,7 +187,14 @@ void main() {
 
     ivec2 samplerUV = ivec2(0, 0);
     vec2 dim = vec2(textureSize(covarianceTexture0, 0).xy);
-    float dd = float(indexes_sorted);
+
+    float dd = float(gl_InstanceID);
+    samplerUV.y = int(floor(dd / dim.x));
+    samplerUV.x = int(mod(dd, dim.x));
+
+    int indexes_sorted = int(texelFetch(sortedTexture, samplerUV, 0));
+
+    dd = float(indexes_sorted);
     samplerUV.y = int(floor(dd / dim.x));
     samplerUV.x = int(mod(dd, dim.x));
 
