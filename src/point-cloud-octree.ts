@@ -36,7 +36,7 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
-  splatsMesh: SplatsMesh = new SplatsMesh(true);
+  splatsMesh: SplatsMesh = new SplatsMesh(false);
 
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
