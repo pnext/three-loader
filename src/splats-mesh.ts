@@ -24,7 +24,8 @@ const DELAYED_FRAMES = 2;
 export class SplatsMesh extends Object3D {
   public mesh: any;
   public material: ShaderMaterial | null = null;
-  public forceSorting: boolean = true;
+  private forceSorting: boolean = true;
+  public continuousSorting: boolean = true;
 
   private nodesAsString: string = '';
 
@@ -36,6 +37,7 @@ export class SplatsMesh extends Object3D {
   private lastSortViewDir = new Vector3(0, 0, -1);
   private sortViewDir = new Vector3(0, 0, -1);
   private lastSortViewPos = new Vector3();
+  private sortViewOffset = new Vector3();
 
   private enableSorting = true;
 
@@ -255,11 +257,9 @@ export class SplatsMesh extends Object3D {
       totalMemoryInDisplay = instanceCount * (this.harmonicsEnabled ? 236 : 56);
 
       if (this.debugMode) {
-        //console.log('----------------------------');
         console.log('total memory in usage: ' + Math.ceil(totalMemoryUsed / 1000000) + ' MB');
         console.log('total memory displayed: ' + Math.ceil(totalMemoryInDisplay / 1000000) + ' MB');
         console.log('levels displayed: ' + nodesAsString);
-        //console.log('----------------------------');
       }
 
       this.instanceCount = instanceCount;
@@ -301,9 +301,17 @@ export class SplatsMesh extends Object3D {
     mvpMatrix.premultiply(camera.projectionMatrix);
     mvpMatrix.multiply(this.mesh.matrixWorld);
 
-    this.sortViewDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    let angleDiff = 0;
+    let positionDiff = 0;
 
-    if (this.enableSorting) {
+    this.sortViewDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    angleDiff = this.sortViewDir.dot(this.lastSortViewDir);
+    positionDiff = this.sortViewOffset.copy(camera.position).sub(this.lastSortViewPos).length();
+
+    if (
+      (this.continuousSorting || this.forceSorting || angleDiff <= 0.99 || positionDiff >= 1.0) &&
+      this.enableSorting
+    ) {
       let sortMessage = {
         indices: this.geometryData.indexesBuffer,
         centers: this.buffers.get('centers'),
@@ -331,7 +339,6 @@ export class SplatsMesh extends Object3D {
               this.enableSorting = true;
             });
           } else {
-            console.warn('error sorting');
             this.enableSorting = true;
           }
         }

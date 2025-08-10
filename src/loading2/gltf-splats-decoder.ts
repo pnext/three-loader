@@ -233,6 +233,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
     }
 
     geometry.userData.maxDepth = this._metadata.hierarchy.depth + 1;
+    geometry.userData.totalSplats = this._metadata.points;
 
     return { data, buffer, geometry };
   }
