@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.16](https://github.com/pnext/three-loader/compare/v0.5.14...v0.5.16) (2025-08-11)
+
+
+### Features
+
+* **GS:** adding types for the textures and buffers ([74c1336](https://github.com/pnext/three-loader/commit/74c1336bd7d9e89fd48d982dee2e4eb4d0febf5b))
+* **GS:** allow to modify the amount of additional memory to save ([c3f7f8e](https://github.com/pnext/three-loader/commit/c3f7f8eda57c61ff37272400d9d02ac42a1a52fb))
+* **GS:** create the dispose method for the geometry data of the splats ([9e3f797](https://github.com/pnext/three-loader/commit/9e3f797575157cb13e9a50821c549b626be1069d))
+* **GS:** define the total amount of splats for the geometry ([f4ab00a](https://github.com/pnext/three-loader/commit/f4ab00a78407acd07cfa829a46802654bb9a985e))
+* **GS:** name refactor ([cf54b36](https://github.com/pnext/three-loader/commit/cf54b36385578cbd71fe1e3e300b3a241ddc2b26))
+* **GS:** remove the geometryData since it is not needed ([1a8610f](https://github.com/pnext/three-loader/commit/1a8610fcdcc51d616c85ae2ad8fac9b85fe72668))
+* **GS:** revert min node size to its original value ([3d037c2](https://github.com/pnext/three-loader/commit/3d037c2cf1493a4022add1698ad8364766faf77a))
+* **GS:** sorting enabler ([e1a856d](https://github.com/pnext/three-loader/commit/e1a856dffd58063af12316b2a1e2de572b4292e4))
+* let an xhr override ([#211](https://github.com/pnext/three-loader/issues/211)) ([6609df4](https://github.com/pnext/three-loader/commit/6609df48342a7b747a027c8ba5893ce4d182d8ae))
+
+
+### Bug Fixes
+
+* **GS:** fix flickering when loading ([f23a4eb](https://github.com/pnext/three-loader/commit/f23a4ebd069fe799cf6f1d72bc90ab66b3d881a7))
+* **GS:** separate texture and buffer creation ([eeded5d](https://github.com/pnext/three-loader/commit/eeded5d863cea97dd0826cd98f4d6d1c8dc186f0))
+
+
+### Dependencies updates
+
+* bump on-headers and compression ([#213](https://github.com/pnext/three-loader/issues/213)) ([a69eefb](https://github.com/pnext/three-loader/commit/a69eefbd2162260d86fbb1941135212d88ef19b2))
+
 ### [0.5.15](https://github.com/pnext/three-loader/compare/v0.5.14...v0.5.15) (2025-07-29)
 
 
