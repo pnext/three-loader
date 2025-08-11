@@ -127,12 +127,12 @@ export class LRU {
     return this.first ? this.first.node : undefined;
   }
 
-  freeMemory(): void {
+  freeMemory(memoryMultiplier: number = 2): void {
     if (this.items.size <= 1) {
       return;
     }
 
-    while (this.numPoints > this.pointBudget * 2) {
+    while (this.numPoints > this.pointBudget * memoryMultiplier) {
       const node = this.getLRUItem();
       if (node) {
         this.disposeSubtree(node);

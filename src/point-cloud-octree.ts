@@ -36,7 +36,7 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
-  splatsMesh: SplatsMesh = new SplatsMesh(false);
+  splatsMesh: SplatsMesh | null = null;
 
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
@@ -52,8 +52,6 @@ export class PointCloudOctree extends PointCloudTree {
   private visibleBounds: Box3 = new Box3();
   private picker: PointCloudOctreePicker | undefined;
   private renderAsSplats: boolean | null = null;
-  private lastUpdateViewPos = new Vector3();
-  private updateViewOffset = new Vector3();
   private loadHarmonics: boolean = false;
   private maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS;
 
@@ -115,7 +113,10 @@ export class PointCloudOctree extends PointCloudTree {
       this.picker = undefined;
     }
 
-    this.splatsMesh.dispose();
+    if (this.splatsMesh !== null) {
+      this.splatsMesh.dispose();
+      this.splatsMesh = null;
+    }
 
     this.disposed = true;
   }
@@ -171,25 +172,18 @@ export class PointCloudOctree extends PointCloudTree {
       });
 
       //Initialise the splats mesh if the nodes contain splats information
-      if (this.renderAsSplats) {
-        this.splatsMesh.initialize(this.maxAmountOfSplats, this.loadHarmonics);
+      if (this.renderAsSplats && this.splatsMesh === null) {
+        this.splatsMesh = new SplatsMesh(false, this.maxAmountOfSplats, this.loadHarmonics);
         this.add(this.splatsMesh);
       }
     }
 
-    if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
-      let positionDiff = this.updateViewOffset
-        .copy(camera.position)
-        .sub(this.lastUpdateViewPos)
-        .length();
-
-      if (positionDiff < 0.01) {
-        this.splatsMesh.update(mesh, camera, size, callback);
-      } else {
-        if (this.splatsMesh.splatsEnabled) this.splatsMesh.sortSplats(camera, callback);
+    if (this.splatsMesh !== null) {
+      if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
+        let runSort = this.splatsMesh.update(mesh, camera, size, callback);
+        if (this.splatsMesh.splatsEnabled && this.progress > 0.99 && runSort)
+          this.splatsMesh.sortSplats(camera, callback);
       }
-
-      this.lastUpdateViewPos.copy(camera.position);
     }
   }
 

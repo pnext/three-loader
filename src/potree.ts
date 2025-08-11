@@ -16,6 +16,7 @@ import {
   MAX_NUM_NODES_LOADING,
   MAX_AMOUNT_OF_SPLATS,
   PERSPECTIVE_CAMERA,
+  MEMORY_SCALE,
 } from './constants';
 import { FEATURES } from './features';
 import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
@@ -66,6 +67,7 @@ export class Potree implements IPotree {
   private _rendererSize: Vector2 = new Vector2();
 
   maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
+  memoryScale: number = MEMORY_SCALE;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
@@ -111,7 +113,7 @@ export class Potree implements IPotree {
       pointCloud.updateSplats(camera, this._rendererSize, callback);
     }
 
-    this.lru.freeMemory();
+    this.lru.freeMemory(this.memoryScale);
 
     return result;
   }
@@ -135,7 +137,7 @@ export class Potree implements IPotree {
     if (value !== this._pointBudget) {
       this._pointBudget = value;
       this.lru.pointBudget = value;
-      this.lru.freeMemory();
+      this.lru.freeMemory(this.memoryScale);
     }
   }
 

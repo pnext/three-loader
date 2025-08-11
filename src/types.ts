@@ -55,6 +55,7 @@ export interface IVisibilityUpdateResult {
 export interface IPotree {
   pointBudget: number;
   maxNumNodesLoading: number;
+  memoryScale: number;
   lru: LRU;
 
   loadPointCloud(
