@@ -26,6 +26,7 @@ export class SplatsMesh extends Object3D {
   public material: ShaderMaterial | null = null;
   private forceSorting: boolean = true;
   public continuousSorting: boolean = true;
+  public totalSplats: number = 500000;
 
   private nodesAsString: string = '';
 
@@ -216,6 +217,7 @@ export class SplatsMesh extends Object3D {
         if (this.material) {
           this.material.uniforms.maxDepth.value = g.userData.maxDepth;
           this.material.uniforms.maxSplatScale.value = g.userData.maxDepth;
+          this.totalSplats = g.userData.totalSplats;
         }
 
         let pointCloudMaterial = mesh.material as PointCloudMaterial;

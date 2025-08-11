@@ -14,8 +14,8 @@ import {
 export class GeometryData {
   public indexesBuffer: any;
 
-  public textures: Map<String, Texture> = new Map();
-  public buffers: Map<String, Int32Array> = new Map();
+  public textures: Map<String, Texture> | null = new Map();
+  public buffers: Map<String, Int32Array> | null = new Map();
 
   private textureSorted: any;
   private texturePosColor: any;
@@ -162,35 +162,55 @@ export class GeometryData {
     this.textureVisibilityNodes.magFilter = NearestFilter;
     this.textureVisibilityNodes.minFilter = NearestFilter;
 
-    this.textures.set('sorted', this.textureSorted);
-    this.textures.set('node', this.textureNode);
-    this.textures.set('node2', this.textureNode2);
-    this.textures.set('nodeIndices', this.textureNodeIndices);
-    this.textures.set('covariance0', this.textureCovariance0);
-    this.textures.set('covariance1', this.textureCovariance1);
-    this.textures.set('posColor', this.texturePosColor);
-    this.textures.set('harmonics1', this.textureHarmonics1);
-    this.textures.set('harmonics2', this.textureHarmonics2);
-    this.textures.set('harmonics3', this.textureHarmonics3);
-    this.textures.set('visibility', this.textureVisibilityNodes);
-    this.textures.forEach((text) => (text.needsUpdate = true));
+    if (this.textures !== null) {
+      this.textures.set('sorted', this.textureSorted);
+      this.textures.set('node', this.textureNode);
+      this.textures.set('node2', this.textureNode2);
+      this.textures.set('nodeIndices', this.textureNodeIndices);
+      this.textures.set('covariance0', this.textureCovariance0);
+      this.textures.set('covariance1', this.textureCovariance1);
+      this.textures.set('posColor', this.texturePosColor);
+      this.textures.set('harmonics1', this.textureHarmonics1);
+      this.textures.set('harmonics2', this.textureHarmonics2);
+      this.textures.set('harmonics3', this.textureHarmonics3);
+      this.textures.set('visibility', this.textureVisibilityNodes);
+      this.textures.forEach((text) => (text.needsUpdate = true));
+    }
 
-    this.buffers.set('sorted', this.bufferSorted);
-    this.buffers.set('centers', this.bufferCenters);
-    this.buffers.set('scale', this.bufferScale);
-    this.buffers.set('orientation', this.bufferOrientation);
-    this.buffers.set('positions', this.bufferPositions);
-    this.buffers.set('node', this.bufferNodes);
-    this.buffers.set('node2', this.bufferNodes2);
-    this.buffers.set('nodeIndices', this.bufferNodesIndices);
-    this.buffers.set('covariance0', this.bufferCovariance0);
-    this.buffers.set('covariance1', this.bufferCovariance1);
-    this.buffers.set('posColor', this.bufferPosColor);
-    this.buffers.set('harmonics1', this.bufferHarmonics1);
-    this.buffers.set('harmonics2', this.bufferHarmonics2);
-    this.buffers.set('harmonics3', this.bufferHarmonics3);
-    this.buffers.set('visibility', this.bufferVisibilityNodes);
+    if (this.buffers !== null) {
+      this.buffers.set('sorted', this.bufferSorted);
+      this.buffers.set('centers', this.bufferCenters);
+      this.buffers.set('scale', this.bufferScale);
+      this.buffers.set('orientation', this.bufferOrientation);
+      this.buffers.set('positions', this.bufferPositions);
+      this.buffers.set('node', this.bufferNodes);
+      this.buffers.set('node2', this.bufferNodes2);
+      this.buffers.set('nodeIndices', this.bufferNodesIndices);
+      this.buffers.set('covariance0', this.bufferCovariance0);
+      this.buffers.set('covariance1', this.bufferCovariance1);
+      this.buffers.set('posColor', this.bufferPosColor);
+      this.buffers.set('harmonics1', this.bufferHarmonics1);
+      this.buffers.set('harmonics2', this.bufferHarmonics2);
+      this.buffers.set('harmonics3', this.bufferHarmonics3);
+      this.buffers.set('visibility', this.bufferVisibilityNodes);
+    }
   }
 
-  dispose() {}
+  dispose() {
+    if (this.textures !== null && this.buffers !== null) {
+      this.textures.forEach((texture, key) => {
+        this.textures?.delete(key);
+        texture.dispose();
+        (texture as any) = null;
+      });
+
+      this.buffers.forEach((buffer, key) => {
+        this.buffers?.delete(key);
+        (buffer as any) = null;
+      });
+    }
+
+    this.textures = null;
+    this.buffers = null;
+  }
 }
