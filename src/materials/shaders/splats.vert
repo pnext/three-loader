@@ -272,7 +272,7 @@ void main() {
 
     if(adaptiveSize) {
         float lodSplatScale = clamp(getLOD( instaceRawPosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
-        renderScale = mix(maxSplatScale, 1., lodSplatScale);
+        renderScale = mix(maxSplatScale * splatScale, 1., lodSplatScale);
     }
 
     vRenderScale = renderScale;
