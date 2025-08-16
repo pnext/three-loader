@@ -205,10 +205,9 @@ void main() {
 
     uvec4 sampledCenterColor = texelFetch(posColorTexture, samplerUV, 0);
     vec3 instancePosition = uintBitsToFloat(uvec3(sampledCenterColor.gba));
-
-    instancePosition += globalOffset;
     
-    vec3 instaceRawPosition = instancePosition;
+    vec3 rawPosition = instancePosition;
+    instancePosition += globalOffset;
 
     uint nodeIndex = texelFetch(nodeIndicesTexture, samplerUV, 0).r;
 
@@ -226,7 +225,7 @@ void main() {
     int vnStart = levelAndVnStart.r;
     int level = levelAndVnStart.g;
 
-    instaceRawPosition += nodeData.rgb;
+    vec3 instanceNodePosition = instancePosition + nodeData.rgb;
 
     vec4 viewCenter = modelViewMatrix * vec4(instancePosition, 1.0);
     vec4 clipCenter = projectionMatrix * viewCenter;
@@ -275,7 +274,7 @@ void main() {
     float renderScale = 1.;
 
     if(adaptiveSize) {
-        float lodSplatScale = clamp(getLOD( instaceRawPosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
+        float lodSplatScale = clamp(getLOD( instanceNodePosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
         renderScale = mix(maxSplatScale * splatScale, 1., lodSplatScale);
     }
 
@@ -301,7 +300,7 @@ void main() {
 
     vColor = colorData.rgb;
 
-    vec3 worldViewDir = normalize(instancePosition - cameraPosition);
+    vec3 worldViewDir = normalize(viewCenter.rgb);
 
     //Harmonics
     vec3 harmonics = vec3(0.);
@@ -335,9 +334,9 @@ void main() {
         sh2 = unpack111011s(d2);
         sh3 = unpack111011s(d3);
 
-        float x = worldViewDir.z;
+        float x = worldViewDir.x;
         float y = worldViewDir.y;
-        float z = worldViewDir.x;
+        float z = worldViewDir.z;
 
         float xx = 1.;
         float yy = 1.;
@@ -407,7 +406,6 @@ void main() {
                     SH_C3[4] * x * (4.0 * zz - xx - yy) * sh13 +
                     SH_C3[5] * z * (xx - yy) * sh14 +
                     SH_C3[6] * x * (xx - 3.0 * yy) * sh15;
-
             }
         }
     }
@@ -422,7 +420,7 @@ void main() {
 
     if(renderLoD) {
         //Test the LOD
-        int LOD = int(getLOD( instaceRawPosition, int(vnStart), float(level) ));
+        int LOD = int(getLOD( instanceNodePosition, int(vnStart), float(level) ));
         switch ( LOD ) {
             case 0:
                 vColor.rgb = vec3(1., 0., 0.);
