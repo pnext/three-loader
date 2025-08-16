@@ -14,6 +14,8 @@ uniform vec3 globalOffset;
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
 uniform sampler2D nodeTexture;
+uniform sampler2D nodeTexture2;
+
 
 uniform highp usampler2D sortedTexture;
 uniform highp usampler2D posColorTexture;
@@ -34,7 +36,6 @@ uniform bool renderOnlyHarmonics;
 uniform float harmonicsScale;
 
 //To read the LOD for each point
-uniform highp usampler2D nodeTexture2;
 uniform sampler2D visibleNodes;
 uniform float octreeSize;
 
@@ -206,7 +207,7 @@ void main() {
     uvec4 sampledCenterColor = texelFetch(posColorTexture, samplerUV, 0);
     vec3 instancePosition = uintBitsToFloat(uvec3(sampledCenterColor.gba));
     
-    vec3 rawPosition = instancePosition;
+    vec3 nodePosition = instancePosition;
     instancePosition += globalOffset;
 
     uint nodeIndex = texelFetch(nodeIndicesTexture, samplerUV, 0).r;
@@ -220,12 +221,13 @@ void main() {
     samplerUV.x = int(mod(dd, 100.));
 
     vec4 nodeData = texelFetch(nodeTexture, samplerUV, 0);
+    vec4 nodeData2 = texelFetch(nodeTexture2, samplerUV, 0);
 
-    ivec2 levelAndVnStart =  ivec2(texelFetch(nodeTexture2, samplerUV, 0).rg);
+    nodePosition += vec3(nodeData.a, nodeData2.ba);
+
+    ivec2 levelAndVnStart =  ivec2(nodeData2.rg);
     int vnStart = levelAndVnStart.r;
     int level = levelAndVnStart.g;
-
-    vec3 instanceNodePosition = instancePosition + nodeData.rgb;
 
     vec4 viewCenter = modelViewMatrix * vec4(instancePosition, 1.0);
     vec4 clipCenter = projectionMatrix * viewCenter;
@@ -274,7 +276,7 @@ void main() {
     float renderScale = 1.;
 
     if(adaptiveSize) {
-        float lodSplatScale = clamp(getLOD( instanceNodePosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
+        float lodSplatScale = clamp(getLOD( nodePosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
         renderScale = mix(maxSplatScale * splatScale, 1., lodSplatScale);
     }
 
@@ -420,7 +422,7 @@ void main() {
 
     if(renderLoD) {
         //Test the LOD
-        int LOD = int(getLOD( instanceNodePosition, int(vnStart), float(level) ));
+        int LOD = int(getLOD( nodePosition, int(vnStart), float(level) ));
         switch ( LOD ) {
             case 0:
                 vColor.rgb = vec3(1., 0., 0.);
