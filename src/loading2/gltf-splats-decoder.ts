@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry } from 'three';
+import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
 import { GetUrlFn, XhrRequest } from '../loading/types';
 import { DecodedGeometry, GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
@@ -234,6 +234,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
 
     geometry.userData.maxDepth = this._metadata.hierarchy.depth + 1;
     geometry.userData.totalSplats = this._metadata.points;
+    geometry.userData.offset = new Vector3(...offset).sub(min);
 
     return { data, buffer, geometry };
   }

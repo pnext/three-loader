@@ -249,6 +249,7 @@ export class SplatsMesh extends Object3D {
           inverseFocalAdjustment: { value: 1 },
           splatScale: { value: 1 },
           basisViewport: { value: new Vector2(0, 0) },
+          globalOffset: { value: new Vector3(0, 0, 0) },
           sortedTexture: { value: null },
           covarianceTexture0: { value: null },
           covarianceTexture1: { value: null },
@@ -267,7 +268,7 @@ export class SplatsMesh extends Object3D {
           debugMode: { value: false },
           renderOnlyHarmonics: { value: false },
           renderLoD: { value: false },
-          adaptiveSize: { value: true },
+          adaptiveSize: { value: false },
           harmonicsScale: { value: 4 },
           octreeSize: { value: 0 },
           fov: { value: 1 },
@@ -380,6 +381,10 @@ export class SplatsMesh extends Object3D {
         let g = m.geometry as BufferGeometry;
 
         if (this.material) {
+          if (m.name === 'r') {
+            this.material?.uniforms.globalOffset.value.copy(g.userData.offset);
+          }
+
           this.material.uniforms.maxDepth.value = g.userData.maxDepth;
           this.material.uniforms.maxSplatScale.value = g.userData.maxDepth;
           this.totalSplats = g.userData.totalSplats;

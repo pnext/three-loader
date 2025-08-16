@@ -9,6 +9,7 @@ uniform float harmonicsDegree;
 uniform bool renderIds;
 uniform bool adaptiveSize;
 uniform bool renderLoD;
+uniform vec3 globalOffset;
 
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
@@ -204,6 +205,9 @@ void main() {
 
     uvec4 sampledCenterColor = texelFetch(posColorTexture, samplerUV, 0);
     vec3 instancePosition = uintBitsToFloat(uvec3(sampledCenterColor.gba));
+
+    instancePosition += globalOffset;
+    
     vec3 instaceRawPosition = instancePosition;
 
     uint nodeIndex = texelFetch(nodeIndicesTexture, samplerUV, 0).r;
@@ -222,7 +226,7 @@ void main() {
     int vnStart = levelAndVnStart.r;
     int level = levelAndVnStart.g;
 
-    instancePosition += nodeData.rgb;
+    instaceRawPosition += nodeData.rgb;
 
     vec4 viewCenter = modelViewMatrix * vec4(instancePosition, 1.0);
     vec4 clipCenter = projectionMatrix * viewCenter;
