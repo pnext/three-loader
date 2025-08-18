@@ -259,8 +259,8 @@ export class SplatsMesh extends Object3D {
           renderIds: { value: false },
           debugMode: { value: false },
           renderOnlyHarmonics: { value: false },
-          renderLoD: { value: true },
-          adaptiveSize: { value: false },
+          renderLoD: { value: false },
+          adaptiveSize: { value: true },
           harmonicsScale: { value: 4 },
           octreeSize: { value: 0 },
           fov: { value: 1 },
@@ -433,6 +433,7 @@ export class SplatsMesh extends Object3D {
       this.forceSorting = true;
 
       this.sortSplats(camera, callback);
+
       return false;
     } else {
       return true;
