@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.17](https://github.com/pnext/three-loader/compare/v0.5.16...v0.5.17) (2025-08-18)
+
+
+### Features
+
+* **GS:** define positions using a global offset insteaed a local one ([e2c8625](https://github.com/pnext/three-loader/commit/e2c8625be704c518100f2b84fe541633e8b9523b))
+* **GS:** fix harmonics evaluation ([20339a8](https://github.com/pnext/three-loader/commit/20339a891967081c2b8367033734c3d51dfe15bf))
+* **GS:** have a manual scale on top of the LOD scale of the splats ([8ab97c1](https://github.com/pnext/three-loader/commit/8ab97c146fa352ca65ec54fb6df7e5946cbffbff))
+* **GS:** refactor ([88b3b8e](https://github.com/pnext/three-loader/commit/88b3b8e32a793546f5a587f9a09adfcc3c945043))
+* **GS:** set default state for the GS shader ([0a4a0dd](https://github.com/pnext/three-loader/commit/0a4a0dd1d56592e4c11382c2b9cbd5f4d43a7094))
+
 ### [0.5.16](https://github.com/pnext/three-loader/compare/v0.5.14...v0.5.16) (2025-08-11)
 
 
