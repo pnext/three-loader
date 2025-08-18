@@ -9,10 +9,13 @@ uniform float harmonicsDegree;
 uniform bool renderIds;
 uniform bool adaptiveSize;
 uniform bool renderLoD;
+uniform vec3 globalOffset;
 
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
 uniform sampler2D nodeTexture;
+uniform sampler2D nodeTexture2;
+
 
 uniform highp usampler2D sortedTexture;
 uniform highp usampler2D posColorTexture;
@@ -33,7 +36,6 @@ uniform bool renderOnlyHarmonics;
 uniform float harmonicsScale;
 
 //To read the LOD for each point
-uniform highp usampler2D nodeTexture2;
 uniform sampler2D visibleNodes;
 uniform float octreeSize;
 
@@ -204,7 +206,9 @@ void main() {
 
     uvec4 sampledCenterColor = texelFetch(posColorTexture, samplerUV, 0);
     vec3 instancePosition = uintBitsToFloat(uvec3(sampledCenterColor.gba));
-    vec3 instaceRawPosition = instancePosition;
+    
+    vec3 nodePosition = instancePosition;
+    instancePosition += globalOffset;
 
     uint nodeIndex = texelFetch(nodeIndicesTexture, samplerUV, 0).r;
 
@@ -217,12 +221,13 @@ void main() {
     samplerUV.x = int(mod(dd, 100.));
 
     vec4 nodeData = texelFetch(nodeTexture, samplerUV, 0);
+    vec4 nodeData2 = texelFetch(nodeTexture2, samplerUV, 0);
 
-    ivec2 levelAndVnStart =  ivec2(texelFetch(nodeTexture2, samplerUV, 0).rg);
+    nodePosition += vec3(nodeData.a, nodeData2.ba);
+
+    ivec2 levelAndVnStart =  ivec2(nodeData2.rg);
     int vnStart = levelAndVnStart.r;
     int level = levelAndVnStart.g;
-
-    instancePosition += nodeData.rgb;
 
     vec4 viewCenter = modelViewMatrix * vec4(instancePosition, 1.0);
     vec4 clipCenter = projectionMatrix * viewCenter;
@@ -271,8 +276,8 @@ void main() {
     float renderScale = 1.;
 
     if(adaptiveSize) {
-        float lodSplatScale = clamp(getLOD( instaceRawPosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
-        renderScale = mix(maxSplatScale, 1., lodSplatScale);
+        float lodSplatScale = clamp(getLOD( nodePosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
+        renderScale = mix(maxSplatScale * splatScale, 1., lodSplatScale);
     }
 
     vRenderScale = renderScale;
@@ -297,7 +302,7 @@ void main() {
 
     vColor = colorData.rgb;
 
-    vec3 worldViewDir = normalize(instancePosition - cameraPosition);
+    vec3 worldViewDir = normalize(viewCenter.rgb);
 
     //Harmonics
     vec3 harmonics = vec3(0.);
@@ -331,9 +336,9 @@ void main() {
         sh2 = unpack111011s(d2);
         sh3 = unpack111011s(d3);
 
-        float x = worldViewDir.z;
+        float x = worldViewDir.x;
         float y = worldViewDir.y;
-        float z = worldViewDir.x;
+        float z = worldViewDir.z;
 
         float xx = 1.;
         float yy = 1.;
@@ -403,7 +408,6 @@ void main() {
                     SH_C3[4] * x * (4.0 * zz - xx - yy) * sh13 +
                     SH_C3[5] * z * (xx - yy) * sh14 +
                     SH_C3[6] * x * (xx - 3.0 * yy) * sh15;
-
             }
         }
     }
@@ -418,7 +422,7 @@ void main() {
 
     if(renderLoD) {
         //Test the LOD
-        int LOD = int(getLOD( instaceRawPosition, int(vnStart), float(level) ));
+        int LOD = int(getLOD( nodePosition, int(vnStart), float(level) ));
         switch ( LOD ) {
             case 0:
                 vColor.rgb = vec3(1., 0., 0.);

@@ -23,7 +23,6 @@ import {
   RGFormat,
   RedIntegerFormat,
   Texture,
-  RGIntegerFormat,
 } from 'three';
 
 import { createSortWorker } from './workers/SortWorker';
@@ -55,7 +54,7 @@ export class SplatsMesh extends Object3D {
   private bufferCovariance0: Float32Array;
   private bufferCovariance1: Float32Array;
   private bufferNodes: Float32Array;
-  private bufferNodes2: Uint32Array;
+  private bufferNodes2: Float32Array;
   private bufferNodesIndices: Uint32Array;
   private bufferVisibilityNodes: Uint8Array;
   private bufferHarmonics1: Uint32Array;
@@ -122,7 +121,7 @@ export class SplatsMesh extends Object3D {
     this.bufferCovariance0 = new Float32Array(size * size * 4);
     this.bufferCovariance1 = new Float32Array(size * size * 2);
     this.bufferNodes = new Float32Array(100 * 100 * 4);
-    this.bufferNodes2 = new Uint32Array(100 * 100 * 2);
+    this.bufferNodes2 = new Float32Array(100 * 100 * 4);
     this.bufferNodesIndices = new Uint32Array(size * size);
     this.bufferVisibilityNodes = new Uint8Array(2048 * 4);
     this.bufferHarmonics1 = new Uint32Array(degree1Size * degree1Size);
@@ -131,14 +130,7 @@ export class SplatsMesh extends Object3D {
 
     //This should be able to save up to 10000 nodes
     this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
-    this.textureNode2 = new DataTexture(
-      this.bufferNodes2,
-      100,
-      100,
-      RGIntegerFormat,
-      UnsignedIntType,
-    );
-    this.textureNode2.internalFormat = 'RG32UI';
+    this.textureNode2 = new DataTexture(this.bufferNodes2, 100, 100, RGBAFormat, FloatType);
 
     this.textureSorted = new DataTexture(
       this.bufferSorted,
@@ -249,6 +241,7 @@ export class SplatsMesh extends Object3D {
           inverseFocalAdjustment: { value: 1 },
           splatScale: { value: 1 },
           basisViewport: { value: new Vector2(0, 0) },
+          globalOffset: { value: new Vector3(0, 0, 0) },
           sortedTexture: { value: null },
           covarianceTexture0: { value: null },
           covarianceTexture1: { value: null },
@@ -380,6 +373,10 @@ export class SplatsMesh extends Object3D {
         let g = m.geometry as BufferGeometry;
 
         if (this.material) {
+          if (m.name === 'r') {
+            this.material?.uniforms.globalOffset.value.copy(g.userData.offset);
+          }
+
           this.material.uniforms.maxDepth.value = g.userData.maxDepth;
           this.material.uniforms.maxSplatScale.value = g.userData.maxDepth;
           this.totalSplats = g.userData.totalSplats;
@@ -389,10 +386,11 @@ export class SplatsMesh extends Object3D {
         const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(el.name)!;
         const level = m.name.length - 1;
 
-        let nodeInfo = [m.position.x, m.position.y, m.position.z, 1];
-        let nodeInfo2 = [vnStart, level];
+        let offset = g.userData.offset;
+        let nodeInfo = [m.position.x, m.position.y, m.position.z, offset.x];
+        let nodeInfo2 = [vnStart, level, offset.y, offset.z];
         this.bufferNodes.set(nodeInfo, nodesCount * 4);
-        this.bufferNodes2.set(nodeInfo2, nodesCount * 2);
+        this.bufferNodes2.set(nodeInfo2, nodesCount * 4);
 
         this.bufferNodesIndices.set(
           new Uint32Array(g.drawRange.count).fill(nodesCount),
@@ -435,6 +433,7 @@ export class SplatsMesh extends Object3D {
       this.forceSorting = true;
 
       this.sortSplats(camera, callback);
+
       return false;
     } else {
       return true;
@@ -587,7 +586,7 @@ export class SplatsMesh extends Object3D {
     this.bufferCovariance0 = new Float32Array(0);
     this.bufferCovariance1 = new Float32Array(0);
     this.bufferNodes = new Float32Array(0);
-    this.bufferNodes2 = new Uint32Array(0);
+    this.bufferNodes2 = new Float32Array(0);
     this.bufferNodesIndices = new Uint32Array(0);
     this.bufferVisibilityNodes = new Uint8Array(0);
     this.bufferHarmonics1 = new Uint32Array(0);

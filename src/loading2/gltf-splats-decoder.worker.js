@@ -456,9 +456,9 @@ onmessage = function (event) {
       color.z = colors[4 * j + 2];
       color.w = colors[4 * j + 3];
 
-      pos.x = positions[4 * j + 0];
-      pos.y = positions[4 * j + 1];
-      pos.z = positions[4 * j + 2];
+      pos.x = rawPositions[4 * j + 0];
+      pos.y = rawPositions[4 * j + 1];
+      pos.z = rawPositions[4 * j + 2];
 
       let encodedColor = rgbaArrayToInteger([
         colX * m0 + color.x * m1,

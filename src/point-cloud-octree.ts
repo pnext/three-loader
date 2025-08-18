@@ -27,6 +27,7 @@ import {
 import { computeTransformedBoundingBox } from './utils/bounds';
 import { SplatsMesh } from './splats-mesh';
 
+const DEBUG_MODE = false;
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
   disposed: boolean = false;
@@ -173,7 +174,7 @@ export class PointCloudOctree extends PointCloudTree {
 
       //Initialise the splats mesh if the nodes contain splats information
       if (this.renderAsSplats && this.splatsMesh === null) {
-        this.splatsMesh = new SplatsMesh(false, this.maxAmountOfSplats, this.loadHarmonics);
+        this.splatsMesh = new SplatsMesh(DEBUG_MODE, this.maxAmountOfSplats, this.loadHarmonics);
         this.add(this.splatsMesh);
       }
     }
