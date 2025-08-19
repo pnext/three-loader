@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.18](https://github.com/pnext/three-loader/compare/v0.5.17...v0.5.18) (2025-08-19)
+
+
+### Bug Fixes
+
+* **GS:** fix harmonics direction and scale ([989d84b](https://github.com/pnext/three-loader/commit/989d84bd1cae6b43d07daa194699fa119ddec99b))
+
 ### [0.5.17](https://github.com/pnext/three-loader/compare/v0.5.16...v0.5.17) (2025-08-18)
 
 
