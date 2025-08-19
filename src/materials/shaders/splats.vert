@@ -302,7 +302,7 @@ void main() {
 
     vColor = colorData.rgb;
 
-    vec3 worldViewDir = normalize(viewCenter.rgb);
+    vec3 worldViewDir = normalize(-viewCenter.rgb);
 
     //Harmonics
     vec3 harmonics = vec3(0.);

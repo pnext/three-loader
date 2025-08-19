@@ -91,8 +91,6 @@ onmessage = function (event) {
   const harmonicsBuffer = new ArrayBuffer(numPoints * 4 * 45);
   let harmonics = new Float32Array(harmonicsBuffer);
 
-  let harmonicsScale = 0;
-
   const harmonicsBandsName = [
     'sh_band_1_triplet_0',
     'sh_band_1_triplet_1',
@@ -275,10 +273,6 @@ onmessage = function (event) {
         harmonics[45 * j + harmonicIndex * 3 + 0] = r;
         harmonics[45 * j + harmonicIndex * 3 + 1] = g;
         harmonics[45 * j + harmonicIndex * 3 + 2] = b;
-
-        harmonicsScale = Math.max(Math.abs(r), harmonicsScale);
-        harmonicsScale = Math.max(Math.abs(g), harmonicsScale);
-        harmonicsScale = Math.max(Math.abs(b), harmonicsScale);
       }
     }
   }
@@ -491,10 +485,8 @@ onmessage = function (event) {
     const compressedHarmonics3 = new Uint32Array(compressedHarmonicsBuffer3);
 
     harmonics = harmonics.map((value, index) => {
-      value = value / harmonicsScale;
       value = Math.min(Math.max(value, -1), 1);
       value = 0.5 * value + 0.5;
-
       let scaler = index % 3 == 1 ? 1023 : 2047;
       value = Math.min(Math.max(Math.floor(value * scaler), 0), scaler);
 
