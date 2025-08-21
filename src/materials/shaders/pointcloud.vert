@@ -101,7 +101,7 @@ out vec3 vColor;
 	out float vOpacity;
 #endif
 
-#if defined(weighted_splats)
+#if defined(weighted_splats) || defined(color_type_depth) || defined(hq_depth_pass)
 	out float vLinearDepth;
 #endif
 
@@ -113,7 +113,7 @@ out vec3 vColor;
 	out vec3 vViewPosition;
 #endif
 
-#if defined(weighted_splats) || defined(paraboloid_point_shape)
+#if defined(weighted_splats) || defined(paraboloid_point_shape) || defined(hq_depth_pass)
 	out float vRadius;
 #endif
 
@@ -415,10 +415,6 @@ void main() {
 		vViewPosition = mvPosition.xyz;
 	#endif
 
-	#if defined weighted_splats
-		vLinearDepth = gl_Position.w;
-	#endif
-
 	#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)
 		vNormal = normalize(normalMatrix * normal);
 	#endif
@@ -447,11 +443,24 @@ void main() {
 	pointSize = max(minSize, pointSize);
 	pointSize = min(maxSize, pointSize);
 
-	#if defined(weighted_splats) || defined(paraboloid_point_shape)
+	#if defined(weighted_splats) || defined(paraboloid_point_shape) || defined(hq_depth_pass)
 		vRadius = pointSize / projFactor;
 	#endif
 
 	gl_PointSize = pointSize;
+
+	#if defined hq_depth_pass
+		float originalDepth = -mvPosition.z;
+		float adjustedDepth = originalDepth + 2.0 * vRadius;
+		float adjust = adjustedDepth / originalDepth;
+
+		mvPosition.xyz = mvPosition.xyz * adjust;
+		gl_Position = projectionMatrix * mvPosition;
+	#endif
+
+	#if defined weighted_splats || defined hq_depth_pass
+		vLinearDepth = -mvPosition.z;
+	#endif
 
 	// ---------------------
 	// HIGHLIGHTING
