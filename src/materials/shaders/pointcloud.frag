@@ -47,7 +47,7 @@ in vec3 vColor;
 	in float vOpacity;
 #endif
 
-#if defined(weighted_splats)
+#if defined(weighted_splats) || defined(color_type_depth) || defined(hq_depth_pass)
 	in float vLinearDepth;
 #endif
 
@@ -59,7 +59,7 @@ in vec3 vColor;
 	in vec3 vViewPosition;
 #endif
 
-#if defined(weighted_splats) || defined(paraboloid_point_shape)
+#if defined(weighted_splats) || defined(paraboloid_point_shape) || defined(hq_depth_pass)
 	in float vRadius;
 #endif
 
@@ -306,6 +306,13 @@ void main() {
 		#if defined(use_edl)
 			outFragColor.a = vLogDepth;
 		#endif
+	#endif
+
+	#if defined(color_type_depth)
+		float linearDepth = color.r;
+		float expDepth = color.g;
+		outFragColor = vec4(linearDepth, expDepth, 0.0, 1.0);
+		gl_FragDepth = expDepth;
 	#endif
 
 	#ifdef highlight_point

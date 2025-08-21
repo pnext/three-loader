@@ -314,6 +314,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @requiresShaderUpdate() useTextureBlending: boolean = false;
   @requiresShaderUpdate() usePointCloudMixing: boolean = false;
   @requiresShaderUpdate() highlightPoint: boolean = false;
+  @requiresShaderUpdate() hqDepthPass: boolean = false;
 
   attributes = {
     position: { type: 'fv', value: [] },
@@ -480,6 +481,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     if (this.colorRgba) {
       define('color_rgba');
+    }
+
+    if(this.hqDepthPass) {
+      define('hq_depth_pass')
     }
 
     define('MAX_POINT_LIGHTS 0');
