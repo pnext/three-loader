@@ -179,7 +179,8 @@ onmessage = function (event) {
         // opacity
         let a = view.getFloat32(opacityOffset, true);
         a = (1 / (1 + Math.exp(-a))) * 255;
-        colors[c3] = clamp(Math.floor(a), 0, 255);
+        a = clamp(Math.floor(a), 0, 255);
+        colors[c3] = a;
       }
     } else if (['scale'].includes(pointAttribute.name)) {
       let maxScale = 0;

@@ -4,6 +4,7 @@ precision highp int;
 uniform vec2 focal;
 uniform float inverseFocalAdjustment;
 uniform float splatScale;
+uniform float initialSplatScale;
 uniform vec2 basisViewport;
 uniform float harmonicsDegree;
 uniform bool renderIds;
@@ -277,7 +278,8 @@ void main() {
 
     if(adaptiveSize) {
         float lodSplatScale = clamp(getLOD( nodePosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
-        renderScale = mix(maxSplatScale * splatScale, 1., lodSplatScale);
+        float currentSplatScale = lodSplatScale < 2. ? initialSplatScale : splatScale;
+        renderScale = mix(maxSplatScale * currentSplatScale, 1., lodSplatScale);
     }
 
     vRenderScale = renderScale;
@@ -302,7 +304,9 @@ void main() {
 
     vColor = colorData.rgb;
 
-    vec3 worldViewDir = normalize(-viewCenter.rgb);
+    vec4 worldCenter = modelMatrix * vec4(instancePosition, 1.0);
+
+    vec3 worldViewDir = normalize(worldCenter.xyz - cameraPosition);
 
     //Harmonics
     vec3 harmonics = vec3(0.);

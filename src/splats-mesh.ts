@@ -240,6 +240,7 @@ export class SplatsMesh extends Object3D {
           focal: { value: new Vector2(0, 0) },
           inverseFocalAdjustment: { value: 1 },
           splatScale: { value: 1 },
+          initialSplatScale: { value: 1 },
           basisViewport: { value: new Vector2(0, 0) },
           globalOffset: { value: new Vector3(0, 0, 0) },
           sortedTexture: { value: null },
