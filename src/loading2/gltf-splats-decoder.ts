@@ -102,7 +102,11 @@ export class GltfSplatDecoder implements GeometryDecoder {
       const fetchBuffer = async (url: string, offsetMultiplier: bigint): Promise<ArrayBuffer> => {
         const firstByte = byteOffset * 4n * offsetMultiplier;
         const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
-        const headers: Record<string, string> = { Range: `bytes=${firstByte}-${lastByte}` };
+        const headers: any = {
+          Range: `bytes=${firstByte}-${lastByte}`,
+          'Transfer-Encoding': 'compress',
+          'Accept-Encoding': 'compress',
+        };
         const response = await this.xhrRequest(url, { headers });
         return response.arrayBuffer();
       };
