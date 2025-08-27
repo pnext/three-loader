@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.19](https://github.com/pnext/three-loader/compare/v0.5.18...v0.5.19) (2025-08-27)
+
+
+### Features
+
+* **GS:** harmonics and scaling of splats ([ed397e3](https://github.com/pnext/three-loader/commit/ed397e3046682db0baf27aa19fb84ad7e6da2f88))
+
 ### [0.5.18](https://github.com/pnext/three-loader/compare/v0.5.17...v0.5.18) (2025-08-19)
 
 
