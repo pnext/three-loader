@@ -689,7 +689,17 @@ export class PointCloudMaterial extends RawShaderMaterial {
         // tslint:enable:no-bitwise
       }
 
-      data[i * 4 + 3] = node.name.length;
+      const density = (node.geometryNode as any).density;
+      if(density && typeof density == 'number' && !Number.isNaN(density)){
+				let lodOffset = Math.log2(density) / 2 - 1.5;
+
+				let offsetUint8 = (lodOffset + 10) * 10;
+
+				data[i * 4 + 3] = offsetUint8;
+			} else {
+				data[i * 4 + 3] = 100;
+			}
+      // data[i * 4 + 3] = node.name.length;
     }
 
     const texture = this.visibleNodesTexture;

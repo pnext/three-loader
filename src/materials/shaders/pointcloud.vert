@@ -223,7 +223,8 @@ float getLOD() {
 
 			depth++;
 		} else {
-			return value.a * 255.0; // no more visible child nodes at this position
+			float lodOffset = (255.0 * value.a) / 10.0 - 10.0;
+			return max(depth + lodOffset, 0.0);
 		}
 
 		offset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;
@@ -233,7 +234,7 @@ float getLOD() {
 }
 
 float getPointSizeAttenuation() {
-	return 0.5 * pow(2.0, getLOD());
+	return pow(2.0, getLOD());
 }
 
 #endif
@@ -431,12 +432,17 @@ void main() {
 	float slope = tan(fov / 2.0);
 	float projFactor =  -0.5 * screenHeight / (slope * mvPosition.z);
 
+	float uOctreeSpacing = spacing;
+	float scale = length(
+		modelViewMatrix * vec4(0,0,0,1) - modelViewMatrix * vec4(uOctreeSpacing,0,0,1)
+	) / uOctreeSpacing;
+
 	#if defined fixed_point_size
 		pointSize = size;
 	#elif defined attenuated_point_size
 		pointSize = size * spacing * projFactor;
 	#elif defined adaptive_point_size
-		float worldSpaceSize = 2.0 * size * spacing / getPointSizeAttenuation();
+		float worldSpaceSize = 1.7 * size * spacing / getPointSizeAttenuation();
 		pointSize = worldSpaceSize * projFactor;
 	#endif
 
