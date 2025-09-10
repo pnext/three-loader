@@ -5,11 +5,17 @@ uniform float opacity;
 uniform bool renderIds;
 uniform bool debugMode;
 
+uniform bool useClipping;
+uniform float screenWidth;
+uniform float screenHeight;
+uniform vec4 clipExtent;
+
 in vec3 vColor;
 in float vOpacity;
 in vec2 vPosition;
 in float backfaseCulling;
 in vec2 vID;
+in float vRenderScale;
 
 out vec4 color_data;
 
@@ -30,6 +36,20 @@ vec3 hash31(float src) {
 
 void main() {
 
+	if(useClipping) {
+		vec2 ndc = vec2((gl_FragCoord.x / screenWidth), 1.0 - (gl_FragCoord.y / screenHeight));
+
+		if(step(clipExtent.x, ndc.x) * step(ndc.x, clipExtent.z) < 1.0)
+		{
+			discard;
+		}
+
+		if(step(clipExtent.y, ndc.y) * step(ndc.y, clipExtent.w) < 1.0)
+		{
+			discard;
+		}
+	}
+
 	float A = dot(vPosition, vPosition);
 	if (A > 8.0) discard;
 	
@@ -43,7 +63,7 @@ void main() {
 
 	if(renderIds) {
 		if(opacity < 0.1) discard;
-		color_data = vec4(vID, 0., 1.);
+		color_data = vec4(vID, vRenderScale, 1.);
 	} 
 
 }

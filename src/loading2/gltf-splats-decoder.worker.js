@@ -91,8 +91,6 @@ onmessage = function (event) {
   const harmonicsBuffer = new ArrayBuffer(numPoints * 4 * 45);
   let harmonics = new Float32Array(harmonicsBuffer);
 
-  let harmonicsScale = 0;
-
   const harmonicsBandsName = [
     'sh_band_1_triplet_0',
     'sh_band_1_triplet_1',
@@ -181,7 +179,8 @@ onmessage = function (event) {
         // opacity
         let a = view.getFloat32(opacityOffset, true);
         a = (1 / (1 + Math.exp(-a))) * 255;
-        colors[c3] = clamp(Math.floor(a), 0, 255);
+        a = clamp(Math.floor(a), 0, 255);
+        colors[c3] = a;
       }
     } else if (['scale'].includes(pointAttribute.name)) {
       let maxScale = 0;
@@ -275,10 +274,6 @@ onmessage = function (event) {
         harmonics[45 * j + harmonicIndex * 3 + 0] = r;
         harmonics[45 * j + harmonicIndex * 3 + 1] = g;
         harmonics[45 * j + harmonicIndex * 3 + 2] = b;
-
-        harmonicsScale = Math.max(Math.abs(r), harmonicsScale);
-        harmonicsScale = Math.max(Math.abs(g), harmonicsScale);
-        harmonicsScale = Math.max(Math.abs(b), harmonicsScale);
       }
     }
   }
@@ -456,9 +451,9 @@ onmessage = function (event) {
       color.z = colors[4 * j + 2];
       color.w = colors[4 * j + 3];
 
-      pos.x = positions[4 * j + 0];
-      pos.y = positions[4 * j + 1];
-      pos.z = positions[4 * j + 2];
+      pos.x = rawPositions[4 * j + 0];
+      pos.y = rawPositions[4 * j + 1];
+      pos.z = rawPositions[4 * j + 2];
 
       let encodedColor = rgbaArrayToInteger([
         colX * m0 + color.x * m1,
@@ -491,10 +486,8 @@ onmessage = function (event) {
     const compressedHarmonics3 = new Uint32Array(compressedHarmonicsBuffer3);
 
     harmonics = harmonics.map((value, index) => {
-      value = value / harmonicsScale;
       value = Math.min(Math.max(value, -1), 1);
       value = 0.5 * value + 0.5;
-
       let scaler = index % 3 == 1 ? 1023 : 2047;
       value = Math.min(Math.max(Math.floor(value * scaler), 0), scaler);
 

@@ -1,37 +1,42 @@
 precision highp float;
 precision highp int;
 
-in int indexes_sorted;
-
 uniform vec2 focal;
 uniform float inverseFocalAdjustment;
 uniform float splatScale;
+uniform float initialSplatScale;
 uniform vec2 basisViewport;
 uniform float harmonicsDegree;
 uniform bool renderIds;
 uniform bool adaptiveSize;
+uniform bool renderLoD;
+uniform vec3 globalOffset;
 
 uniform sampler2D covarianceTexture0;
 uniform sampler2D covarianceTexture1;
 uniform sampler2D nodeTexture;
+uniform sampler2D nodeTexture2;
+
+
+uniform highp usampler2D sortedTexture;
 uniform highp usampler2D posColorTexture;
 uniform highp usampler2D nodeIndicesTexture;
 uniform highp usampler2D harmonicsTexture1;
 uniform highp usampler2D harmonicsTexture2;
 uniform highp usampler2D harmonicsTexture3;
 
-uniform highp usampler2D nodeTexture2;
 uniform float fov;
 uniform float spacing;
 uniform float screenHeight;
 uniform float maxSplatScale;
+
+uniform float maxDepth;
 
 
 uniform bool renderOnlyHarmonics;
 uniform float harmonicsScale;
 
 //To read the LOD for each point
-uniform highp usampler2D vnStartTexture;
 uniform sampler2D visibleNodes;
 uniform float octreeSize;
 
@@ -41,6 +46,7 @@ out vec2 vPosition;
 out float vZ;
 out float backfaseCulling;
 out vec2 vID;
+out float vRenderScale;
 
 const float sqrt8 = sqrt(8.0);
 const float minAlpha = 1.0 / 255.0;
@@ -76,6 +82,14 @@ const float[7] SH_C3 = float[](-0.5900435899266435,
                                 -0.4570457994644658, 
                                 1.445305721320277, 
                                 -0.5900435899266435);
+
+/**
+ * Rounds the specified number to the closest integer.
+ */
+float safeRound(float number){
+	return floor(number + 0.5);
+}
+
 
 /**
  * Gets the number of 1-bits up to inclusive index position.
@@ -146,15 +160,15 @@ float getLOD(vec3 pos, int vnStart, float level) {
 
 		vec3 index3d = (pos-offset) / nodeSizeAtLevel;
 		index3d = floor(index3d + 0.5);
-		int index = int(round(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));
+		int index = int(safeRound(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));
 
 		vec4 value = texture2D(visibleNodes, vec2(float(iOffset) / 2048.0, 0.0));
-		int mask = int(round(value.r * 255.0));
+		int mask = int(safeRound(value.r * 255.0));
 
 		if (isBitSet(mask, index)) {
 			// there are more visible child nodes at this position
-			int advanceG = int(round(value.g * 255.0)) * 256;
-			int advanceB = int(round(value.b * 255.0));
+			int advanceG = int(safeRound(value.g * 255.0)) * 256;
+			int advanceB = int(safeRound(value.b * 255.0));
 			int advanceChild = numberOfOnes(mask, index - 1);
 			int advance = advanceG + advanceB + advanceChild;
 
@@ -171,16 +185,19 @@ float getLOD(vec3 pos, int vnStart, float level) {
 	return depth;
 }
 
-float getPointSizeAttenuation(vec3 pos, int vnStart, float level) {
-    return 0.5 * pow(2.0, getLOD(pos, vnStart, level));
-}
-
 
 void main() {
 
     ivec2 samplerUV = ivec2(0, 0);
     vec2 dim = vec2(textureSize(covarianceTexture0, 0).xy);
-    float dd = float(indexes_sorted);
+
+    float dd = float(gl_InstanceID);
+    samplerUV.y = int(floor(dd / dim.x));
+    samplerUV.x = int(mod(dd, dim.x));
+
+    int indexes_sorted = int(texelFetch(sortedTexture, samplerUV, 0));
+
+    dd = float(indexes_sorted);
     samplerUV.y = int(floor(dd / dim.x));
     samplerUV.x = int(mod(dd, dim.x));
 
@@ -190,6 +207,9 @@ void main() {
 
     uvec4 sampledCenterColor = texelFetch(posColorTexture, samplerUV, 0);
     vec3 instancePosition = uintBitsToFloat(uvec3(sampledCenterColor.gba));
+    
+    vec3 nodePosition = instancePosition;
+    instancePosition += globalOffset;
 
     uint nodeIndex = texelFetch(nodeIndicesTexture, samplerUV, 0).r;
 
@@ -202,12 +222,13 @@ void main() {
     samplerUV.x = int(mod(dd, 100.));
 
     vec4 nodeData = texelFetch(nodeTexture, samplerUV, 0);
+    vec4 nodeData2 = texelFetch(nodeTexture2, samplerUV, 0);
 
-    ivec2 levelAndVnStart =  ivec2(texelFetch(nodeTexture2, samplerUV, 0).rg);
+    nodePosition += vec3(nodeData.a, nodeData2.ba);
+
+    ivec2 levelAndVnStart =  ivec2(nodeData2.rg);
     int vnStart = levelAndVnStart.r;
     int level = levelAndVnStart.g;
-
-    instancePosition += nodeData.rgb;
 
     vec4 viewCenter = modelViewMatrix * vec4(instancePosition, 1.0);
     vec4 clipCenter = projectionMatrix * viewCenter;
@@ -256,17 +277,12 @@ void main() {
     float renderScale = 1.;
 
     if(adaptiveSize) {
-
-        float slope = tan(fov / 2.0);
-	    float projFactor =  -0.5 * screenHeight / (slope * viewCenter.z);
-        float worldSpaceSize = 2.0 * spacing / getPointSizeAttenuation( instancePosition, vnStart, float(level) );
-        renderScale = worldSpaceSize * projFactor;
-
-        //the splats should be at least the default size.
-        renderScale = max(1., renderScale);
-        renderScale = min(renderScale, maxSplatScale);
-
+        float lodSplatScale = clamp(getLOD( nodePosition, int(vnStart), float(level) ) / maxDepth, 0., 1.);
+        float currentSplatScale = lodSplatScale < 2. ? initialSplatScale : splatScale;
+        renderScale = mix(maxSplatScale * currentSplatScale, 1., lodSplatScale);
     }
+
+    vRenderScale = renderScale;
 
     float cameraDistance = length(cameraPosition - instancePosition);
 
@@ -288,7 +304,9 @@ void main() {
 
     vColor = colorData.rgb;
 
-    vec3 worldViewDir = normalize(instancePosition - cameraPosition);
+    vec4 worldCenter = modelMatrix * vec4(instancePosition, 1.0);
+
+    vec3 worldViewDir = normalize(worldCenter.xyz - cameraPosition);
 
     //Harmonics
     vec3 harmonics = vec3(0.);
@@ -322,9 +340,9 @@ void main() {
         sh2 = unpack111011s(d2);
         sh3 = unpack111011s(d3);
 
-        float x = worldViewDir.z;
+        float x = worldViewDir.x;
         float y = worldViewDir.y;
-        float z = worldViewDir.x;
+        float z = worldViewDir.z;
 
         float xx = 1.;
         float yy = 1.;
@@ -394,7 +412,6 @@ void main() {
                     SH_C3[4] * x * (4.0 * zz - xx - yy) * sh13 +
                     SH_C3[5] * z * (xx - yy) * sh14 +
                     SH_C3[6] * x * (xx - 3.0 * yy) * sh15;
-
             }
         }
     }
@@ -407,51 +424,51 @@ void main() {
     
     vColor.rgb = clamp(vColor.rgb, vec3(0.), vec3(1.));
 
-/*
-    //Test the LOD
-    int LOD = int(getLOD( instancePosition, int(vnStart), float(level) ));
-    switch ( LOD ) {
-        case 0:
-            vColor.rgb = vec3(1., 0., 0.);
-        break;
-        case 1:
-            vColor.rgb = vec3(0., 1., 0.);
-        break;
-        case 2:
-            vColor.rgb = vec3(0., 0., 1.);
-        break;
-        case 3:
-            vColor.rgb = vec3(1., 0., 1.);
-        break;
-        case 4:
-            vColor.rgb = vec3(1., 1., 0.);
-        break;
-        case 5:
-            vColor.rgb = vec3(0., 1., 1.);
-        break;
-        case 6:
-            vColor.rgb = vec3(0.5, 0., 0.);
-        break;
-        case 7:
-            vColor.rgb = vec3(0., 0.5, 0.);
-        break;
-        case 8:
-            vColor.rgb = vec3(0.0, 0., 0.5);
-        break;
-        case 9:
-            vColor.rgb = vec3(0.5, 0., 0.5);
-        break;
-        case 10:
-            vColor.rgb = vec3(0.5, 0.5, 0.0);
-        break;
-        case 11:
-            vColor.rgb = vec3(0.0, 0.5, 0.5);
-        break;
-        case 12:
-            vColor.rgb = vec3(1., 1., 1.);
-        break;
+    if(renderLoD) {
+        //Test the LOD
+        int LOD = int(getLOD( nodePosition, int(vnStart), float(level) ));
+        switch ( LOD ) {
+            case 0:
+                vColor.rgb = vec3(1., 0., 0.);
+            break;
+            case 1:
+                vColor.rgb = vec3(0., 1., 0.);
+            break;
+            case 2:
+                vColor.rgb = vec3(0., 0., 1.);
+            break;
+            case 3:
+                vColor.rgb = vec3(1., 0., 1.);
+            break;
+            case 4:
+                vColor.rgb = vec3(1., 1., 0.);
+            break;
+            case 5:
+                vColor.rgb = vec3(0., 1., 1.);
+            break;
+            case 6:
+                vColor.rgb = vec3(0.5, 0., 0.);
+            break;
+            case 7:
+                vColor.rgb = vec3(0., 0.5, 0.);
+            break;
+            case 8:
+                vColor.rgb = vec3(0.0, 0., 0.5);
+            break;
+            case 9:
+                vColor.rgb = vec3(0.5, 0., 0.5);
+            break;
+            case 10:
+                vColor.rgb = vec3(0.5, 0.5, 0.0);
+            break;
+            case 11:
+                vColor.rgb = vec3(0.0, 0.5, 0.5);
+            break;
+            case 12:
+                vColor.rgb = vec3(1., 1., 1.);
+            break;
+        }
     }
-    */
 
 	vOpacity = colorData.a;
 }

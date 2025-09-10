@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry } from 'three';
+import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
 import { GetUrlFn, XhrRequest } from '../loading/types';
 import { DecodedGeometry, GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
@@ -102,7 +102,11 @@ export class GltfSplatDecoder implements GeometryDecoder {
       const fetchBuffer = async (url: string, offsetMultiplier: bigint): Promise<ArrayBuffer> => {
         const firstByte = byteOffset * 4n * offsetMultiplier;
         const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
-        const headers: Record<string, string> = { Range: `bytes=${firstByte}-${lastByte}` };
+        const headers: any = {
+          Range: `bytes=${firstByte}-${lastByte}`,
+          'Transfer-Encoding': 'compress',
+          'Accept-Encoding': 'compress',
+        };
         const response = await this.xhrRequest(url, { headers });
         return response.arrayBuffer();
       };
@@ -231,6 +235,10 @@ export class GltfSplatDecoder implements GeometryDecoder {
         }
       }
     }
+
+    geometry.userData.maxDepth = this._metadata.hierarchy.depth + 1;
+    geometry.userData.totalSplats = this._metadata.points;
+    geometry.userData.offset = new Vector3(...offset).sub(min);
 
     return { data, buffer, geometry };
   }

@@ -56,6 +56,7 @@ export interface IVisibilityUpdateResult {
 export interface IPotree {
   pointBudget: number;
   maxNumNodesLoading: number;
+  memoryScale: number;
   lru: LRU;
 
   loadPointCloud(
@@ -63,6 +64,7 @@ export interface IPotree {
     getUrl: GetUrlFn,
     xhrRequest?: XhrRequest,
     loadHarmonics?: boolean,
+    maxAmountOfSplats?: number,
   ): Promise<PointCloudOctree>;
 
   updatePointClouds(
