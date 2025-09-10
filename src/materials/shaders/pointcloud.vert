@@ -103,7 +103,7 @@ out vec3 vColor;
 	out float vOpacity;
 #endif
 
-#if defined(weighted_splats)
+#if defined(weighted_splats) || defined(color_type_depth) || defined(hq_depth_pass)
 	out float vLinearDepth;
 #endif
 
@@ -115,7 +115,7 @@ out vec3 vColor;
 	out vec3 vViewPosition;
 #endif
 
-#if defined(weighted_splats) || defined(paraboloid_point_shape)
+#if defined(weighted_splats) || defined(paraboloid_point_shape) || defined(hq_depth_pass)
 	out float vRadius;
 #endif
 
@@ -225,7 +225,8 @@ float getLOD() {
 
 			depth++;
 		} else {
-			return value.a * 255.0; // no more visible child nodes at this position
+			float lodOffset = (255.0 * value.a) / 10.0 - 10.0;
+			return max(depth + lodOffset, 0.0);
 		}
 
 		offset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;
@@ -235,7 +236,7 @@ float getLOD() {
 }
 
 float getPointSizeAttenuation() {
-	return 0.5 * pow(2.0, getLOD());
+	return pow(2.0, getLOD());
 }
 
 #endif
@@ -377,8 +378,8 @@ vec3 getSourceID() {
 }
 
 vec3 getCompositeColor() {
-	vec3 c;
-	float w;
+	vec3 c = vec3(0.0, 0.0, 0.0);
+	float w = 0.0;
 
 	c += wRGB * getRGB();
 	w += wRGB;
@@ -417,10 +418,6 @@ void main() {
 		vViewPosition = mvPosition.xyz;
 	#endif
 
-	#if defined weighted_splats
-		vLinearDepth = gl_Position.w;
-	#endif
-
 	#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)
 		vNormal = normalize(normalMatrix * normal);
 	#endif
@@ -437,23 +434,41 @@ void main() {
 	float slope = tan(fov / 2.0);
 	float projFactor =  -0.5 * screenHeight / (slope * mvPosition.z);
 
+	float uOctreeSpacing = spacing;
+	float scale = length(
+		modelViewMatrix * vec4(0,0,0,1) - modelViewMatrix * vec4(uOctreeSpacing,0,0,1)
+	) / uOctreeSpacing;
+
 	#if defined fixed_point_size
 		pointSize = size;
 	#elif defined attenuated_point_size
 		pointSize = size * spacing * projFactor;
 	#elif defined adaptive_point_size
-		float worldSpaceSize = 2.0 * size * spacing / getPointSizeAttenuation();
+		float worldSpaceSize = 1.7 * size * spacing / getPointSizeAttenuation();
 		pointSize = worldSpaceSize * projFactor;
 	#endif
 
 	pointSize = max(minSize, pointSize);
 	pointSize = min(maxSize, pointSize);
 
-	#if defined(weighted_splats) || defined(paraboloid_point_shape)
+	#if defined(weighted_splats) || defined(paraboloid_point_shape) || defined(hq_depth_pass)
 		vRadius = pointSize / projFactor;
 	#endif
 
 	gl_PointSize = pointSize;
+
+	#if defined hq_depth_pass
+		float originalDepth = -mvPosition.z;
+		float adjustedDepth = originalDepth + 2.0 * vRadius;
+		float adjust = adjustedDepth / originalDepth;
+
+		mvPosition.xyz = mvPosition.xyz * adjust;
+		gl_Position = projectionMatrix * mvPosition;
+	#endif
+
+	#if defined weighted_splats || defined hq_depth_pass
+		vLinearDepth = -mvPosition.z;
+	#endif
 
 	// ---------------------
 	// HIGHLIGHTING
@@ -527,8 +542,13 @@ void main() {
 		float w = getIntensity();
 		vColor = vec3(w, w, w);
 	#elif defined color_type_intensity_gradient
-		float w = getIntensity();
-		vColor = texture(gradient, vec2(w, 1.0 - w)).rgb;
+		// VEERUM: If the intensity is 0, it should be grey
+		if(intensity == 0.0) {
+			vColor = vec3(0.5);	
+		} else {
+			float w = getIntensity();
+			vColor = texture(gradient, vec2(w, 1.0 - w)).rgb;
+		}
 	#elif defined color_type_color
 		vColor = uColor;
 	#elif defined color_type_lod
