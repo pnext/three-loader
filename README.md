@@ -114,6 +114,15 @@ To publish a new version of the library, follow these steps:
 
 Thank you to Markus Schütz for his work on Potree, on which this project is based.
 
+# Contribution Guidelines
+
+We welcome contributions to this project! Here are the types of contributions we encourage:
+
+- **Bug Fixes**: If you find any bugs or issues in the code, feel free to submit a fix.
+- **Small Improvements**: Suggestions or implementations of minor enhancements to improve the codebase or functionality are highly appreciated.
+
+Please ensure your contributions align with the project's coding standards and include appropriate tests where applicable.
+
 # Contributors
 
 ## Pix4D
