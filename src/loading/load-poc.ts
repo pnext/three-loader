@@ -52,10 +52,10 @@ export function loadPOC(
   getUrl: GetUrlFn,
   xhrRequest: XhrRequest,
 ): Promise<PointCloudOctreeGeometry> {
-  return Promise.resolve(getUrl(url)).then(transformedUrl => {
+  return Promise.resolve(getUrl(url)).then((transformedUrl) => {
     return xhrRequest(transformedUrl, { mode: 'cors' })
-      .then(res => handleFailedRequest(res))
-      .then(okRes => okRes.json())
+      .then((res) => handleFailedRequest(res))
+      .then((okRes) => okRes.json())
       .then(parse(transformedUrl, getUrl, xhrRequest));
   });
 }
@@ -140,9 +140,7 @@ function getPointAttributes(pointAttributes: PointAttributeStringName[] | 'LAS' 
   return isLasLaz ? defaultLasLazAttributes() : pointAttributes;
 }
 
-function getBoundingBoxes(
-  data: POCJson,
-): {
+function getBoundingBoxes(data: POCJson): {
   offset: Vector3;
   boundingBox: Box3;
   tightBoundingBox: Box3;

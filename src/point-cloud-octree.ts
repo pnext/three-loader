@@ -1,13 +1,33 @@
-import { Box3, Camera, Object3D, Points, Ray, Sphere, Vector3, WebGLRenderer } from 'three';
-import { DEFAULT_MIN_NODE_PIXEL_SIZE } from './constants';
+import {
+  Box3,
+  Camera,
+  Object3D,
+  Points,
+  Ray,
+  Sphere,
+  Vector3,
+  Vector2,
+  WebGLRenderer,
+  Mesh,
+  BufferGeometry,
+} from 'three';
+import { DEFAULT_MIN_NODE_PIXEL_SIZE, MAX_AMOUNT_OF_SPLATS } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
 import { PointCloudMaterial, PointSizeType } from './materials';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
-import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, PCOGeometry, PickPoint } from './types';
+import {
+  IPointCloudGeometryNode,
+  IPointCloudTreeNode,
+  IPotree,
+  PCOGeometry,
+  PickPoint,
+} from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
+import { SplatsMesh } from './splats-mesh';
 
+const DEBUG_MODE = false;
 export class PointCloudOctree extends PointCloudTree {
   potree: IPotree;
   disposed: boolean = false;
@@ -17,6 +37,8 @@ export class PointCloudOctree extends PointCloudTree {
   material: PointCloudMaterial;
   level: number = 0;
   maxLevel: number = Infinity;
+  splatsMesh: SplatsMesh | null = null;
+
   /**
    * The minimum radius of a node's bounding sphere on the screen in order to be displayed.
    */
@@ -27,13 +49,19 @@ export class PointCloudOctree extends PointCloudTree {
   visibleGeometry: IPointCloudGeometryNode[] = [];
   numVisiblePoints: number = 0;
   showBoundingBox: boolean = false;
+
   private visibleBounds: Box3 = new Box3();
   private picker: PointCloudOctreePicker | undefined;
+  private renderAsSplats: boolean | null = null;
+  private loadHarmonics: boolean = false;
+  private maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS;
 
   constructor(
     potree: IPotree,
     pcoGeometry: PCOGeometry,
     material?: PointCloudMaterial,
+    loadHarmonics: boolean = false,
+    maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS,
   ) {
     super();
 
@@ -43,7 +71,8 @@ export class PointCloudOctree extends PointCloudTree {
     this.pcoGeometry = pcoGeometry;
     this.boundingBox = pcoGeometry.boundingBox;
     this.boundingSphere = this.boundingBox.getBoundingSphere(new Sphere());
-
+    this.loadHarmonics = loadHarmonics;
+    this.maxAmountOfSplats = maxAmountOfSplats;
     this.position.copy(pcoGeometry.offset);
     this.updateMatrix();
 
@@ -73,7 +102,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.root.dispose();
     }
 
-    this.pcoGeometry.root.traverse(n => this.potree.lru.remove(n));
+    this.pcoGeometry.root.traverse((n) => this.potree.lru.remove(n));
     this.pcoGeometry.dispose();
     this.material.dispose();
 
@@ -83,6 +112,11 @@ export class PointCloudOctree extends PointCloudTree {
     if (this.picker) {
       this.picker.dispose();
       this.picker = undefined;
+    }
+
+    if (this.splatsMesh !== null) {
+      this.splatsMesh.dispose();
+      this.splatsMesh = null;
     }
 
     this.disposed = true;
@@ -123,6 +157,35 @@ export class PointCloudOctree extends PointCloudTree {
     }
 
     return node;
+  }
+
+  updateSplats(camera: Camera, size: Vector2, callback = () => {}) {
+    let mesh = this.children[0] as Mesh;
+    if (!mesh) return;
+
+    //Parse the nodes to see if they contain splats information.
+    if (this.renderAsSplats === null || !this.renderAsSplats) {
+      this.renderAsSplats = false;
+      mesh.traverse((el) => {
+        let m = el as Mesh;
+        let g = m.geometry as BufferGeometry;
+        if (g.hasAttribute('COVARIANCE0')) this.renderAsSplats = true;
+      });
+
+      //Initialise the splats mesh if the nodes contain splats information
+      if (this.renderAsSplats && this.splatsMesh === null) {
+        this.splatsMesh = new SplatsMesh(DEBUG_MODE, this.maxAmountOfSplats, this.loadHarmonics);
+        this.add(this.splatsMesh);
+      }
+    }
+
+    if (this.splatsMesh !== null) {
+      if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
+        let runSort = this.splatsMesh.update(mesh, camera, size, callback);
+        if (this.splatsMesh.splatsEnabled && this.progress > 0.99 && runSort)
+          this.splatsMesh.sortSplats(camera, callback);
+      }
+    }
   }
 
   updateVisibleBounds() {
@@ -229,5 +292,9 @@ export class PointCloudOctree extends PointCloudTree {
     return this.visibleGeometry.length === 0
       ? 0
       : this.visibleNodes.length / this.visibleGeometry.length;
+  }
+
+  get maxAmountOfSplatsToRender() {
+    return this.maxAmountOfSplats;
   }
 }

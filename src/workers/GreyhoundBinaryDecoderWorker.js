@@ -9,15 +9,15 @@ function CustomView(buffer) {
   let tmpf = new Float32Array(tmp);
   let tmpu8 = new Uint8Array(tmp);
 
-  this.getUint32 = function(i) {
+  this.getUint32 = function (i) {
     return (this.u8[i + 3] << 24) | (this.u8[i + 2] << 16) | (this.u8[i + 1] << 8) | this.u8[i];
   };
 
-  this.getUint16 = function(i) {
+  this.getUint16 = function (i) {
     return (this.u8[i + 1] << 8) | this.u8[i];
   };
 
-  this.getFloat = function(i) {
+  this.getFloat = function (i) {
     tmpu8[0] = this.u8[i + 0];
     tmpu8[1] = this.u8[i + 1];
     tmpu8[2] = this.u8[i + 2];
@@ -26,12 +26,12 @@ function CustomView(buffer) {
     return tmpf[0];
   };
 
-  this.getUint8 = function(i) {
+  this.getUint8 = function (i) {
     return this.u8[i];
   };
 }
 
-let decompress = function(schema, input, numPoints) {
+let decompress = function (schema, input, numPoints) {
   let x = new Module.DynamicLASZip();
 
   let abInt = new Uint8Array(input);
@@ -42,7 +42,7 @@ let decompress = function(schema, input, numPoints) {
 
   let pointSize = 0;
 
-  schema.forEach(function(f) {
+  schema.forEach(function (f) {
     pointSize += f.size;
     if (f.type === 'floating') x.addFieldFloating(f.size);
     else if (f.type === 'unsigned') x.addFieldUnsigned(f.size);
@@ -73,7 +73,7 @@ let decompress = function(schema, input, numPoints) {
 
 Potree = {};
 
-onmessage = function(event) {
+onmessage = function (event) {
   let NUM_POINTS_BYTES = 4;
 
   let buffer = event.data.buffer;

@@ -14,21 +14,29 @@ import {
   DEFAULT_POINT_BUDGET,
   MAX_LOADS_TO_GPU,
   MAX_NUM_NODES_LOADING,
+  MAX_AMOUNT_OF_SPLATS,
   PERSPECTIVE_CAMERA,
+  MEMORY_SCALE,
 } from './constants';
 import { FEATURES } from './features';
-import { GetUrlFn, loadPOC } from './loading';
+import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
 import { loadOctree } from './loading2/load-octree';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { isGeometryNode, isTreeNode } from './type-predicates';
-import { IPointCloudGeometryNode, IPointCloudTreeNode, IPotree, IVisibilityUpdateResult, PCOGeometry, PickPoint } from './types';
+import {
+  IPointCloudGeometryNode,
+  IPointCloudTreeNode,
+  IPotree,
+  IVisibilityUpdateResult,
+  PCOGeometry,
+  PickPoint,
+} from './types';
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
-import { WorkerPool } from './utils/worker-pool';
 
 export class QueueItem {
   constructor(
@@ -36,14 +44,19 @@ export class QueueItem {
     public weight: number,
     public node: IPointCloudTreeNode,
     public parent?: IPointCloudTreeNode | null,
-  ) { }
+  ) {}
 }
 
-type GeometryLoader = (url: string, getUrl: GetUrlFn, xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>) => Promise<PCOGeometry>
+type GeometryLoader = (
+  url: string,
+  getUrl: GetUrlFn,
+  xhrRequest: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
+  loadHarmonics: boolean,
+) => Promise<PCOGeometry>;
 
 const GEOMETRY_LOADERS = {
   v1: loadPOC,
-  v2: loadOctree
+  v2: loadOctree,
 } satisfies Record<string, GeometryLoader>;
 
 export type PotreeVersion = keyof typeof GEOMETRY_LOADERS;
@@ -54,27 +67,34 @@ export class Potree implements IPotree {
   private _rendererSize: Vector2 = new Vector2();
 
   maxNumNodesLoading: number = MAX_NUM_NODES_LOADING;
+  memoryScale: number = MEMORY_SCALE;
   features = FEATURES;
   lru = new LRU(this._pointBudget);
 
-  private readonly loadGeometry: GeometryLoader
+  private readonly loadGeometry: GeometryLoader;
 
-  constructor(version: PotreeVersion = "v1") {
-    this.loadGeometry = GEOMETRY_LOADERS[version]
+  constructor(version: PotreeVersion = 'v1') {
+    this.loadGeometry = GEOMETRY_LOADERS[version];
   }
 
   loadPointCloud(
     url: string,
     getUrl: GetUrlFn,
     xhrRequest = (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+    loadHarmonics: boolean = false,
+    maxAmountOfSplats: number = MAX_AMOUNT_OF_SPLATS,
   ): Promise<PointCloudOctree> {
-    return this.loadGeometry(url, getUrl, xhrRequest).then(geometry => new PointCloudOctree(this, geometry));
+    return this.loadGeometry(url, getUrl, xhrRequest, loadHarmonics).then(
+      (geometry) =>
+        new PointCloudOctree(this, geometry, undefined, loadHarmonics, maxAmountOfSplats),
+    );
   }
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    callback = () => {},
   ): IVisibilityUpdateResult {
     const result = this.updateVisibility(pointClouds, camera, renderer);
 
@@ -87,9 +107,13 @@ export class Potree implements IPotree {
       pointCloud.material.updateMaterial(pointCloud, pointCloud.visibleNodes, camera, renderer);
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
+
+      //For the splats
+      renderer.getSize(this._rendererSize);
+      pointCloud.updateSplats(camera, this._rendererSize, callback);
     }
 
-    this.lru.freeMemory();
+    this.lru.freeMemory(this.memoryScale);
 
     return result;
   }
@@ -113,16 +137,16 @@ export class Potree implements IPotree {
     if (value !== this._pointBudget) {
       this._pointBudget = value;
       this.lru.pointBudget = value;
-      this.lru.freeMemory();
+      this.lru.freeMemory(this.memoryScale);
     }
   }
 
   static set maxLoaderWorkers(value: number) {
-    WorkerPool.getInstance().maxWorkersPerPool = value;
+    BinaryLoader.WORKER_POOL.maxWorkers = value;
   }
 
   static get maxLoaderWorkers(): number {
-    return WorkerPool.getInstance().maxWorkersPerPool;
+    return BinaryLoader.WORKER_POOL.maxWorkers;
   }
 
   private updateVisibility(
@@ -346,7 +370,7 @@ export class Potree implements IPotree {
     } => {
       const frustums: Frustum[] = [];
       const cameraPositions: Vector3[] = [];
-      const priorityQueue = new BinaryHeap<QueueItem>(x => 1 / x.weight);
+      const priorityQueue = new BinaryHeap<QueueItem>((x) => 1 / x.weight);
 
       for (let i = 0; i < pointClouds.length; i++) {
         const pointCloud = pointClouds[i];
@@ -373,10 +397,7 @@ export class Potree implements IPotree {
 
         // Camera position in object space
         inverseWorldMatrix.copy(worldMatrix).invert();
-        cameraMatrix
-          .identity()
-          .multiply(inverseWorldMatrix)
-          .multiply(camera.matrixWorld);
+        cameraMatrix.identity().multiply(inverseWorldMatrix).multiply(camera.matrixWorld);
         cameraPositions.push(new Vector3().setFromMatrixPosition(cameraMatrix));
 
         if (pointCloud.visible && pointCloud.root !== null) {

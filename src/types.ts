@@ -25,7 +25,7 @@ export interface IPointCloudTreeNode {
 
 export interface IPointCloudGeometryNode extends IPointCloudTreeNode {
   geometry: BufferGeometry | undefined;
-  children: ReadonlyArray<IPointCloudGeometryNode | null>
+  children: ReadonlyArray<IPointCloudGeometryNode | null>;
   oneTimeDisposeHandlers: Function[];
 
   loading: boolean;
@@ -56,14 +56,22 @@ export interface IVisibilityUpdateResult {
 export interface IPotree {
   pointBudget: number;
   maxNumNodesLoading: number;
+  memoryScale: number;
   lru: LRU;
 
-  loadPointCloud(url: string, getUrl: GetUrlFn, xhrRequest?: XhrRequest): Promise<PointCloudOctree>;
+  loadPointCloud(
+    url: string,
+    getUrl: GetUrlFn,
+    xhrRequest?: XhrRequest,
+    loadHarmonics?: boolean,
+    maxAmountOfSplats?: number,
+  ): Promise<PointCloudOctree>;
 
   updatePointClouds(
     pointClouds: PointCloudOctree[],
     camera: Camera,
     renderer: WebGLRenderer,
+    callback?: any,
   ): IVisibilityUpdateResult;
 }
 

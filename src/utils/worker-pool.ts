@@ -1,71 +1,80 @@
-import { AutoTerminatingWorker, WorkerQueue } from './worker-queue';
+import { AsyncBlockingQueue } from './async-blocking-queue';
 
-export enum WorkerType {
-  // Potree 1 loader workers
-  LAZ_LOADER_WORKER = 'LAZ_LOADER_WORKER',
+export class AutoTerminatingWorker {
+  private timeoutId: number | undefined = undefined;
+  private terminated: boolean = false;
 
-  // Potree 2 decoder workers
-  BINARY_DECODER_WORKER = 'BINARY_DECODER_WORKER',
-  LAS_DECODER_WORKER = 'LAS_DECODER_WORKER',
+  constructor(
+    private wrappedWorker: Worker,
+    private maxIdle: number,
+  ) {}
 
-  // Potree 2 workers
-  DECODER_WORKER = 'DECODER_WORKER',
-  DECODER_WORKER_GLTF = 'DECODER_WORKER_GLTF',
-  DECODER_WORKER_BROTLI = 'DECODER_WORKER_BROTLI',
+  public get worker(): Worker {
+    return this.wrappedWorker;
+  }
+
+  get isTerminated(): boolean {
+    return this.terminated;
+  }
+
+  markIdle(): void {
+    this.timeoutId = window.setTimeout(() => {
+      this.terminated = true;
+      this.wrappedWorker.terminate();
+    }, this.maxIdle);
+  }
+
+  markInUse(): void {
+    if (this.timeoutId) {
+      window.clearTimeout(this.timeoutId);
+    }
+  }
 }
 
-export const DEFAULT_MAX_WORKERS_PER_POOL = 32;
-
 export class WorkerPool {
-  public _maxWorkersPerPool = DEFAULT_MAX_WORKERS_PER_POOL;
+  /**
+   * The maximum amount of idle time that can elapse before a worker from this pool is automatically terminated
+   */
+  private static readonly POOL_MAX_IDLE = 7000;
 
-  private static instance: WorkerPool | undefined;
-  private constructor() {}
+  private pool = new AsyncBlockingQueue<AutoTerminatingWorker>();
+  private poolSize = 0;
 
-  private pool: { [key in WorkerType]: WorkerQueue } = {
-    LAZ_LOADER_WORKER: new WorkerQueue(
-      this._maxWorkersPerPool,
-      require('../workers/LAZLoaderWorker.worker.js').default,
-    ),
-    BINARY_DECODER_WORKER: new WorkerQueue(
-      this._maxWorkersPerPool,
-      require('../workers/binary-decoder.worker.js').default,
-    ),
-    LAS_DECODER_WORKER: new WorkerQueue(
-      this._maxWorkersPerPool,
-      require('../workers/las-decoder.worker.js').default,
-    ),
-    DECODER_WORKER: new WorkerQueue(
-      this._maxWorkersPerPool,
-      require('../loading2/decoder.worker.js').default,
-    ),
-    DECODER_WORKER_GLTF: new WorkerQueue(
-      this._maxWorkersPerPool,
-      require('../loading2/gltf-decoder.worker.js').default,
-    ),
-    DECODER_WORKER_BROTLI: new WorkerQueue(
-      this._maxWorkersPerPool,
-      require('../loading2/brotli-decoder.worker.js').default,
-    ),
-  };
+  constructor(
+    public maxWorkers: number,
+    private workerType: any,
+  ) {}
 
-  static getInstance(): WorkerPool {
-    if (!this.instance) {
-      this.instance = new WorkerPool();
+  /**
+   * Returns a worker promise which is resolved when one is available.
+   */
+  public getWorker(): Promise<AutoTerminatingWorker> {
+    // If the number of active workers is smaller than the maximum, return a new one.
+    // Otherwise, return a promise for worker from the pool.
+    if (this.poolSize < this.maxWorkers) {
+      this.poolSize++;
+      return Promise.resolve(
+        new AutoTerminatingWorker(new this.workerType(), WorkerPool.POOL_MAX_IDLE),
+      );
+    } else {
+      return this.pool.dequeue().then((worker) => {
+        worker.markInUse();
+        // If the dequeued worker has been terminated, decrease the pool size and make a recursive call to get a new worker
+        if (worker.isTerminated) {
+          this.poolSize--;
+          return this.getWorker();
+        }
+        return worker;
+      });
     }
-
-    return this.instance;
   }
 
-  set maxWorkersPerPool(count: number) {
-    Object.entries(this.pool).forEach(([_, pool]) => (pool.maxWorkers = count));
-  }
-
-  public getWorker(workerType: WorkerType): Promise<AutoTerminatingWorker> {
-    return this.pool[workerType].getWorker();
-  }
-
-  public releaseWorker(workerType: WorkerType, worker: AutoTerminatingWorker): void {
-    return this.pool[workerType].releaseWorker(worker);
+  /**
+   * Releases a Worker back into the pool
+   * @param worker
+   */
+  public releaseWorker(worker: AutoTerminatingWorker): void {
+    worker.markIdle();
+    this.pool.enqueue(worker);
   }
 }

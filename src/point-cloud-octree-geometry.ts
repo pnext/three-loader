@@ -28,7 +28,7 @@ export class PointCloudOctreeGeometry {
 
   dispose(): void {
     this.loader.dispose();
-    this.root.traverse(node => node.dispose());
+    this.root.traverse((node) => node.dispose());
 
     this.disposed = true;
   }

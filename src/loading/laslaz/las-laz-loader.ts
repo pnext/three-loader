@@ -1,7 +1,7 @@
 import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } from 'three';
 import { Version } from '../../version';
 import { Callback, GetUrlFn, XhrRequest } from '../types';
-import { WorkerPool, WorkerType } from '../../utils/worker-pool';
+import { WorkerPool } from '../../utils/worker-pool';
 import { PointCloudOctreeGeometryNode } from '../../point-cloud-octree-geometry-node';
 import { handleEmptyBuffer, handleFailedRequest } from '../../utils/utils';
 import { LASFile } from './LASFile';
@@ -43,14 +43,17 @@ export class LasLazLoader {
   xhrRequest: XhrRequest;
   callbacks: Callback[];
 
-  public static readonly WORKER_POOL = WorkerPool.getInstance();
+  public static readonly WORKER_POOL = new WorkerPool(
+    32,
+    require('../../workers/las-decoder.worker.js').default,
+  );
 
   dispose(): void {
     this.disposed = true;
   }
 
   constructor({
-    getUrl = s => Promise.resolve(s),
+    getUrl = (s) => Promise.resolve(s),
     version,
     extension,
     boundingBox,
@@ -77,12 +80,12 @@ export class LasLazLoader {
     }
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
-      .then(url => this.xhrRequest(url, { mode: 'cors' }))
-      .then(res => handleFailedRequest(res))
-      .then(okRes => okRes.arrayBuffer())
-      .then(buffer => handleEmptyBuffer(buffer))
-      .then(okBuffer => {
-        return new Promise(resolve => this.parse(node, okBuffer, resolve));
+      .then((url) => this.xhrRequest(url, { mode: 'cors' }))
+      .then((res) => handleFailedRequest(res))
+      .then((okRes) => okRes.arrayBuffer())
+      .then((buffer) => handleEmptyBuffer(buffer))
+      .then((okBuffer) => {
+        return new Promise((resolve) => this.parse(node, okBuffer, resolve));
       });
   }
 
@@ -105,7 +108,7 @@ export class LasLazLoader {
       return;
     }
 
-    const lf = new LASFile(buffer, LasLazLoader.WORKER_POOL);
+    const lf = new LASFile(buffer);
 
     try {
       await lf.open();
@@ -124,10 +127,9 @@ export class LasLazLoader {
     while (hasMoreData) {
       const data: any = await lf.readData(1000 * 1000, 0, skip);
 
-      const workerType = WorkerType.LAS_DECODER_WORKER;
       const numPoints = data.count;
 
-      LasLazLoader.WORKER_POOL.getWorker(workerType).then(autoTerminatingWorker => {
+      LasLazLoader.WORKER_POOL.getWorker().then((autoTerminatingWorker) => {
         autoTerminatingWorker.worker.onmessage = (e: WorkerResponse) => {
           const data = e.data;
 
@@ -152,7 +154,7 @@ export class LasLazLoader {
           node.pcoGeometry.needsUpdate = true;
 
           resolve();
-          LasLazLoader.WORKER_POOL.releaseWorker(workerType, autoTerminatingWorker);
+          LasLazLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
         };
 
         const message = {
@@ -226,7 +228,7 @@ export class LasLazLoader {
     geometry: BufferGeometry,
     buffers: { [name: string]: ArrayBuffer },
   ): void {
-    Object.keys(buffers).forEach(property => {
+    Object.keys(buffers).forEach((property) => {
       const buffer = buffers[property];
 
       if (this.isAttribute(property, PointAttributeName.POSITION_CARTESIAN)) {

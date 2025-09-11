@@ -6,7 +6,7 @@ import { Box3, BufferAttribute, BufferGeometry, Uint8BufferAttribute, Vector3 } 
 import { PointAttributeName, PointAttributeType } from '../point-attributes';
 import { PointCloudOctreeGeometryNode } from '../point-cloud-octree-geometry-node';
 import { handleEmptyBuffer, handleFailedRequest } from '../utils/utils';
-import { WorkerPool, WorkerType } from '../utils/worker-pool';
+import { WorkerPool } from '../utils/worker-pool';
 import { Version } from '../version';
 import { Callback, GetUrlFn, XhrRequest } from './types';
 
@@ -46,10 +46,13 @@ export class BinaryLoader {
   xhrRequest: XhrRequest;
   callbacks: Callback[];
 
-  public static readonly WORKER_POOL = WorkerPool.getInstance();
+  public static readonly WORKER_POOL = new WorkerPool(
+    32,
+    require('../workers/binary-decoder.worker.js').default,
+  );
 
   constructor({
-    getUrl = s => Promise.resolve(s),
+    getUrl = (s) => Promise.resolve(s),
     version,
     boundingBox,
     scale,
@@ -78,12 +81,12 @@ export class BinaryLoader {
     }
 
     return Promise.resolve(this.getUrl(this.getNodeUrl(node)))
-      .then(url => this.xhrRequest(url, { mode: 'cors' }))
-      .then(res => handleFailedRequest(res))
-      .then(okRes => okRes.arrayBuffer())
-      .then(buffer => handleEmptyBuffer(buffer))
-      .then(okBuffer => {
-        return new Promise(resolve => this.parse(node, okBuffer, resolve));
+      .then((url) => this.xhrRequest(url, { mode: 'cors' }))
+      .then((res) => handleFailedRequest(res))
+      .then((okRes) => okRes.arrayBuffer())
+      .then((buffer) => handleEmptyBuffer(buffer))
+      .then((okBuffer) => {
+        return new Promise((resolve) => this.parse(node, okBuffer, resolve));
       });
   }
 
@@ -106,7 +109,7 @@ export class BinaryLoader {
       return;
     }
 
-    BinaryLoader.WORKER_POOL.getWorker(WorkerType.BINARY_DECODER_WORKER).then(autoTerminatingWorker => {
+    BinaryLoader.WORKER_POOL.getWorker().then((autoTerminatingWorker) => {
       const pointAttributes = node.pcoGeometry.pointAttributes;
       const numPoints = buffer.byteLength / pointAttributes.byteSize;
 
@@ -117,7 +120,7 @@ export class BinaryLoader {
       autoTerminatingWorker.worker.onmessage = (e: WorkerResponse) => {
         if (this.disposed) {
           resolve();
-          BinaryLoader.WORKER_POOL.releaseWorker(WorkerType.BINARY_DECODER_WORKER, autoTerminatingWorker);
+          BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
           return;
         }
 
@@ -138,9 +141,9 @@ export class BinaryLoader {
         node.pcoGeometry.numNodesLoading--;
         node.pcoGeometry.needsUpdate = true;
 
-        this.callbacks.forEach(callback => callback(node));
+        this.callbacks.forEach((callback) => callback(node));
         resolve();
-        BinaryLoader.WORKER_POOL.releaseWorker(WorkerType.BINARY_DECODER_WORKER, autoTerminatingWorker);
+        BinaryLoader.WORKER_POOL.releaseWorker(autoTerminatingWorker);
       };
 
       const message = {
@@ -170,7 +173,7 @@ export class BinaryLoader {
     geometry: BufferGeometry,
     buffers: { [name: string]: { buffer: ArrayBuffer } },
   ): void {
-    Object.keys(buffers).forEach(property => {
+    Object.keys(buffers).forEach((property) => {
       const buffer = buffers[property].buffer;
 
       if (this.isAttribute(property, PointAttributeName.POSITION_CARTESIAN)) {
