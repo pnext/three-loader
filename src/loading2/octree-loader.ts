@@ -383,7 +383,6 @@ export class OctreeLoader implements LoadingContext {
       }
     }
 
-    console.log(attributes);
     return attributes;
   }
 
