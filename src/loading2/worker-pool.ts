@@ -3,6 +3,7 @@ export enum WorkerType {
   DECODER_WORKER = 'DECODER_WORKER',
   DECODER_WORKER_GLTF = 'DECODER_WORKER_GLTF',
   DECODER_WORKER_SPLATS = 'DECODER_WORKER_SPLATS',
+  DECODER_WORKER_SPLATS_COMPRESSED = 'DECODER_WORKER_SPLATS_COMPRESSED',
 }
 
 // Worker JS names: 'BinaryDecoderWorker.js', 'DEMWorker.js', 'EptBinaryDecoderWorker.js', 'EptLaszipDecoderWorker.js',
@@ -22,6 +23,10 @@ function createWorker(type: WorkerType): Worker {
       const DecoderWorker_GLTF = require('./gltf-splats-decoder.worker.js').default;
       return new DecoderWorker_GLTF();
     }
+    case WorkerType.DECODER_WORKER_SPLATS_COMPRESSED: {
+      const DecoderWorker_GLTF = require('./gltf-splats-compressed-decoder.worker.js').default;
+      return new DecoderWorker_GLTF();
+    }
     default:
       throw new Error('Unknown worker type');
   }
@@ -33,6 +38,7 @@ export class WorkerPool {
     DECODER_WORKER: [],
     DECODER_WORKER_GLTF: [],
     DECODER_WORKER_SPLATS: [],
+    DECODER_WORKER_SPLATS_COMPRESSED: [],
   };
 
   getWorker(workerType: WorkerType): Worker {

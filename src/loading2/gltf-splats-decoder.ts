@@ -7,15 +7,30 @@ import { appendBuffer } from './utils';
 import { WorkerType } from './worker-pool';
 
 export class GltfSplatDecoder implements GeometryDecoder {
-  readonly workerType: WorkerType = WorkerType.DECODER_WORKER_SPLATS;
+  readonly workerType: WorkerType;
 
   private _metadata: Metadata;
+
+  private compressed = false;
 
   constructor(
     public metadata: Metadata,
     private context: LoadingContext,
   ) {
     this._metadata = metadata;
+    const attributes = metadata.attributes;
+
+    /*
+    The non compressed data works with scales of three dimensions, where the Z value is always zero,
+    the compressed data avoids this third value and only works with the XY elements, which is
+    used to know if the metadata points to compressed values (the scale only has two elements).
+    */
+    const scale = attributes.filter((el) => el.name === 'scale')[0];
+    this.compressed = scale.numElements === 2;
+
+    this.workerType = this.compressed
+      ? WorkerType.DECODER_WORKER_SPLATS_COMPRESSED
+      : WorkerType.DECODER_WORKER_SPLATS;
   }
 
   async decode(node: OctreeGeometryNode, worker: Worker): Promise<DecodedGeometry | undefined> {
@@ -73,7 +88,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
       positions: 3n,
       colors: 3n,
       opacities: 1n,
-      scales: 3n,
+      scales: this.compressed ? 2n : 3n,
       rotations: 4n,
 
       shBand1_0: 3n,
@@ -95,13 +110,45 @@ export class GltfSplatDecoder implements GeometryDecoder {
       shBand3_6: 3n,
     };
 
+    const intOrFloat = this.compressed ? 1n : 4n;
+
+    const sizes: Record<string, bigint> = {
+      positions: 4n,
+      colors: intOrFloat,
+      opacities: intOrFloat,
+      scales: 4n,
+      rotations: intOrFloat,
+
+      shBand1_0: intOrFloat,
+      shBand1_1: intOrFloat,
+      shBand1_2: intOrFloat,
+
+      shBand2_0: intOrFloat,
+      shBand2_1: intOrFloat,
+      shBand2_2: intOrFloat,
+      shBand2_3: intOrFloat,
+      shBand2_4: intOrFloat,
+
+      shBand3_0: intOrFloat,
+      shBand3_1: intOrFloat,
+      shBand3_2: intOrFloat,
+      shBand3_3: intOrFloat,
+      shBand3_4: intOrFloat,
+      shBand3_5: intOrFloat,
+      shBand3_6: intOrFloat,
+    };
+
     if (byteSize === BigInt(0)) {
       console.warn(`Loaded node with 0 bytes: ${node.name}`);
       return;
     } else {
-      const fetchBuffer = async (url: string, offsetMultiplier: bigint): Promise<ArrayBuffer> => {
-        const firstByte = byteOffset * 4n * offsetMultiplier;
-        const lastByte = firstByte + byteSize * 4n * offsetMultiplier - 1n;
+      const fetchBuffer = async (
+        url: string,
+        offsetMultiplier: bigint,
+        size: bigint,
+      ): Promise<ArrayBuffer> => {
+        const firstByte = byteOffset * size * offsetMultiplier;
+        const lastByte = firstByte + byteSize * size * offsetMultiplier - 1n;
         const headers: any = {
           Range: `bytes=${firstByte}-${lastByte}`,
           'Transfer-Encoding': 'compress',
@@ -112,7 +159,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
       };
 
       const fetchPromises: Promise<ArrayBuffer>[] = Object.entries(urls).map(([key, url]) =>
-        fetchBuffer(url, offsets[key]),
+        fetchBuffer(url, offsets[key], sizes[key]),
       );
 
       const [
