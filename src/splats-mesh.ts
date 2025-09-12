@@ -10,7 +10,6 @@ import {
   Camera,
   Quaternion,
   ShaderMaterial,
-  DoubleSide,
   GLSL3,
   Object3D,
   Vector4,
@@ -23,6 +22,7 @@ import {
   RGFormat,
   RedIntegerFormat,
   Texture,
+  FrontSide,
 } from 'three';
 
 import { createSortWorker } from './workers/SortWorker';
@@ -225,7 +225,7 @@ export class SplatsMesh extends Object3D {
       this.sorter = result;
 
       const quadVertices = new Float32Array([-1, -1, 0.0, 1, -1, 0.0, -1, 1, 0.0, 1, 1, 0.0]);
-      const quadIndices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+      const quadIndices = new Uint16Array([2, 1, 0, 3, 1, 2]);
 
       //Global mesh used to setup the global rendering of the points
       let shader = new ShaderMaterial({
@@ -235,7 +235,7 @@ export class SplatsMesh extends Object3D {
         transparent: true,
         depthTest: true,
         depthWrite: false,
-        side: DoubleSide,
+        side: FrontSide,
         uniforms: {
           focal: { value: new Vector2(0, 0) },
           inverseFocalAdjustment: { value: 1 },
