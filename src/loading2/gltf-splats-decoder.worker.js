@@ -331,8 +331,7 @@ onmessage = function (event) {
         wz = w * z2;
 
       const sx = scale.x,
-        sy = scale.y,
-        sz = scale.z;
+        sy = scale.y;
 
       covarianceMatrix[0] = (1 - (yy + zz)) * sx;
       covarianceMatrix[1] = (xy + wz) * sx;
@@ -342,9 +341,9 @@ onmessage = function (event) {
       covarianceMatrix[4] = (1 - (xx + zz)) * sy;
       covarianceMatrix[5] = (yz + wx) * sy;
 
-      covarianceMatrix[6] = (xz + wy) * sz;
-      covarianceMatrix[7] = (yz - wx) * sz;
-      covarianceMatrix[8] = (1 - (xx + yy)) * sz;
+      covarianceMatrix[6] = 0;
+      covarianceMatrix[7] = 0;
+      covarianceMatrix[8] = 0;
 
       const transposeCovariance = covarianceMatrix.map((el) => el);
 
