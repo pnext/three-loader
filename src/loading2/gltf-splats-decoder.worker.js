@@ -183,9 +183,6 @@ onmessage = function (event) {
         colors[c3] = a;
       }
     } else if (['scale'].includes(pointAttribute.name)) {
-      let maxScale = 0;
-      let index = 0;
-
       for (let j = 0; j < numPoints; j++) {
         const scaleOffset =
           j * bytesPerPointScale +
@@ -198,12 +195,6 @@ onmessage = function (event) {
         scales[3 * j + 0] = Math.exp(sx);
         scales[3 * j + 1] = Math.exp(sy);
         scales[3 * j + 2] = Math.exp(sz);
-
-        let s = Math.max(Math.exp(sx), Math.exp(sy));
-        if (s > maxScale) {
-          maxScale = s;
-          index = j;
-        }
       }
 
       attributeBuffers['scale'] = { buffer: bufferScales, attribute: 'scale' };
