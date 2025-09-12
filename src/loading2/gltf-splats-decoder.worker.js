@@ -422,13 +422,6 @@ onmessage = function (event) {
       return arr[0] + (arr[1] << 8) + (arr[2] << 16) + (arr[3] << 24);
     };
 
-    let colX = Math.floor(255 * Math.random());
-    let colY = Math.floor(255 * Math.random());
-    let colZ = Math.floor(255 * Math.random());
-
-    let m0 = 0;
-    let m1 = 1 - m0;
-
     const uintEncodedFloat = (function () {
       const floatView = new Float32Array(1);
       const int32View = new Int32Array(floatView.buffer);
@@ -455,12 +448,7 @@ onmessage = function (event) {
       pos.y = rawPositions[4 * j + 1];
       pos.z = rawPositions[4 * j + 2];
 
-      let encodedColor = rgbaArrayToInteger([
-        colX * m0 + color.x * m1,
-        colY * m0 + color.y * m1,
-        colZ * m0 + color.z * m1,
-        color.w,
-      ]);
+      let encodedColor = rgbaArrayToInteger([color.x, color.y, color.z, color.w]);
       pos.x = uintEncodedFloat(pos.x);
       pos.y = uintEncodedFloat(pos.y);
       pos.z = uintEncodedFloat(pos.z);
