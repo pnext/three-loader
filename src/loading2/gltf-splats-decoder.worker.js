@@ -114,6 +114,10 @@ onmessage = function (event) {
   // positions, colors, opacities, scales, rotations
   for (const pointAttribute of pointAttributes.attributes) {
     if (['POSITION_CARTESIAN', 'position'].includes(pointAttribute.name)) {
+      const diffX = offset[0] - min.x;
+      const diffY = offset[1] - min.y;
+      const diffZ = offset[2] - min.z;
+
       for (let j = 0; j < numPoints; j++) {
         const pointOffset = j * bytesPerPointPosition;
 
@@ -121,9 +125,9 @@ onmessage = function (event) {
         const _y = view.getFloat32(pointOffset + 4, true);
         const _z = view.getFloat32(pointOffset + 8, true);
 
-        const x = _x + offset[0] - min.x;
-        const y = _y + offset[1] - min.y;
-        const z = _z + offset[2] - min.z;
+        const x = _x + diffX;
+        const y = _y + diffY;
+        const z = _z + diffZ;
 
         tightBoxMin[0] = Math.min(tightBoxMin[0], x);
         tightBoxMin[1] = Math.min(tightBoxMin[1], y);
