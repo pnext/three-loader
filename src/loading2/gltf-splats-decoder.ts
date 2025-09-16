@@ -28,7 +28,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
     const scale = attributes.filter((el) => el.name === 'scale')[0];
     this.compressed = scale.numElements === 2;
 
-    this.workerType = this.compressed
+    this.workerType = this.metadata.compressed
       ? WorkerType.DECODER_WORKER_SPLATS_COMPRESSED
       : WorkerType.DECODER_WORKER_SPLATS;
   }

@@ -13,6 +13,8 @@ import { WorkerPool, WorkerType } from './worker-pool';
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
 export const OCTREE_FILE = 'octree.bin';
+export const COMPRESSION_TYPE_FILE = 'pcl.gltf';
+//const COMPRESSION_VERSION = "ext_pix4d_gltf_gs_version";
 
 // Default buffer files for GLTF encoding
 export const GLTF_COLORS_FILE = 'colors.glbin';
@@ -284,6 +286,16 @@ export interface Metadata {
   };
   encoding: string;
   attributes: Attribute[];
+  compressed: boolean;
+}
+
+export interface PCL {
+  asset: {
+    extensions: {
+      ext_pix4d_gltf_gs_version: { version: string };
+      OPF_asset_version: { version: string };
+    };
+  };
 }
 
 export interface LoadingContext {
@@ -308,7 +320,6 @@ export class OctreeLoader implements LoadingContext {
   octreePath = '';
   gltfColorsPath = '';
   gltfPositionsPath = '';
-
   harmonicsEnabled: boolean = false;
 
   getUrl: GetUrlFn;
@@ -324,6 +335,7 @@ export class OctreeLoader implements LoadingContext {
     this.xhrRequest = xhrRequest;
     this.basePath = extractBasePath(url);
     this.hierarchyPath = buildUrl(this.basePath, HIERARCHY_FILE);
+
     this.octreePath = buildUrl(this.basePath, OCTREE_FILE);
     this.harmonicsEnabled = loadHarmonics;
 
@@ -388,6 +400,19 @@ export class OctreeLoader implements LoadingContext {
 
   async load(url: string) {
     const metadata = await this.fetchMetadata(url);
+
+    //Used to know the compression definition in the pcl.gltf file, this is used to know if the
+    //splats are compressed by the PNext compression standard.
+    try {
+      const compressionTypeFile = await this.fetchPCL(
+        buildUrl(extractBasePath(url), COMPRESSION_TYPE_FILE),
+      );
+      metadata.compressed =
+        Number(compressionTypeFile.asset.extensions.ext_pix4d_gltf_gs_version.version) >= 2;
+    } catch (e) {
+      console.warn('there is no pcl.gltf file to define the compression of the splats');
+    }
+
     const attributes = OctreeLoader.parseAttributes(metadata.attributes);
 
     this.applyCustomBufferURI(metadata.encoding, attributes);
@@ -406,6 +431,11 @@ export class OctreeLoader implements LoadingContext {
   }
 
   private async fetchMetadata(url: string): Promise<Metadata> {
+    const response = await this.xhrRequest(url);
+    return response.json();
+  }
+
+  private async fetchPCL(url: string): Promise<PCL> {
     const response = await this.xhrRequest(url);
     return response.json();
   }
