@@ -3488,10 +3488,9 @@
             const t = o;
             f = (2 * s) / (t.top - t.bottom);
           }
-          const p = h * f;
-          if (p < n.minNodePixelSize) continue;
-          const g = c < h ? Number.MAX_VALUE : 1 + p + 1 / c;
-          e.push(new Xt(t.pointCloudIndex, g, u, i));
+          if (h * f < n.minNodePixelSize) continue;
+          const p = Number.MAX_VALUE;
+          e.push(new Xt(t.pointCloudIndex, p, u, i));
         }
       }
       updateBoundingBoxVisibility(t, e) {
