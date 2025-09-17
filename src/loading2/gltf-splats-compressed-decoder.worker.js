@@ -176,6 +176,8 @@ onmessage = function (event) {
       attributeBuffers['position'] = { buffer: buff, attribute: 'position' };
     } else if (['sh_band_0'].includes(pointAttribute.name)) {
       const SH_C0 = 0.28209479177387814;
+      const bytesOffsetColor = numPoints * bytesPerPointPosition;
+      const bytesOffsetOpacity = numPoints * (bytesPerPointPosition + bytesPerPointColor);
 
       for (let j = 0; j < numPoints; j++) {
         const c0 = 4 * j + 0;
@@ -183,9 +185,8 @@ onmessage = function (event) {
         const c2 = 4 * j + 2;
         const c3 = 4 * j + 3;
 
-        const colorOffset = j * bytesPerPointColor + numPoints * bytesPerPointPosition;
-        const opacityOffset =
-          j * bytesPerPointOpacity + numPoints * (bytesPerPointPosition + bytesPerPointColor);
+        const colorOffset = j * bytesPerPointColor + bytesOffsetColor;
+        const opacityOffset = j * bytesPerPointOpacity + bytesOffsetOpacity;
 
         // rgb: https://github.com/Pix4D/pix4d-gsplat/blob/master/docs/GS_OPF_glTF_requirements.md
         const r = (view.getUint8(colorOffset + 0, true) / 255 - 0.5) / 0.15;
@@ -207,10 +208,11 @@ onmessage = function (event) {
         colors[c3] = a;
       }
     } else if (['scale'].includes(pointAttribute.name)) {
+      const bytesOffsetScale =
+        numPoints * (bytesPerPointPosition + bytesPerPointColor + bytesPerPointOpacity);
+
       for (let j = 0; j < numPoints; j++) {
-        const scaleOffset =
-          j * bytesPerPointScale +
-          numPoints * (bytesPerPointPosition + bytesPerPointColor + bytesPerPointOpacity);
+        const scaleOffset = j * bytesPerPointScale + bytesOffsetScale;
 
         const sx = view.getFloat32(scaleOffset + 0, true);
         const sy = view.getFloat32(scaleOffset + 4, true);
@@ -222,14 +224,12 @@ onmessage = function (event) {
 
       attributeBuffers['scale'] = { buffer: bufferScales, attribute: 'scale' };
     } else if (['rotation'].includes(pointAttribute.name)) {
+      const bytesOffsetOrientation =
+        numPoints *
+        (bytesPerPointPosition + bytesPerPointColor + bytesPerPointOpacity + bytesPerPointScale);
+
       for (let j = 0; j < numPoints; j++) {
-        const rotationOffset =
-          j * bytesPerPointRotation +
-          numPoints *
-            (bytesPerPointPosition +
-              bytesPerPointColor +
-              bytesPerPointOpacity +
-              bytesPerPointScale);
+        const rotationOffset = j * bytesPerPointRotation + bytesOffsetOrientation;
 
         //Decoding based on: https://github.com/Pix4D/pix4d-gsplat/blob/master/docs/GS_OPF_glTF_requirements.md
         const encoded = view.getUint32(rotationOffset, true);
@@ -291,18 +291,18 @@ onmessage = function (event) {
 
     //For the spherical harmonics
     else if (pointAttribute.name.indexOf('triplet') > -1 && harmonicsEnabled) {
-      for (let j = 0; j < numPoints; j++) {
-        let harmonicIndex = harmonicsBandsName.indexOf(pointAttribute.name);
+      const harmonicIndex = harmonicsBandsName.indexOf(pointAttribute.name);
+      const bytesOffsetHarmonics =
+        numPoints *
+        (bytesPerPointPosition +
+          bytesPerPointColor +
+          bytesPerPointOpacity +
+          bytesPerPointScale +
+          bytesPerPointRotation +
+          harmonicIndex * bytesPerPointHarmonics);
 
-        const harmonicsOffset =
-          j * bytesPerPointHarmonics +
-          numPoints *
-            (bytesPerPointPosition +
-              bytesPerPointColor +
-              bytesPerPointOpacity +
-              bytesPerPointScale +
-              bytesPerPointRotation +
-              harmonicIndex * bytesPerPointHarmonics);
+      for (let j = 0; j < numPoints; j++) {
+        const harmonicsOffset = j * bytesPerPointHarmonics + bytesOffsetHarmonics;
 
         const r = (view.getUint8(harmonicsOffset + 0, true) - 128) / 128;
         const g = (view.getUint8(harmonicsOffset + 1, true) - 128) / 128;
@@ -317,7 +317,7 @@ onmessage = function (event) {
 
   //calculate the convariance from scales and rotations.
   {
-    function multiplyMatricex(ae, be) {
+    function multiplyMatrices(ae, be) {
       const te = new Array(9);
 
       const a11 = ae[0],
@@ -406,7 +406,7 @@ onmessage = function (event) {
       m[5] = m[7];
       m[7] = tmp;
 
-      return multiplyMatricex(covarianceMatrix, transposeCovariance);
+      return multiplyMatrices(covarianceMatrix, transposeCovariance);
     }
 
     function computeCovariance(scale, rotation, outOffset) {

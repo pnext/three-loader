@@ -18,15 +18,12 @@ export class GltfSplatDecoder implements GeometryDecoder {
     private context: LoadingContext,
   ) {
     this._metadata = metadata;
-    const attributes = metadata.attributes;
 
     /*
     The non compressed data works with scales of three dimensions, where the Z value is always zero,
     the compressed data avoids this third value and only works with the XY elements, which is
     used to know if the metadata points to compressed values (the scale only has two elements).
     */
-    const scale = attributes.filter((el) => el.name === 'scale')[0];
-    this.compressed = scale.numElements === 2;
 
     this.workerType = this.metadata.compressed
       ? WorkerType.DECODER_WORKER_SPLATS_COMPRESSED
@@ -139,7 +136,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
     };
 
     if (byteSize === BigInt(0)) {
-      console.warn(`Loaded node with 0 bytes: ${node.name}`);
+      //warn(`Loaded node with 0 bytes: ${node.name}`);
       return;
     } else {
       const fetchBuffer = async (
