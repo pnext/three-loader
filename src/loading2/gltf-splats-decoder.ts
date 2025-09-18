@@ -25,7 +25,7 @@ export class GltfSplatDecoder implements GeometryDecoder {
     used to know if the metadata points to compressed values (the scale only has two elements).
     */
 
-    this.workerType = this.metadata.compressed
+    this.workerType = true
       ? WorkerType.DECODER_WORKER_SPLATS_COMPRESSED
       : WorkerType.DECODER_WORKER_SPLATS;
   }

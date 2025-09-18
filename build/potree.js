@@ -422,7 +422,7 @@
       const n = new f.DataTexture(e, 256, 256, f.RGBAFormat);
       return (n.magFilter = f.NearestFilter), (n.needsUpdate = !0), n;
     }
-    var R = function (t, e, n, i) {
+    var B = function (t, e, n, i) {
       var r,
         o = arguments.length,
         s = o < 3 ? e : null === i ? (i = Object.getOwnPropertyDescriptor(e, n)) : i;
@@ -433,7 +433,7 @@
           (r = t[a]) && (s = (o < 3 ? r(s) : o > 3 ? r(e, n, s) : r(e, n)) || s);
       return o > 3 && s && Object.defineProperty(e, n, s), s;
     };
-    const B = { [l.OCTREE]: 'tree_type_octree', [l.KDTREE]: 'tree_type_kdtree' },
+    const R = { [l.OCTREE]: 'tree_type_octree', [l.KDTREE]: 'tree_type_kdtree' },
       M = {
         [s.FIXED]: 'fixed_point_size',
         [s.ATTENUATED]: 'attenuated_point_size',
@@ -628,7 +628,7 @@
           t && e.push(`#define ${t}`);
         }
         return (
-          n(B[this.treeType]),
+          n(R[this.treeType]),
           n(M[this.pointSizeType]),
           n(z[this.shape]),
           n(F[this.pointColorType]),
@@ -796,64 +796,64 @@
     var W;
     (V.helperVec3 = new f.Vector3()),
       (V.helperVec2 = new f.Vector2()),
-      R([G('bbSize')], V.prototype, 'bbSize', void 0),
-      R([G('clipExtent')], V.prototype, 'clipExtent', void 0),
-      R([G('depthMap')], V.prototype, 'depthMap', void 0),
-      R([G('fov')], V.prototype, 'fov', void 0),
-      R([G('heightMax')], V.prototype, 'heightMax', void 0),
-      R([G('heightMin')], V.prototype, 'heightMin', void 0),
-      R([G('intensityBrightness')], V.prototype, 'intensityBrightness', void 0),
-      R([G('intensityContrast')], V.prototype, 'intensityContrast', void 0),
-      R([G('intensityGamma')], V.prototype, 'intensityGamma', void 0),
-      R([G('intensityRange')], V.prototype, 'intensityRange', void 0),
-      R([G('maxSize')], V.prototype, 'maxSize', void 0),
-      R([G('minSize')], V.prototype, 'minSize', void 0),
-      R([G('octreeSize')], V.prototype, 'octreeSize', void 0),
-      R([G('opacity', !0)], V.prototype, 'opacity', void 0),
-      R([G('rgbBrightness', !0)], V.prototype, 'rgbBrightness', void 0),
-      R([G('rgbContrast', !0)], V.prototype, 'rgbContrast', void 0),
-      R([G('rgbGamma', !0)], V.prototype, 'rgbGamma', void 0),
-      R([G('screenHeight')], V.prototype, 'screenHeight', void 0),
-      R([G('screenWidth')], V.prototype, 'screenWidth', void 0),
-      R([G('size')], V.prototype, 'size', void 0),
-      R([G('spacing')], V.prototype, 'spacing', void 0),
-      R([G('transition')], V.prototype, 'transition', void 0),
-      R([G('uColor')], V.prototype, 'color', void 0),
-      R([G('wClassification')], V.prototype, 'weightClassification', void 0),
-      R([G('wElevation')], V.prototype, 'weightElevation', void 0),
-      R([G('wIntensity')], V.prototype, 'weightIntensity', void 0),
-      R([G('wReturnNumber')], V.prototype, 'weightReturnNumber', void 0),
-      R([G('wRGB')], V.prototype, 'weightRGB', void 0),
-      R([G('wSourceID')], V.prototype, 'weightSourceID', void 0),
-      R([G('opacityAttenuation')], V.prototype, 'opacityAttenuation', void 0),
-      R([G('filterByNormalThreshold')], V.prototype, 'filterByNormalThreshold', void 0),
-      R([G('highlightedPointCoordinate')], V.prototype, 'highlightedPointCoordinate', void 0),
-      R([G('highlightedPointColor')], V.prototype, 'highlightedPointColor', void 0),
-      R([G('enablePointHighlighting')], V.prototype, 'enablePointHighlighting', void 0),
-      R([G('highlightedPointScale')], V.prototype, 'highlightedPointScale', void 0),
-      R([G('normalFilteringMode')], V.prototype, 'normalFilteringMode', void 0),
-      R([G('backgroundMap')], V.prototype, 'backgroundMap', void 0),
-      R([G('pointCloudID')], V.prototype, 'pointCloudID', void 0),
-      R([G('pointCloudMixingMode')], V.prototype, 'pointCloudMixingMode', void 0),
-      R([G('stripeDistanceX')], V.prototype, 'stripeDistanceX', void 0),
-      R([G('stripeDistanceY')], V.prototype, 'stripeDistanceY', void 0),
-      R([G('stripeDivisorX')], V.prototype, 'stripeDivisorX', void 0),
-      R([G('stripeDivisorY')], V.prototype, 'stripeDivisorY', void 0),
-      R([G('pointCloudMixAngle')], V.prototype, 'pointCloudMixAngle', void 0),
-      R([G('renderDepth')], V.prototype, 'renderDepth', void 0),
-      R([k()], V.prototype, 'useClipBox', void 0),
-      R([k()], V.prototype, 'weighted', void 0),
-      R([k()], V.prototype, 'pointColorType', void 0),
-      R([k()], V.prototype, 'pointSizeType', void 0),
-      R([k()], V.prototype, 'clipMode', void 0),
-      R([k()], V.prototype, 'useEDL', void 0),
-      R([k()], V.prototype, 'shape', void 0),
-      R([k()], V.prototype, 'treeType', void 0),
-      R([k()], V.prototype, 'pointOpacityType', void 0),
-      R([k()], V.prototype, 'useFilterByNormal', void 0),
-      R([k()], V.prototype, 'useTextureBlending', void 0),
-      R([k()], V.prototype, 'usePointCloudMixing', void 0),
-      R([k()], V.prototype, 'highlightPoint', void 0),
+      B([G('bbSize')], V.prototype, 'bbSize', void 0),
+      B([G('clipExtent')], V.prototype, 'clipExtent', void 0),
+      B([G('depthMap')], V.prototype, 'depthMap', void 0),
+      B([G('fov')], V.prototype, 'fov', void 0),
+      B([G('heightMax')], V.prototype, 'heightMax', void 0),
+      B([G('heightMin')], V.prototype, 'heightMin', void 0),
+      B([G('intensityBrightness')], V.prototype, 'intensityBrightness', void 0),
+      B([G('intensityContrast')], V.prototype, 'intensityContrast', void 0),
+      B([G('intensityGamma')], V.prototype, 'intensityGamma', void 0),
+      B([G('intensityRange')], V.prototype, 'intensityRange', void 0),
+      B([G('maxSize')], V.prototype, 'maxSize', void 0),
+      B([G('minSize')], V.prototype, 'minSize', void 0),
+      B([G('octreeSize')], V.prototype, 'octreeSize', void 0),
+      B([G('opacity', !0)], V.prototype, 'opacity', void 0),
+      B([G('rgbBrightness', !0)], V.prototype, 'rgbBrightness', void 0),
+      B([G('rgbContrast', !0)], V.prototype, 'rgbContrast', void 0),
+      B([G('rgbGamma', !0)], V.prototype, 'rgbGamma', void 0),
+      B([G('screenHeight')], V.prototype, 'screenHeight', void 0),
+      B([G('screenWidth')], V.prototype, 'screenWidth', void 0),
+      B([G('size')], V.prototype, 'size', void 0),
+      B([G('spacing')], V.prototype, 'spacing', void 0),
+      B([G('transition')], V.prototype, 'transition', void 0),
+      B([G('uColor')], V.prototype, 'color', void 0),
+      B([G('wClassification')], V.prototype, 'weightClassification', void 0),
+      B([G('wElevation')], V.prototype, 'weightElevation', void 0),
+      B([G('wIntensity')], V.prototype, 'weightIntensity', void 0),
+      B([G('wReturnNumber')], V.prototype, 'weightReturnNumber', void 0),
+      B([G('wRGB')], V.prototype, 'weightRGB', void 0),
+      B([G('wSourceID')], V.prototype, 'weightSourceID', void 0),
+      B([G('opacityAttenuation')], V.prototype, 'opacityAttenuation', void 0),
+      B([G('filterByNormalThreshold')], V.prototype, 'filterByNormalThreshold', void 0),
+      B([G('highlightedPointCoordinate')], V.prototype, 'highlightedPointCoordinate', void 0),
+      B([G('highlightedPointColor')], V.prototype, 'highlightedPointColor', void 0),
+      B([G('enablePointHighlighting')], V.prototype, 'enablePointHighlighting', void 0),
+      B([G('highlightedPointScale')], V.prototype, 'highlightedPointScale', void 0),
+      B([G('normalFilteringMode')], V.prototype, 'normalFilteringMode', void 0),
+      B([G('backgroundMap')], V.prototype, 'backgroundMap', void 0),
+      B([G('pointCloudID')], V.prototype, 'pointCloudID', void 0),
+      B([G('pointCloudMixingMode')], V.prototype, 'pointCloudMixingMode', void 0),
+      B([G('stripeDistanceX')], V.prototype, 'stripeDistanceX', void 0),
+      B([G('stripeDistanceY')], V.prototype, 'stripeDistanceY', void 0),
+      B([G('stripeDivisorX')], V.prototype, 'stripeDivisorX', void 0),
+      B([G('stripeDivisorY')], V.prototype, 'stripeDivisorY', void 0),
+      B([G('pointCloudMixAngle')], V.prototype, 'pointCloudMixAngle', void 0),
+      B([G('renderDepth')], V.prototype, 'renderDepth', void 0),
+      B([k()], V.prototype, 'useClipBox', void 0),
+      B([k()], V.prototype, 'weighted', void 0),
+      B([k()], V.prototype, 'pointColorType', void 0),
+      B([k()], V.prototype, 'pointSizeType', void 0),
+      B([k()], V.prototype, 'clipMode', void 0),
+      B([k()], V.prototype, 'useEDL', void 0),
+      B([k()], V.prototype, 'shape', void 0),
+      B([k()], V.prototype, 'treeType', void 0),
+      B([k()], V.prototype, 'pointOpacityType', void 0),
+      B([k()], V.prototype, 'useFilterByNormal', void 0),
+      B([k()], V.prototype, 'useTextureBlending', void 0),
+      B([k()], V.prototype, 'usePointCloudMixing', void 0),
+      B([k()], V.prototype, 'highlightPoint', void 0),
       (function (t) {
         (t[(t.POSITION_CARTESIAN = 0)] = 'POSITION_CARTESIAN'),
           (t[(t.COLOR_PACKED = 1)] = 'COLOR_PACKED'),
@@ -2557,9 +2557,7 @@
           (this.context = e),
           (this.compressed = !1),
           (this._metadata = t),
-          (this.workerType = this.metadata.compressed
-            ? Tt.DECODER_WORKER_SPLATS_COMPRESSED
-            : Tt.DECODER_WORKER_SPLATS);
+          (this.workerType = Tt.DECODER_WORKER_SPLATS_COMPRESSED);
       }
       async decode(t, e) {
         const { byteOffset: n, byteSize: i } = t;
@@ -2821,7 +2819,7 @@
     };
     let Dt = 0;
     for (const t in Pt) (Pt[Dt] = Pt[t]), Dt++;
-    class Rt {
+    class Bt {
       constructor(t, e, n, i = [1 / 0, -1 / 0], r = void 0) {
         (this.name = t),
           (this.type = e),
@@ -2832,23 +2830,23 @@
           (this.description = '');
       }
     }
-    const Bt = {
-      POSITION_CARTESIAN: new Rt('POSITION_CARTESIAN', Pt.DATA_TYPE_FLOAT, 3),
-      RGBA_PACKED: new Rt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 4),
-      COLOR_PACKED: new Rt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 4),
-      RGB_PACKED: new Rt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 3),
-      NORMAL_FLOATS: new Rt('NORMAL_FLOATS', Pt.DATA_TYPE_FLOAT, 3),
-      INTENSITY: new Rt('INTENSITY', Pt.DATA_TYPE_UINT16, 1),
-      CLASSIFICATION: new Rt('CLASSIFICATION', Pt.DATA_TYPE_UINT8, 1),
-      NORMAL_SPHEREMAPPED: new Rt('NORMAL_SPHEREMAPPED', Pt.DATA_TYPE_UINT8, 2),
-      NORMAL_OCT16: new Rt('NORMAL_OCT16', Pt.DATA_TYPE_UINT8, 2),
-      NORMAL: new Rt('NORMAL', Pt.DATA_TYPE_FLOAT, 3),
-      RETURN_NUMBER: new Rt('RETURN_NUMBER', Pt.DATA_TYPE_UINT8, 1),
-      NUMBER_OF_RETURNS: new Rt('NUMBER_OF_RETURNS', Pt.DATA_TYPE_UINT8, 1),
-      SOURCE_ID: new Rt('SOURCE_ID', Pt.DATA_TYPE_UINT16, 1),
-      INDICES: new Rt('INDICES', Pt.DATA_TYPE_UINT32, 1),
-      SPACING: new Rt('SPACING', Pt.DATA_TYPE_FLOAT, 1),
-      GPS_TIME: new Rt('GPS_TIME', Pt.DATA_TYPE_DOUBLE, 1),
+    const Rt = {
+      POSITION_CARTESIAN: new Bt('POSITION_CARTESIAN', Pt.DATA_TYPE_FLOAT, 3),
+      RGBA_PACKED: new Bt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 4),
+      COLOR_PACKED: new Bt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 4),
+      RGB_PACKED: new Bt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 3),
+      NORMAL_FLOATS: new Bt('NORMAL_FLOATS', Pt.DATA_TYPE_FLOAT, 3),
+      INTENSITY: new Bt('INTENSITY', Pt.DATA_TYPE_UINT16, 1),
+      CLASSIFICATION: new Bt('CLASSIFICATION', Pt.DATA_TYPE_UINT8, 1),
+      NORMAL_SPHEREMAPPED: new Bt('NORMAL_SPHEREMAPPED', Pt.DATA_TYPE_UINT8, 2),
+      NORMAL_OCT16: new Bt('NORMAL_OCT16', Pt.DATA_TYPE_UINT8, 2),
+      NORMAL: new Bt('NORMAL', Pt.DATA_TYPE_FLOAT, 3),
+      RETURN_NUMBER: new Bt('RETURN_NUMBER', Pt.DATA_TYPE_UINT8, 1),
+      NUMBER_OF_RETURNS: new Bt('NUMBER_OF_RETURNS', Pt.DATA_TYPE_UINT8, 1),
+      SOURCE_ID: new Bt('SOURCE_ID', Pt.DATA_TYPE_UINT16, 1),
+      INDICES: new Bt('INDICES', Pt.DATA_TYPE_UINT32, 1),
+      SPACING: new Bt('SPACING', Pt.DATA_TYPE_FLOAT, 1),
+      GPS_TIME: new Bt('GPS_TIME', Pt.DATA_TYPE_DOUBLE, 1),
     };
     class Mt {
       constructor(t, e = [], n = 0, i = 0, r = []) {
@@ -2861,7 +2859,7 @@
         )
           for (let e = 0; e < t.length; e++) {
             const n = t[e],
-              i = Bt[n];
+              i = Rt[n];
             this.attributes.push(i), (this.byteSize += i.byteSize), this.size++;
           }
       }
@@ -2875,10 +2873,10 @@
         for (const t in this.attributes) {
           const e = this.attributes[t];
           if (
-            e === Bt.NORMAL_SPHEREMAPPED ||
-            e === Bt.NORMAL_FLOATS ||
-            e === Bt.NORMAL ||
-            e === Bt.NORMAL_OCT16
+            e === Rt.NORMAL_SPHEREMAPPED ||
+            e === Rt.NORMAL_FLOATS ||
+            e === Rt.NORMAL ||
+            e === Rt.NORMAL_OCT16
           )
             return !0;
         }
@@ -3043,7 +3041,7 @@
         for (const i of t) {
           const { name: t, numElements: r, min: o, max: s, bufferView: a } = i,
             l = Ut[i.type],
-            u = new Rt(n[t] ? n[t] : t, l, r);
+            u = new Bt(n[t] ? n[t] : t, l, r);
           a && (u.uri = a.uri),
             (u.range = 1 === r && o && s ? [o[0], s[0]] : [o, s]),
             'gps-time' === t &&
@@ -3488,9 +3486,10 @@
             const t = o;
             f = (2 * s) / (t.top - t.bottom);
           }
-          if (h * f < n.minNodePixelSize) continue;
-          const p = Number.MAX_VALUE;
-          e.push(new Xt(t.pointCloudIndex, p, u, i));
+          const p = h * f;
+          if (p < n.minNodePixelSize) continue;
+          const g = c < h ? Number.MAX_VALUE : 1 + p + 1 / c;
+          e.push(new Xt(t.pointCloudIndex, g, u, i));
         }
       }
       updateBoundingBoxVisibility(t, e) {
