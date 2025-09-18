@@ -1645,7 +1645,7 @@
               renderIds: { value: !1 },
               debugMode: { value: !1 },
               renderOnlyHarmonics: { value: !1 },
-              renderLoD: { value: !0 },
+              renderLoD: { value: !1 },
               adaptiveSize: { value: !0 },
               harmonicsScale: { value: 4 },
               octreeSize: { value: 0 },
@@ -2554,8 +2554,11 @@
     class Ct {
       constructor(t, e) {
         (this.metadata = t), (this.context = e), (this.compressed = !1), (this._metadata = t);
-        const n = 2 == t.attributes.filter((t) => 'scale' == t.name)[0].numElements;
-        this.workerType = n ? Tt.DECODER_WORKER_SPLATS_COMPRESSED : Tt.DECODER_WORKER_SPLATS;
+        const n = t.attributes.filter((t) => 'scale' == t.name)[0];
+        (this.compressed = 2 == n.numElements),
+          (this.workerType = this.compressed
+            ? Tt.DECODER_WORKER_SPLATS_COMPRESSED
+            : Tt.DECODER_WORKER_SPLATS);
       }
       async decode(t, e) {
         const { byteOffset: n, byteSize: i } = t;
