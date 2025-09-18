@@ -18,14 +18,11 @@ export class GltfSplatDecoder implements GeometryDecoder {
     private context: LoadingContext,
   ) {
     this._metadata = metadata;
+    const attributes = metadata.attributes;
+    const scale_attribute = attributes.filter((el) => el.name == 'scale')[0];
+    const compressed = scale_attribute.numElements == 2;
 
-    /*
-    The non compressed data works with scales of three dimensions, where the Z value is always zero,
-    the compressed data avoids this third value and only works with the XY elements, which is
-    used to know if the metadata points to compressed values (the scale only has two elements).
-    */
-
-    this.workerType = true
+    this.workerType = compressed
       ? WorkerType.DECODER_WORKER_SPLATS_COMPRESSED
       : WorkerType.DECODER_WORKER_SPLATS;
   }
