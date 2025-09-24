@@ -24,7 +24,7 @@ function createWorker(type: WorkerType): Worker {
       return new DecoderWorker_GLTF();
     }
     case WorkerType.DECODER_WORKER_SPLATS_COMPRESSED: {
-      const DecoderWorker_GLTF = require('./gltf-splats-compressed-decoder.worker.js').default;
+      const DecoderWorker_GLTF = require('./gltf-splats-interleaved-decoder.worker.js').default;
       return new DecoderWorker_GLTF();
     }
     default:

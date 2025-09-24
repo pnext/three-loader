@@ -3,7 +3,7 @@ import { GetUrlFn, XhrRequest } from '../loading/types';
 import { Decoder } from './decoder';
 import { GeometryDecoder } from './geometry-decoder';
 import { GltfDecoder } from './gltf-decoder';
-import { GltfSplatDecoder } from './gltf-splats-decoder';
+import { GltfSplatDecoderInterleaved } from './gltf-splats-decoder-interleaved';
 import { OctreeGeometry } from './octree-geometry';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { PointAttribute, PointAttributes, PointAttributeTypes } from './point-attributes';
@@ -29,8 +29,8 @@ export class NodeLoader {
   ) {
     if (this.metadata.encoding !== 'GLTF') {
       this.decoder = new Decoder(metadata, loadingContext);
-    } else if (metadata.attributes.some((attr) => attr.name === 'sh_band_0')) {
-      this.decoder = new GltfSplatDecoder(metadata, loadingContext);
+    } else if (metadata.attributes.some((attr) => attr.name === 'core')) {
+      this.decoder = new GltfSplatDecoderInterleaved(metadata, loadingContext);
     } else {
       this.decoder = new GltfDecoder(metadata, loadingContext);
     }
