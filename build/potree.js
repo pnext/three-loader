@@ -23,19 +23,6 @@
             );
           }
         },
-        146: (t, e, n) => {
-          n.d(e, { A: () => o });
-          var i = n(512),
-            r = n.n(i);
-          function o() {
-            return r()(
-              '(()=>{"use strict";const r={DATA_TYPE_DOUBLE:{ordinal:0,name:"double",size:8},DATA_TYPE_FLOAT:{ordinal:1,name:"float",size:4},DATA_TYPE_INT8:{ordinal:2,name:"int8",size:1},DATA_TYPE_UINT8:{ordinal:3,name:"uint8",size:1},DATA_TYPE_INT16:{ordinal:4,name:"int16",size:2},DATA_TYPE_UINT16:{ordinal:5,name:"uint16",size:2},DATA_TYPE_INT32:{ordinal:6,name:"int32",size:4},DATA_TYPE_UINT32:{ordinal:7,name:"uint32",size:4},DATA_TYPE_INT64:{ordinal:8,name:"int64",size:8},DATA_TYPE_UINT64:{ordinal:9,name:"uint64",size:8}};let t=0;for(const e in r)r[t]=r[e],t++;class e{constructor(r,t,e,n=[1/0,-1/0],a=void 0){this.name=r,this.type=t,this.numElements=e,this.range=n,this.uri=a,this.byteSize=this.numElements*this.type.size,this.description=""}}function n(r){throw new TypeError(\'"\'+r+\'" is read-only\')}function a(r,t){var e="undefined"!=typeof Symbol&&r[Symbol.iterator]||r["@@iterator"];if(!e){if(Array.isArray(r)||(e=function(r,t){if(r){if("string"==typeof r)return i(r,t);var e={}.toString.call(r).slice(8,-1);return"Object"===e&&r.constructor&&(e=r.constructor.name),"Map"===e||"Set"===e?Array.from(r):"Arguments"===e||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)?i(r,t):void 0}}(r))||t&&r&&"number"==typeof r.length){e&&(r=e);var n=0,a=function(){};return{s:a,n:function(){return n>=r.length?{done:!0}:{done:!1,value:r[n++]}},e:function(r){throw r},f:a}}throw new TypeError("Invalid attempt to iterate non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}var o,f=!0,A=!1;return{s:function(){e=e.call(r)},n:function(){var r=e.next();return f=r.done,r},e:function(r){A=!0,o=r},f:function(){try{f||null==e.return||e.return()}finally{if(A)throw o}}}}function i(r,t){(null==t||t>r.length)&&(t=r.length);for(var e=0,n=Array(t);e<t;e++)n[e]=r[e];return n}new e("POSITION_CARTESIAN",r.DATA_TYPE_FLOAT,3),new e("COLOR_PACKED",r.DATA_TYPE_INT8,4),new e("COLOR_PACKED",r.DATA_TYPE_INT8,4),new e("COLOR_PACKED",r.DATA_TYPE_INT8,3),new e("NORMAL_FLOATS",r.DATA_TYPE_FLOAT,3),new e("INTENSITY",r.DATA_TYPE_UINT16,1),new e("CLASSIFICATION",r.DATA_TYPE_UINT8,1),new e("NORMAL_SPHEREMAPPED",r.DATA_TYPE_UINT8,2),new e("NORMAL_OCT16",r.DATA_TYPE_UINT8,2),new e("NORMAL",r.DATA_TYPE_FLOAT,3),new e("RETURN_NUMBER",r.DATA_TYPE_UINT8,1),new e("NUMBER_OF_RETURNS",r.DATA_TYPE_UINT8,1),new e("SOURCE_ID",r.DATA_TYPE_UINT16,1),new e("INDICES",r.DATA_TYPE_UINT32,1),new e("SPACING",r.DATA_TYPE_FLOAT,1),new e("GPS_TIME",r.DATA_TYPE_DOUBLE,1),Int8Array,Int16Array,Int32Array,Float64Array,Uint8Array,Uint16Array,Uint32Array,Float64Array,Float32Array,Float64Array,onmessage=function(t){var i,o,f,A=t.data,_=A.buffer,u=A.pointAttributes,s=(A.scale,A.name,A.min),l=(A.max,A.size),T=A.offset,I=A.numPoints,y=A.harmonicsEnabled,b=new DataView(_),h={},w=32,N=new Uint32Array(Math.pow(w,3)),E=function(r,t,e){var n=w*r/l.x,a=w*t/l.y,i=w*e/l.z,o=Math.min(parseInt(n),31),f=Math.min(parseInt(a),31),A=Math.min(parseInt(i),31);return o+f*w+A*w*w},m=function(r,t,e){return Math.max(Math.min(r,e),t)},c=0,d=[Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY],v=[Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY],O=new ArrayBuffer(4*I*4),p=new Float32Array(O),P=new ArrayBuffer(4*I*4),M=new Float32Array(P),D=new ArrayBuffer(4*I*3),U=new Float32Array(D),F=new ArrayBuffer(4*I*4),S=new Float32Array(F),Y=new ArrayBuffer(4*I*4),C=new Float32Array(Y),x=new ArrayBuffer(45*I*4),R=new Float32Array(x),z=(i=new Float32Array(1),o=new Int32Array(i.buffer),function(r){return i[0]=r,o[0]}),g=["sh_band_1_triplet_0","sh_band_1_triplet_1","sh_band_1_triplet_2","sh_band_2_triplet_0","sh_band_2_triplet_1","sh_band_2_triplet_2","sh_band_2_triplet_3","sh_band_2_triplet_4","sh_band_3_triplet_0","sh_band_3_triplet_1","sh_band_3_triplet_2","sh_band_3_triplet_3","sh_band_3_triplet_4","sh_band_3_triplet_5","sh_band_3_triplet_6"],B=a(u.attributes);try{for(B.s();!(f=B.n()).done;){var L=f.value;if(["POSITION_CARTESIAN","position"].includes(L.name)){for(var V=T[0]-s.x,H=T[1]-s.y,G=T[2]-s.z,k=0;k<I;k++){var K=12*k,j=b.getFloat32(K+0,!0),q=b.getFloat32(K+4,!0),Q=b.getFloat32(K+8,!0),$=j+V,J=q+H,W=Q+G;d[0]=Math.min(d[0],$),d[1]=Math.min(d[1],J),d[2]=Math.min(d[2],W),v[0]=Math.max(v[0],$),v[1]=Math.max(v[1],J),v[2]=Math.max(v[2],W),0===N[E($,J,W)]++&&c++,p[4*k+0]=$,p[4*k+1]=J,p[4*k+2]=W,M[4*k+0]=j,M[4*k+1]=q,M[4*k+2]=Q}h.raw_position={buffer:P,attribute:"raw_position"},h.position={buffer:O,attribute:"position"}}else if(["sh_band_0"].includes(L.name))for(var X=.28209479177387814,Z=12*I,rr=15*I,tr=0;tr<I;tr++){var er=4*tr+0,nr=4*tr+1,ar=4*tr+2,ir=4*tr+3,or=3*tr+Z,fr=1*tr+rr,Ar=(b.getUint8(or+0,!0)/255-.5)/.15,_r=(b.getUint8(or+1,!0)/255-.5)/.15,ur=(b.getUint8(or+2,!0)/255-.5)/.15;C[er]=255*(.5+X*Ar),C[nr]=255*(.5+X*_r),C[ar]=255*(.5+X*ur),C[er]=m(Math.floor(C[er]),0,255),C[nr]=m(Math.floor(C[nr]),0,255),C[ar]=m(Math.floor(C[ar]),0,255);var sr=b.getUint8(fr,!0)/255;sr=1/(1+Math.exp(-sr))*255,sr=m(Math.floor(sr),0,255),C[ir]=sr}else if(["scale"].includes(L.name)){for(var lr=16*I,Tr=0;Tr<I;Tr++){var Ir=8*Tr+lr,yr=b.getFloat32(Ir+0,!0),br=b.getFloat32(Ir+4,!0);U[3*Tr+0]=Math.exp(yr),U[3*Tr+1]=Math.exp(br),U[3*Tr+2]=0}h.scale={buffer:D,attribute:"scale"}}else if(["rotation"].includes(L.name)){for(var hr=24*I,wr=function(){var r=4*Nr+hr,t=b.getUint32(r,!0),e=function(r){return(1-2*(t>>r+9&1))*(t>>r&511)/(511*Math.SQRT2)},n=t>>30&3,a=e(20),i=e(10),o=e(0),f=Math.sqrt(1-a*a-i*i-o*o),A=0,_=0,u=0,s=1;switch(n){case 0:A=f,_=a,u=i,s=o;break;case 1:A=a,_=f,u=i,s=o;break;case 2:A=a,_=i,u=f,s=o;break;case 3:A=a,_=i,u=o,s=f}S[4*Nr+0]=A,S[4*Nr+1]=_,S[4*Nr+2]=u,S[4*Nr+3]=s},Nr=0;Nr<I;Nr++)wr();h.orientation={buffer:F,attribute:"orientation"}}else if(L.name.indexOf("triplet")>-1&&y)for(var Er=g.indexOf(L.name),mr=I*(28+3*Er),cr=0;cr<I;cr++){var dr=3*cr+mr,vr=(b.getUint8(dr+0,!0)-128)/128,Or=(b.getUint8(dr+1,!0)-128)/128,pr=(b.getUint8(dr+2,!0)-128)/128;R[45*cr+3*Er+0]=vr,R[45*cr+3*Er+1]=Or,R[45*cr+3*Er+2]=pr}}}catch(r){B.e(r)}finally{B.f()}for(var Pr=function(r,t,e){var n=function(r,t){var e=new Array(16),n=r.x,a=r.y,i=r.z,o=r.w,f=n+n,A=a+a,_=i+i,u=n*f,s=n*A,l=n*_,T=a*A,I=a*_,y=i*_,b=o*f,h=o*A,w=o*_,N=t.x,E=t.y;e[0]=(1-(T+y))*N,e[1]=(s+w)*N,e[2]=(l-h)*N,e[3]=(s-w)*E,e[4]=(1-(u+y))*E,e[5]=(I+b)*E,e[6]=0,e[7]=0,e[8]=0;var m,c,d,v,O,p,P,M,D,U,F,S,Y,C,x,R,z,g,B,L,V,H,G=e.map(function(r){return r}),k=G;return m=k[1],k[1]=k[3],k[3]=m,m=k[2],k[2]=k[6],k[6]=m,m=k[5],k[5]=k[7],k[7]=m,c=e,d=G,v=new Array(9),O=c[0],p=c[3],P=c[6],M=c[1],D=c[4],U=c[7],F=c[2],S=c[5],Y=c[8],C=d[0],x=d[3],R=d[6],z=d[1],g=d[4],B=d[7],L=d[2],V=d[5],H=d[8],v[0]=O*C+p*z+P*L,v[3]=O*x+p*g+P*V,v[6]=O*R+p*B+P*H,v[1]=M*C+D*z+U*L,v[4]=M*x+D*g+U*V,v[7]=M*R+D*B+U*H,v[2]=F*C+S*z+Y*L,v[5]=F*x+S*g+Y*V,v[8]=F*R+S*B+Y*H,v}(t,r);Dr[4*e+0]=n[0],Dr[4*e+1]=n[3],Dr[4*e+2]=n[6],Dr[4*e+3]=n[4],Fr[2*e+0]=n[7],Fr[2*e+1]=n[8]},Mr=new ArrayBuffer(4*I*4),Dr=new Float32Array(Mr),Ur=new ArrayBuffer(4*I*2),Fr=new Float32Array(Ur),Sr=0;Sr<I;Sr++){var Yr={x:0,y:0,z:0,w:0},Cr={x:0,y:0,z:0};Yr.w=S[4*Sr+0],Yr.x=S[4*Sr+1],Yr.y=S[4*Sr+2],Yr.z=S[4*Sr+3],Cr.x=U[3*Sr+0],Cr.y=U[3*Sr+1],Cr.z=U[3*Sr+2],Pr(Cr,Yr,Sr)}h.COVARIANCE0={buffer:Mr,attribute:e.COVARIANCE0},h.COVARIANCE1={buffer:Ur,attribute:e.COVARIANCE1};for(var xr=function(r){return r[0]+(r[1]<<8)+(r[2]<<16)+(r[3]<<24)},Rr=new ArrayBuffer(4*I*4),zr=new Int32Array(Rr),gr=0;gr<I;gr++){var Br={x:0,y:0,z:0,w:0},Lr={x:0,y:0,z:0};Br.x=C[4*gr+0],Br.y=C[4*gr+1],Br.z=C[4*gr+2],Br.w=C[4*gr+3],Lr.x=M[4*gr+0],Lr.y=M[4*gr+1],Lr.z=M[4*gr+2];var Vr=xr([Br.x,Br.y,Br.z,Br.w]);Lr.x=z(Lr.x),Lr.y=z(Lr.y),Lr.z=z(Lr.z),zr[4*gr+0]=Vr,zr[4*gr+1]=Lr.x,zr[4*gr+2]=Lr.y,zr[4*gr+3]=Lr.z}h.POS_COLOR={buffer:Rr,attribute:e.POS_COLOR};var Hr=new ArrayBuffer(4*I*3),Gr=new Uint32Array(Hr),kr=new ArrayBuffer(4*I*5),Kr=new Uint32Array(kr),jr=new ArrayBuffer(4*I*7),qr=new Uint32Array(jr);R=R.map(function(r,t){r=.5*(r=Math.min(Math.max(r,-1),1))+.5;var e=t%3==1?1023:2047;return Math.min(Math.max(Math.floor(r*e),0),e)});for(var Qr=0;Qr<I;Qr++)for(var $r=0;$r<15;$r++){var Jr=R[45*Qr+3*$r+0],Wr=R[45*Qr+3*$r+1],Xr=R[45*Qr+3*$r+2];$r<3&&(Gr[3*Qr+$r-0]=Jr<<21|Wr<<11|Xr),$r>=3&&$r<8&&(Kr[5*Qr+$r-3]=Jr<<21|Wr<<11|Xr),$r>=8&&(qr[7*Qr+$r-8]=Jr<<21|Wr<<11|Xr)}h.HARMONICS1={buffer:Hr,attribute:"HARMONICS1"},h.HARMONICS2={buffer:kr,attribute:"HARMONICS2"},h.HARMONICS3={buffer:jr,attribute:"HARMONICS3"};for(var Zr=parseInt(I/c),rt=new ArrayBuffer(4*I),tt=new Uint32Array(rt),et=0;et<I;et++)tt[et]=et;h.INDICES={buffer:rt,attribute:e.INDICES};var nt,at=a(u.vectors);try{for(at.s();!(nt=at.n()).done;){var it,ot=nt.value,ft=ot.name,At=ot.attributes,_t=At.length,ut=new ArrayBuffer(_t*I*4),st=new Float32Array(ut),lt=a(At);try{for(lt.s();!(it=lt.n()).done;){for(var Tt=h[it.value],It=Tt.offset,yt=Tt.scale,bt=new DataView(Tt.buffer),ht=bt.getFloat32.bind(bt),wt=0;wt<I;wt++){var Nt=ht(4*wt,!0);st[wt*_t+0]=Nt/yt+It}n("iElement")}}catch(r){lt.e(r)}finally{lt.f()}var Et=new e(ft,r.DATA_TYPE_FLOAT,3);h[ft]={buffer:ut,attribute:Et}}}catch(r){at.e(r)}finally{at.f()}var mt={buffer:_,attributeBuffers:h,density:Zr,tightBoundingBox:{min:d,max:v}},ct=[];for(var dt in mt.attributeBuffers)ct.push(mt.attributeBuffers[dt].buffer);ct.push(_),postMessage(mt,ct)}})();\n',
-              'Worker',
-              void 0,
-              void 0,
-            );
-          }
-        },
         168: (t, e, n) => {
           n.d(e, { A: () => i });
           const i =
@@ -58,6 +45,19 @@
           n.d(e, { A: () => i });
           const i =
             'precision highp float;\nprecision highp int;\n\n#define max_clip_boxes 30\n\nin vec3 position;\nin vec3 color;\n\n#ifdef color_rgba\n\tin vec4 rgba;\n#endif\n\nin vec3 normal;\nin float intensity;\nin float classification;\nin float returnNumber;\nin float numberOfReturns;\nin float pointSourceID;\nin vec4 indices;\nin vec2 uv;\n\nuniform mat4 modelMatrix;\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\n\nuniform float pcIndex;\n\nuniform float screenWidth;\nuniform float screenHeight;\nuniform float fov;\nuniform float spacing;\n\n#if defined use_clip_box\n\tuniform mat4 clipBoxes[max_clip_boxes];\n#endif\n\nuniform float heightMin;\nuniform float heightMax;\nuniform float size; // pixel size factor\nuniform float minSize; // minimum pixel size\nuniform float maxSize; // maximum pixel size\nuniform float octreeSize;\nuniform vec3 bbSize;\nuniform vec3 uColor;\nuniform float opacity;\nuniform float clipBoxCount;\nuniform float level;\nuniform float vnStart;\nuniform bool isLeafNode;\n\nuniform float filterByNormalThreshold;\nuniform vec2 intensityRange;\nuniform float opacityAttenuation;\nuniform float intensityGamma;\nuniform float intensityContrast;\nuniform float intensityBrightness;\nuniform float rgbGamma;\nuniform float rgbContrast;\nuniform float rgbBrightness;\nuniform float transition;\nuniform float wRGB;\nuniform float wIntensity;\nuniform float wElevation;\nuniform float wClassification;\nuniform float wReturnNumber;\nuniform float wSourceID;\n\nuniform bool renderDepth;\n\nuniform sampler2D visibleNodes;\nuniform sampler2D gradient;\nuniform sampler2D classificationLUT;\nuniform sampler2D depthMap;\n\n#ifdef use_texture_blending\n\tuniform sampler2D backgroundMap;\n#endif\n\n#ifdef use_point_cloud_mixing\n\tuniform int pointCloudMixingMode;\n\tuniform float pointCloudID;\n\n\tuniform float pointCloudMixAngle;\n\tuniform float stripeDistanceX;\n\tuniform float stripeDistanceY;\n\n\tuniform float stripeDivisorX;\n\tuniform float stripeDivisorY;\n#endif\n\n#ifdef highlight_point\n\tuniform vec3 highlightedPointCoordinate;\n\tuniform bool enablePointHighlighting;\n\tuniform float highlightedPointScale;\n#endif\n\n#ifdef use_filter_by_normal\n\tuniform int normalFilteringMode;\n#endif\n\nout vec3 vColor;\n\n#if !defined(color_type_point_index)\n\tout float vOpacity;\n#endif\n\n#if defined(weighted_splats)\n\tout float vLinearDepth;\n#endif\n\n#if !defined(paraboloid_point_shape) && defined(use_edl)\n\tout float vLogDepth;\n#endif\n\n#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)\n\tout vec3 vViewPosition;\n#endif\n\n#if defined(weighted_splats) || defined(paraboloid_point_shape)\n\tout float vRadius;\n#endif\n\n#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)\n\tout vec3 vNormal;\n#endif\n\n#ifdef highlight_point\n\tout float vHighlight;\n#endif\n\n// ---------------------\n// OCTREE\n// ---------------------\n\n#if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_octree)\n\n/**\n * Rounds the specified number to the closest integer.\n */\nfloat safeRound(float number){\n\treturn floor(number + 0.5);\n}\n\n/**\n * Gets the number of 1-bits up to inclusive index position.\n *\n * number is treated as if it were an integer in the range 0-255\n */\nint numberOfOnes(int number, int index) {\n\tint numOnes = 0;\n\tint tmp = 128;\n\tfor (int i = 7; i >= 0; i--) {\n\n\t\tif (number >= tmp) {\n\t\t\tnumber = number - tmp;\n\n\t\t\tif (i <= index) {\n\t\t\t\tnumOnes++;\n\t\t\t}\n\t\t}\n\n\t\ttmp = tmp / 2;\n\t}\n\n\treturn numOnes;\n}\n\n/**\n * Checks whether the bit at index is 1.0\n *\n * number is treated as if it were an integer in the range 0-255\n */\nbool isBitSet(int number, int index){\n\n\t// weird multi else if due to lack of proper array, int and bitwise support in WebGL 1.0\n\tint powi = 1;\n\tif (index == 0) {\n\t\tpowi = 1;\n\t} else if (index == 1) {\n\t\tpowi = 2;\n\t} else if (index == 2) {\n\t\tpowi = 4;\n\t} else if (index == 3) {\n\t\tpowi = 8;\n\t} else if (index == 4) {\n\t\tpowi = 16;\n\t} else if (index == 5) {\n\t\tpowi = 32;\n\t} else if (index == 6) {\n\t\tpowi = 64;\n\t} else if (index == 7) {\n\t\tpowi = 128;\n\t}\n\n\tint ndp = number / powi;\n\n\treturn mod(float(ndp), 2.0) != 0.0;\n}\n\n/**\n * Gets the the LOD at the point position.\n */\nfloat getLOD() {\n\tvec3 offset = vec3(0.0, 0.0, 0.0);\n\tint iOffset = int(vnStart);\n\tfloat depth = level;\n\n\tfor (float i = 0.0; i <= 30.0; i++) {\n\t\tfloat nodeSizeAtLevel = octreeSize  / pow(2.0, i + level + 0.0);\n\n\t\tvec3 index3d = (position-offset) / nodeSizeAtLevel;\n\t\tindex3d = floor(index3d + 0.5);\n\t\tint index = int(safeRound(4.0 * index3d.x + 2.0 * index3d.y + index3d.z));\n\n\t\tvec4 value = texture(visibleNodes, vec2(float(iOffset) / 2048.0, 0.0));\n\t\tint mask = int(safeRound(value.r * 255.0));\n\n\t\tif (isBitSet(mask, index)) {\n\t\t\t// there are more visible child nodes at this position\n\t\t\tint advanceG = int(safeRound(value.g * 255.0)) * 256;\n\t\t\tint advanceB = int(safeRound(value.b * 255.0));\n\t\t\tint advanceChild = numberOfOnes(mask, index - 1);\n\t\t\tint advance = advanceG + advanceB + advanceChild;\n\n\t\t\tiOffset = iOffset + advance;\n\n\t\t\tdepth++;\n\t\t} else {\n\t\t\treturn value.a * 255.0; // no more visible child nodes at this position\n\t\t}\n\n\t\toffset = offset + (vec3(1.0, 1.0, 1.0) * nodeSizeAtLevel * 0.5) * index3d;\n\t}\n\n\treturn depth;\n}\n\nfloat getPointSizeAttenuation() {\n\treturn 0.5 * pow(2.0, getLOD());\n}\n\n#endif\n\n// ---------------------\n// KD-TREE\n// ---------------------\n\n#if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_kdtree)\n\nfloat getLOD() {\n\tvec3 offset = vec3(0.0, 0.0, 0.0);\n\tfloat intOffset = 0.0;\n\tfloat depth = 0.0;\n\n\tvec3 size = bbSize;\n\tvec3 pos = position;\n\n\tfor (float i = 0.0; i <= 1000.0; i++) {\n\n\t\tvec4 value = texture(visibleNodes, vec2(intOffset / 2048.0, 0.0));\n\n\t\tint children = int(value.r * 255.0);\n\t\tfloat next = value.g * 255.0;\n\t\tint split = int(value.b * 255.0);\n\n\t\tif (next == 0.0) {\n\t\t \treturn depth;\n\t\t}\n\n\t\tvec3 splitv = vec3(0.0, 0.0, 0.0);\n\t\tif (split == 1) {\n\t\t\tsplitv.x = 1.0;\n\t\t} else if (split == 2) {\n\t\t \tsplitv.y = 1.0;\n\t\t} else if (split == 4) {\n\t\t \tsplitv.z = 1.0;\n\t\t}\n\n\t\tintOffset = intOffset + next;\n\n\t\tfloat factor = length(pos * splitv / size);\n\t\tif (factor < 0.5) {\n\t\t \t// left\n\t\t\tif (children == 0 || children == 2) {\n\t\t\t\treturn depth;\n\t\t\t}\n\t\t} else {\n\t\t\t// right\n\t\t\tpos = pos - size * splitv * 0.5;\n\t\t\tif (children == 0 || children == 1) {\n\t\t\t\treturn depth;\n\t\t\t}\n\t\t\tif (children == 3) {\n\t\t\t\tintOffset = intOffset + 1.0;\n\t\t\t}\n\t\t}\n\t\tsize = size * ((1.0 - (splitv + 1.0) / 2.0) + 0.5);\n\n\t\tdepth++;\n\t}\n\n\n\treturn depth;\n}\n\nfloat getPointSizeAttenuation() {\n\treturn 0.5 * pow(1.3, getLOD());\n}\n\n#endif\n\n// formula adapted from: http://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/\nfloat getContrastFactor(float contrast) {\n\treturn (1.0158730158730156 * (contrast + 1.0)) / (1.0158730158730156 - contrast);\n}\n\nvec3 getRGB() {\n\t\n\t#ifdef color_rgba\n\t\tvec3 rgb = rgba.rgb;\n\t#else\t\n\t\tvec3 rgb = color;\n\t#endif\t\t\n\n\t#if defined(use_rgb_gamma_contrast_brightness)\n\t\trgb = pow(rgb, vec3(rgbGamma));\n\t\trgb = rgb + rgbBrightness;\n\t\trgb = (rgb - 0.5) * getContrastFactor(rgbContrast) + 0.5;\n\t\trgb = clamp(rgb, 0.0, 1.0);\n\t\treturn rgb;\n\t#else\n\t\treturn rgb;\n\t#endif\n}\n\nfloat getIntensity() {\n\tfloat w = (intensity - intensityRange.x) / (intensityRange.y - intensityRange.x);\n\tw = pow(w, intensityGamma);\n\tw = w + intensityBrightness;\n\tw = (w - 0.5) * getContrastFactor(intensityContrast) + 0.5;\n\tw = clamp(w, 0.0, 1.0);\n\n\treturn w;\n}\n\nvec3 getElevation() {\n\tvec4 world = modelMatrix * vec4( position, 1.0 );\n\tfloat w = (world.z - heightMin) / (heightMax-heightMin);\n\tvec3 cElevation = texture(gradient, vec2(w,1.0-w)).rgb;\n\n\treturn cElevation;\n}\n\nvec4 getClassification() {\n\tvec2 uv = vec2(classification / 255.0, 0.5);\n\tvec4 classColor = texture(classificationLUT, uv);\n\n\treturn classColor;\n}\n\nvec3 getReturnNumber() {\n\tif (numberOfReturns == 1.0) {\n\t\treturn vec3(1.0, 1.0, 0.0);\n\t} else {\n\t\tif (returnNumber == 1.0) {\n\t\t\treturn vec3(1.0, 0.0, 0.0);\n\t\t} else if (returnNumber == numberOfReturns) {\n\t\t\treturn vec3(0.0, 0.0, 1.0);\n\t\t} else {\n\t\t\treturn vec3(0.0, 1.0, 0.0);\n\t\t}\n\t}\n}\n\nvec3 getSourceID() {\n\tfloat w = mod(pointSourceID, 10.0) / 10.0;\n\treturn texture(gradient, vec2(w, 1.0 - w)).rgb;\n}\n\nvec3 getCompositeColor() {\n\tvec3 c;\n\tfloat w;\n\n\tc += wRGB * getRGB();\n\tw += wRGB;\n\n\tc += wIntensity * getIntensity() * vec3(1.0, 1.0, 1.0);\n\tw += wIntensity;\n\n\tc += wElevation * getElevation();\n\tw += wElevation;\n\n\tc += wReturnNumber * getReturnNumber();\n\tw += wReturnNumber;\n\n\tc += wSourceID * getSourceID();\n\tw += wSourceID;\n\n\tvec4 cl = wClassification * getClassification();\n\tc += cl.a * cl.rgb;\n\tw += wClassification * cl.a;\n\n\tc = c / w;\n\n\tif (w == 0.0) {\n\t\tgl_Position = vec4(100.0, 100.0, 100.0, 0.0);\n\t}\n\n\treturn c;\n}\n\nvoid main() {\n\tvec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\n\n\tgl_Position = projectionMatrix * mvPosition;\n\n\t#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0) || defined(paraboloid_point_shape)\n\t\tvViewPosition = mvPosition.xyz;\n\t#endif\n\n\t#if defined weighted_splats\n\t\tvLinearDepth = gl_Position.w;\n\t#endif\n\n\t#if defined(color_type_phong) && (MAX_POINT_LIGHTS > 0 || MAX_DIR_LIGHTS > 0)\n\t\tvNormal = normalize(normalMatrix * normal);\n\t#endif\n\n\t#if !defined(paraboloid_point_shape) && defined(use_edl)\n\t\tvLogDepth = log2(-mvPosition.z);\n\t#endif\n\n\t// ---------------------\n\t// POINT SIZE\n\t// ---------------------\n\n\tfloat pointSize = 1.0;\n\tfloat slope = tan(fov / 2.0);\n\tfloat projFactor =  -0.5 * screenHeight / (slope * mvPosition.z);\n\n\t#if defined fixed_point_size\n\t\tpointSize = size;\n\t#elif defined attenuated_point_size\n\t\tpointSize = size * spacing * projFactor;\n\t#elif defined adaptive_point_size\n\t\tfloat worldSpaceSize = 2.0 * size * spacing / getPointSizeAttenuation();\n\t\tpointSize = worldSpaceSize * projFactor;\n\t#endif\n\n\tpointSize = max(minSize, pointSize);\n\tpointSize = min(maxSize, pointSize);\n\n\t#if defined(weighted_splats) || defined(paraboloid_point_shape)\n\t\tvRadius = pointSize / projFactor;\n\t#endif\n\n\tgl_PointSize = pointSize;\n\n\t// ---------------------\n\t// HIGHLIGHTING\n\t// ---------------------\n\n\t#ifdef highlight_point\n\t\tvec4 mPosition = modelMatrix * vec4(position, 1.0);\n\t\tif (enablePointHighlighting && abs(mPosition.x - highlightedPointCoordinate.x) < 0.0001 &&\n\t\t\tabs(mPosition.y - highlightedPointCoordinate.y) < 0.0001 &&\n\t\t\tabs(mPosition.z - highlightedPointCoordinate.z) < 0.0001) {\n\t\t\tvHighlight = 1.0;\n\t\t\tgl_PointSize = pointSize * highlightedPointScale;\n\t\t} else {\n\t\t\tvHighlight = 0.0;\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// OPACITY\n\t// ---------------------\n\n\t#ifndef color_type_point_index\n\t\t#ifdef attenuated_opacity\n\t\t\tvOpacity = opacity * exp(-length(-mvPosition.xyz) / opacityAttenuation);\n\t\t#else\n\t\t\tvOpacity = opacity;\n\t\t#endif\n\t#endif\n\n\t// ---------------------\n\t// FILTERING\n\t// ---------------------\n\n\t#ifdef use_filter_by_normal\n\t\tbool discardPoint = false;\n\t\t// Absolute normal filtering\n\t\tif (normalFilteringMode == 1) {\n\t\t\tdiscardPoint = (abs((modelViewMatrix * vec4(normal, 0.0)).z) > filterByNormalThreshold);\n\t\t}\n\t\t// less than equal to\n\t\telse if (normalFilteringMode == 2) {\n\t\t\tdiscardPoint = (modelViewMatrix * vec4(normal, 0.0)).z <= filterByNormalThreshold;\n\t\t\t}\n\t\t// greater than\n\t\telse if(normalFilteringMode == 3) {\n\t\t\tdiscardPoint = (modelViewMatrix * vec4(normal, 0.0)).z > filterByNormalThreshold;\n\t\t\t}\n\n\t\tif (discardPoint)\n\t\t{\n\t\t\tgl_Position = vec4(0.0, 0.0, 2.0, 1.0);\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// POINT COLOR\n\t// ---------------------\n\n\t#ifdef color_type_rgb\n\t\tvColor = getRGB();\n\t#elif defined color_type_height\n\t\tvColor = getElevation();\n\t#elif defined color_type_rgb_height\n\t\tvec3 cHeight = getElevation();\n\t\tvColor = (1.0 - transition) * getRGB() + transition * cHeight;\n\t#elif defined color_type_depth\n\t\tfloat linearDepth = -mvPosition.z ;\n\t\tfloat expDepth = (gl_Position.z / gl_Position.w) * 0.5 + 0.5;\n\t\tvColor = vec3(linearDepth, expDepth, 0.0);\n\t#elif defined color_type_intensity\n\t\tfloat w = getIntensity();\n\t\tvColor = vec3(w, w, w);\n\t#elif defined color_type_intensity_gradient\n\t\tfloat w = getIntensity();\n\t\tvColor = texture(gradient, vec2(w, 1.0 - w)).rgb;\n\t#elif defined color_type_color\n\t\tvColor = uColor;\n\t#elif defined color_type_lod\n\tfloat w = getLOD() / 10.0;\n\tvColor = texture(gradient, vec2(w, 1.0 - w)).rgb;\n\t#elif defined color_type_point_index\n\t\tvColor = indices.rgb;\n\t#elif defined color_type_classification\n\t  vec4 cl = getClassification();\n\t\tvColor = cl.rgb;\n\t#elif defined color_type_return_number\n\t\tvColor = getReturnNumber();\n\t#elif defined color_type_source\n\t\tvColor = getSourceID();\n\t#elif defined color_type_normal\n\t\tvColor = (modelMatrix * vec4(normal, 0.0)).xyz;\n\t#elif defined color_type_phong\n\t\tvColor = color;\n\t#elif defined color_type_composite\n\t\tvColor = getCompositeColor();\n\t#endif\n\n\t#if !defined color_type_composite && defined color_type_classification\n\t\tif (cl.a == 0.0) {\n\t\t\tgl_Position = vec4(100.0, 100.0, 100.0, 0.0);\n\t\t\treturn;\n\t\t}\n\t#endif\n\n\t// ---------------------\n\t// CLIPPING\n\t// ---------------------\n\n\t#if defined use_clip_box\n\t\tbool insideAny = false;\n\t\tfor (int i = 0; i < max_clip_boxes; i++) {\n\t\t\tif (i == int(clipBoxCount)) {\n\t\t\t\tbreak;\n\t\t\t}\n\n\t\t\tvec4 clipPosition = clipBoxes[i] * modelMatrix * vec4(position, 1.0);\n\t\t\tbool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;\n\t\t\tinside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;\n\t\t\tinside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;\n\t\t\tinsideAny = insideAny || inside;\n\t\t}\n\n\t\tif (!insideAny) {\n\t\t\t#if defined clip_outside\n\t\t\t\tgl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);\n\t\t\t#elif defined clip_highlight_inside && !defined(color_type_depth)\n\t\t\t\tfloat c = (vColor.r + vColor.g + vColor.b) / 6.0;\n\t\t\t#endif\n\t\t} else {\n\t\t\t#if defined clip_highlight_inside\n\t\t\t\tvColor.r += 0.5;\n\t\t\t#elif defined clip_inside\n\t\t\t\tgl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);\n\t\t\t#endif\n\t\t}\n\t#endif\n\n\n\t// ---------------------\n\t// For Depth purposes\n\t// ---------------------\n\n\tif(renderDepth) {\n\t\tvColor = vec3(1. - gl_Position.z / gl_Position.w);\n\t}\n\n}\n';
+        },
+        290: (t, e, n) => {
+          n.d(e, { A: () => o });
+          var i = n(512),
+            r = n.n(i);
+          function o() {
+            return r()(
+              '(()=>{"use strict";const r={DATA_TYPE_DOUBLE:{ordinal:0,name:"double",size:8},DATA_TYPE_FLOAT:{ordinal:1,name:"float",size:4},DATA_TYPE_INT8:{ordinal:2,name:"int8",size:1},DATA_TYPE_UINT8:{ordinal:3,name:"uint8",size:1},DATA_TYPE_INT16:{ordinal:4,name:"int16",size:2},DATA_TYPE_UINT16:{ordinal:5,name:"uint16",size:2},DATA_TYPE_INT32:{ordinal:6,name:"int32",size:4},DATA_TYPE_UINT32:{ordinal:7,name:"uint32",size:4},DATA_TYPE_INT64:{ordinal:8,name:"int64",size:8},DATA_TYPE_UINT64:{ordinal:9,name:"uint64",size:8}};let t=0;for(const e in r)r[t]=r[e],t++;class e{constructor(r,t,e,n=[1/0,-1/0],a=void 0){this.name=r,this.type=t,this.numElements=e,this.range=n,this.uri=a,this.byteSize=this.numElements*this.type.size,this.description=""}}function n(r){throw new TypeError(\'"\'+r+\'" is read-only\')}function a(r,t){var e="undefined"!=typeof Symbol&&r[Symbol.iterator]||r["@@iterator"];if(!e){if(Array.isArray(r)||(e=function(r,t){if(r){if("string"==typeof r)return i(r,t);var e={}.toString.call(r).slice(8,-1);return"Object"===e&&r.constructor&&(e=r.constructor.name),"Map"===e||"Set"===e?Array.from(r):"Arguments"===e||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)?i(r,t):void 0}}(r))||t&&r&&"number"==typeof r.length){e&&(r=e);var n=0,a=function(){};return{s:a,n:function(){return n>=r.length?{done:!0}:{done:!1,value:r[n++]}},e:function(r){throw r},f:a}}throw new TypeError("Invalid attempt to iterate non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}var o,A=!0,f=!1;return{s:function(){e=e.call(r)},n:function(){var r=e.next();return A=r.done,r},e:function(r){f=!0,o=r},f:function(){try{A||null==e.return||e.return()}finally{if(f)throw o}}}}function i(r,t){(null==t||t>r.length)&&(t=r.length);for(var e=0,n=Array(t);e<t;e++)n[e]=r[e];return n}new e("POSITION_CARTESIAN",r.DATA_TYPE_FLOAT,3),new e("COLOR_PACKED",r.DATA_TYPE_INT8,4),new e("COLOR_PACKED",r.DATA_TYPE_INT8,4),new e("COLOR_PACKED",r.DATA_TYPE_INT8,3),new e("NORMAL_FLOATS",r.DATA_TYPE_FLOAT,3),new e("INTENSITY",r.DATA_TYPE_UINT16,1),new e("CLASSIFICATION",r.DATA_TYPE_UINT8,1),new e("NORMAL_SPHEREMAPPED",r.DATA_TYPE_UINT8,2),new e("NORMAL_OCT16",r.DATA_TYPE_UINT8,2),new e("NORMAL",r.DATA_TYPE_FLOAT,3),new e("RETURN_NUMBER",r.DATA_TYPE_UINT8,1),new e("NUMBER_OF_RETURNS",r.DATA_TYPE_UINT8,1),new e("SOURCE_ID",r.DATA_TYPE_UINT16,1),new e("INDICES",r.DATA_TYPE_UINT32,1),new e("SPACING",r.DATA_TYPE_FLOAT,1),new e("GPS_TIME",r.DATA_TYPE_DOUBLE,1),Int8Array,Int16Array,Int32Array,Float64Array,Uint8Array,Uint16Array,Uint32Array,Float64Array,Float32Array,Float64Array,onmessage=function(t){for(var i,o,A,f=t.data,u=f.buffer,T=f.pointAttributes,I=(f.scale,f.name,f.min),y=(f.max,f.size),s=f.offset,l=f.numPoints,_=f.harmonicsEnabled,w=new DataView(u),N={},E=28,m=32,b=new Uint32Array(Math.pow(m,3)),c=function(r,t,e){var n=m*r/y.x,a=m*t/y.y,i=m*e/y.z,o=Math.min(parseInt(n),31),A=Math.min(parseInt(a),31),f=Math.min(parseInt(i),31);return o+A*m+f*m*m},h=function(r,t,e){return Math.max(Math.min(r,e),t)},v=0,O=[Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY],M=[Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY],P=new ArrayBuffer(4*l*4),D=new Float32Array(P),U=new ArrayBuffer(4*l*4),F=new Float32Array(U),Y=new ArrayBuffer(4*l*3),C=new Float32Array(Y),S=new ArrayBuffer(4*l*4),d=new Float32Array(S),p=new ArrayBuffer(4*l*4),x=new Float32Array(p),R=new ArrayBuffer(45*l*4),z=new Float32Array(R),g=(i=new Float32Array(1),o=new Int32Array(i.buffer),function(r){return i[0]=r,o[0]}),B=s[0]-I.x,L=s[1]-I.y,V=s[2]-I.z,H=.28209479177387814,G=function(r){return(1-2*(A>>r+9&1))*(A>>r&511)/(511*Math.SQRT2)},k=0;k<l;k++){var K=k*E,j=w.getFloat32(K+0,!0),q=w.getFloat32(K+4,!0),Q=w.getFloat32(K+8,!0),$=j+B,J=q+L,W=Q+V;O[0]=Math.min(O[0],$),O[1]=Math.min(O[1],J),O[2]=Math.min(O[2],W),M[0]=Math.max(M[0],$),M[1]=Math.max(M[1],J),M[2]=Math.max(M[2],W),0===b[c($,J,W)]++&&v++,D[4*k+0]=$,D[4*k+1]=J,D[4*k+2]=W,F[4*k+0]=j,F[4*k+1]=q,F[4*k+2]=Q;var X=4*k+0,Z=4*k+1,rr=4*k+2,tr=4*k+3,er=k*E+21,nr=k*E+20,ar=(w.getUint8(er+0,!0)/255-.5)/.15,ir=(w.getUint8(er+1,!0)/255-.5)/.15,or=(w.getUint8(er+2,!0)/255-.5)/.15;x[X]=255*(.5+H*ar),x[Z]=255*(.5+H*ir),x[rr]=255*(.5+H*or),x[X]=h(Math.floor(x[X]),0,255),x[Z]=h(Math.floor(x[Z]),0,255),x[rr]=h(Math.floor(x[rr]),0,255);var Ar=w.getUint8(nr,!0)/255;Ar=1/(1+Math.exp(-Ar))*255,Ar=h(Math.floor(Ar),0,255),x[tr]=Ar;var fr=k*E+12,ur=w.getFloat32(fr+0,!0),Tr=w.getFloat32(fr+4,!0);C[3*k+0]=Math.exp(ur),C[3*k+1]=Math.exp(Tr),C[3*k+2]=0;var Ir=k*E+24,yr=(A=w.getUint32(Ir,!0))>>30&3,sr=G(20),lr=G(10),_r=G(0),wr=Math.sqrt(1-sr*sr-lr*lr-_r*_r),Nr=0,Er=0,mr=0,br=1;switch(yr){case 0:Nr=wr,Er=sr,mr=lr,br=_r;break;case 1:Nr=sr,Er=wr,mr=lr,br=_r;break;case 2:Nr=sr,Er=lr,mr=wr,br=_r;break;case 3:Nr=sr,Er=lr,mr=_r,br=wr}d[4*k+0]=Nr,d[4*k+1]=Er,d[4*k+2]=mr,d[4*k+3]=br}if(N.raw_position={buffer:U,attribute:"raw_position"},N.position={buffer:P,attribute:"position"},N.scale={buffer:Y,attribute:"scale"},N.orientation={buffer:S,attribute:"orientation"},_)for(var cr=0;cr<l;cr++)for(var hr=0;hr<15;hr++){var vr=l*E+45*cr+3*hr,Or=(w.getUint8(vr+0,!0)-128)/128,Mr=(w.getUint8(vr+1,!0)-128)/128,Pr=(w.getUint8(vr+2,!0)-128)/128;z[45*cr+3*hr+0]=Or,z[45*cr+3*hr+1]=Mr,z[45*cr+3*hr+2]=Pr}for(var Dr=function(r,t,e){var n=function(r,t){var e=new Array(16),n=r.x,a=r.y,i=r.z,o=r.w,A=n+n,f=a+a,u=i+i,T=n*A,I=n*f,y=n*u,s=a*f,l=a*u,_=i*u,w=o*A,N=o*f,E=o*u,m=t.x,b=t.y;e[0]=(1-(s+_))*m,e[1]=(I+E)*m,e[2]=(y-N)*m,e[3]=(I-E)*b,e[4]=(1-(T+_))*b,e[5]=(l+w)*b,e[6]=0,e[7]=0,e[8]=0;var c,h,v,O,M,P,D,U,F,Y,C,S,d,p,x,R,z,g,B,L,V,H,G=e.map(function(r){return r}),k=G;return c=k[1],k[1]=k[3],k[3]=c,c=k[2],k[2]=k[6],k[6]=c,c=k[5],k[5]=k[7],k[7]=c,h=e,v=G,O=new Array(9),M=h[0],P=h[3],D=h[6],U=h[1],F=h[4],Y=h[7],C=h[2],S=h[5],d=h[8],p=v[0],x=v[3],R=v[6],z=v[1],g=v[4],B=v[7],L=v[2],V=v[5],H=v[8],O[0]=M*p+P*z+D*L,O[3]=M*x+P*g+D*V,O[6]=M*R+P*B+D*H,O[1]=U*p+F*z+Y*L,O[4]=U*x+F*g+Y*V,O[7]=U*R+F*B+Y*H,O[2]=C*p+S*z+d*L,O[5]=C*x+S*g+d*V,O[8]=C*R+S*B+d*H,O}(t,r);Fr[4*e+0]=n[0],Fr[4*e+1]=n[3],Fr[4*e+2]=n[6],Fr[4*e+3]=n[4],Cr[2*e+0]=n[7],Cr[2*e+1]=n[8]},Ur=new ArrayBuffer(4*l*4),Fr=new Float32Array(Ur),Yr=new ArrayBuffer(4*l*2),Cr=new Float32Array(Yr),Sr=0;Sr<l;Sr++){var dr={x:0,y:0,z:0,w:0},pr={x:0,y:0,z:0};dr.w=d[4*Sr+0],dr.x=d[4*Sr+1],dr.y=d[4*Sr+2],dr.z=d[4*Sr+3],pr.x=C[3*Sr+0],pr.y=C[3*Sr+1],pr.z=C[3*Sr+2],Dr(pr,dr,Sr)}N.COVARIANCE0={buffer:Ur,attribute:e.COVARIANCE0},N.COVARIANCE1={buffer:Yr,attribute:e.COVARIANCE1};for(var xr=function(r){return r[0]+(r[1]<<8)+(r[2]<<16)+(r[3]<<24)},Rr=new ArrayBuffer(4*l*4),zr=new Int32Array(Rr),gr=0;gr<l;gr++){var Br={x:0,y:0,z:0,w:0},Lr={x:0,y:0,z:0};Br.x=x[4*gr+0],Br.y=x[4*gr+1],Br.z=x[4*gr+2],Br.w=x[4*gr+3],Lr.x=F[4*gr+0],Lr.y=F[4*gr+1],Lr.z=F[4*gr+2];var Vr=xr([Br.x,Br.y,Br.z,Br.w]);Lr.x=g(Lr.x),Lr.y=g(Lr.y),Lr.z=g(Lr.z),zr[4*gr+0]=Vr,zr[4*gr+1]=Lr.x,zr[4*gr+2]=Lr.y,zr[4*gr+3]=Lr.z}N.POS_COLOR={buffer:Rr,attribute:e.POS_COLOR};var Hr=new ArrayBuffer(4*l*3),Gr=new Uint32Array(Hr),kr=new ArrayBuffer(4*l*5),Kr=new Uint32Array(kr),jr=new ArrayBuffer(4*l*7),qr=new Uint32Array(jr);z=z.map(function(r,t){r=.5*(r=Math.min(Math.max(r,-1),1))+.5;var e=t%3==1?1023:2047;return Math.min(Math.max(Math.floor(r*e),0),e)});for(var Qr=0;Qr<l;Qr++)for(var $r=0;$r<15;$r++){var Jr=z[45*Qr+3*$r+0],Wr=z[45*Qr+3*$r+1],Xr=z[45*Qr+3*$r+2];$r<3&&(Gr[3*Qr+$r-0]=Jr<<21|Wr<<11|Xr),$r>=3&&$r<8&&(Kr[5*Qr+$r-3]=Jr<<21|Wr<<11|Xr),$r>=8&&(qr[7*Qr+$r-8]=Jr<<21|Wr<<11|Xr)}N.HARMONICS1={buffer:Hr,attribute:"HARMONICS1"},N.HARMONICS2={buffer:kr,attribute:"HARMONICS2"},N.HARMONICS3={buffer:jr,attribute:"HARMONICS3"};for(var Zr=parseInt(l/v),rt=new ArrayBuffer(4*l),tt=new Uint32Array(rt),et=0;et<l;et++)tt[et]=et;N.INDICES={buffer:rt,attribute:e.INDICES};var nt,at=a(T.vectors);try{for(at.s();!(nt=at.n()).done;){var it,ot=nt.value,At=ot.name,ft=ot.attributes,ut=ft.length,Tt=new ArrayBuffer(ut*l*4),It=new Float32Array(Tt),yt=a(ft);try{for(yt.s();!(it=yt.n()).done;){for(var st=N[it.value],lt=st.offset,_t=st.scale,wt=new DataView(st.buffer),Nt=wt.getFloat32.bind(wt),Et=0;Et<l;Et++){var mt=Nt(4*Et,!0);It[Et*ut+0]=mt/_t+lt}n("iElement")}}catch(r){yt.e(r)}finally{yt.f()}var bt=new e(At,r.DATA_TYPE_FLOAT,3);N[At]={buffer:Tt,attribute:bt}}}catch(r){at.e(r)}finally{at.f()}var ct={buffer:u,attributeBuffers:N,density:Zr,tightBoundingBox:{min:O,max:M}},ht=[];for(var vt in ct.attributeBuffers)ht.push(ct.attributeBuffers[vt].buffer);ht.push(u),postMessage(ct,ht)}})();\n',
+              'Worker',
+              void 0,
+              void 0,
+            );
+          }
         },
         300: (t, e, n) => {
           n.d(e, { A: () => o });
@@ -186,14 +186,14 @@
         PointSizeType: () => s,
         Potree: () => Qt,
         QueueItem: () => Xt,
-        RAINBOW: () => S,
-        SPECTRAL: () => E,
+        RAINBOW: () => E,
+        SPECTRAL: () => S,
         SplatsMesh: () => ut,
         TreeType: () => l,
-        V1_LOADER: () => vt,
+        V1_LOADER: () => bt,
         V2_LOADER: () => Yt,
         VIRIDIS: () => N,
-        Version: () => _t,
+        Version: () => yt,
         YELLOW_GREEN: () => C,
         generateClassificationTexture: () => D,
         generateDataTexture: () => O,
@@ -274,19 +274,19 @@
     const m = 'PerspectiveCamera',
       g = new f.Color(0, 0, 0),
       A = new f.Vector4(1, 0, 0, 1);
-    function _(t) {
+    function y(t) {
       return parseInt(t.charAt(t.length - 1), 10);
     }
-    function y(t, e) {
+    function v(t, e) {
       const n = t.name,
         i = e.name;
       return n.length !== i.length ? n.length - i.length : n < i ? -1 : n > i ? 1 : 0;
     }
-    function v(t) {
+    function b(t) {
       if (200 !== t.status) throw Error('Response error');
       return t;
     }
-    function b(t) {
+    function _(t) {
       if (!t || 0 === t.byteLength) throw Error('Empty buffer');
       return t;
     }
@@ -334,7 +334,7 @@
         [0.9, new f.Color(0.987, 0.822, 0.144)],
         [1, new f.Color(0.94, 0.975, 0.131)],
       ],
-      S = [
+      E = [
         [0, new f.Color(0.278, 0, 0.714)],
         [1 / 6, new f.Color(0, 0, 1)],
         [2 / 6, new f.Color(0, 1, 1)],
@@ -343,7 +343,7 @@
         [5 / 6, new f.Color(1, 0.64, 0)],
         [1, new f.Color(1, 0, 0)],
       ],
-      E = [
+      S = [
         [0, new f.Color(0.3686, 0.3098, 0.6353)],
         [0.1, new f.Color(0.1961, 0.5333, 0.7412)],
         [0.2, new f.Color(0.4, 0.7608, 0.6471)],
@@ -433,8 +433,8 @@
           (r = t[a]) && (s = (o < 3 ? r(s) : o > 3 ? r(e, n, s) : r(e, n)) || s);
       return o > 3 && s && Object.defineProperty(e, n, s), s;
     };
-    const B = { [l.OCTREE]: 'tree_type_octree', [l.KDTREE]: 'tree_type_kdtree' },
-      M = {
+    const M = { [l.OCTREE]: 'tree_type_octree', [l.KDTREE]: 'tree_type_kdtree' },
+      B = {
         [s.FIXED]: 'fixed_point_size',
         [s.ATTENUATED]: 'attenuated_point_size',
         [s.ADAPTIVE]: 'adaptive_point_size',
@@ -480,7 +480,7 @@
           (this.numClipBoxes = 0),
           (this.clipBoxes = []),
           (this.visibleNodeTextureOffsets = new Map()),
-          (this._gradient = E),
+          (this._gradient = S),
           (this.gradientTexture = P(this._gradient)),
           (this._classification = T),
           (this.classificationTexture = D(this._classification)),
@@ -628,8 +628,8 @@
           t && e.push(`#define ${t}`);
         }
         return (
-          n(B[this.treeType]),
-          n(M[this.pointSizeType]),
+          n(M[this.treeType]),
+          n(B[this.pointSizeType]),
           n(z[this.shape]),
           n(F[this.pointColorType]),
           n(U[this.clipMode]),
@@ -731,7 +731,7 @@
             this.updateVisibilityTextureData(e);
       }
       updateVisibilityTextureData(t) {
-        t.sort(y);
+        t.sort(v);
         const e = new Uint8Array(4 * t.length),
           n = new Array(t.length).fill(1 / 0);
         this.visibleNodeTextureOffsets.clear();
@@ -969,7 +969,7 @@
           (this.isTreeNode = !1),
           (this.isGeometryNode = !0),
           (this.name = t),
-          (this.index = _(t)),
+          (this.index = y(t)),
           (this.pcoGeometry = e),
           (this.boundingBox = n),
           (this.tightBoundingBox = n.clone()),
@@ -1044,9 +1044,9 @@
           ? Promise.resolve()
           : Promise.resolve(this.pcoGeometry.loader.getUrl(this.getHierarchyUrl()))
               .then((t) => this.pcoGeometry.xhrRequest(t, { mode: 'cors' }))
-              .then((t) => v(t))
-              .then((t) => t.arrayBuffer())
               .then((t) => b(t))
+              .then((t) => t.arrayBuffer())
+              .then((t) => _(t))
               .then((t) => this.loadHierarchy(this, t));
       }
       getHierarchyBaseUrl() {
@@ -1083,7 +1083,7 @@
         return { children: n.getUint8(e), numPoints: n.getUint32(e + 1, !0), name: t };
       }
       addNode({ name: t, numPoints: e, children: n }, i, r) {
-        const o = _(t),
+        const o = y(t),
           s = t.substring(0, t.length - 1),
           a = r.get(s),
           l = t.length - 1,
@@ -1412,20 +1412,20 @@
               m = 4 * r,
               g = 524288,
               A = f + p + 64 + m + g + 4 * r + 2097152,
-              _ = Math.floor(A / 65536) + 1,
-              y = {
+              y = Math.floor(A / 65536) + 1,
+              v = {
                 module: {},
-                env: { memory: new WebAssembly.Memory({ initial: _, maximum: _ }) },
+                env: { memory: new WebAssembly.Memory({ initial: y, maximum: y }) },
               },
-              v = new Uint8Array(
+              b = new Uint8Array(
                 atob(
                   'AGFzbQEAAAAADwhkeWxpbmsuMAEEAAAAAAEPAmAAAGAIf39/f39/f38AAg8BA2VudgZtZW1vcnkCAAADAwIAAQcjAhFfX3dhc21fY2FsbF9jdG9ycwAAC3NvcnRJbmRleGVzAAEKhgMCAwABC/8CAgN/A30gBwRAIAQqAighCyAEKgIYIQwgBCoCCCENQfj///8HIQlBiICAgHghBANAIAIgCkECdCIIaiALIAEgACAIaigCAEEEdGoiCCoCCJQgDSAIKgIAlCAMIAgqAgSUkpJDAACARZT8ACIINgIAIAkgCCAIIAlKGyEJIAQgCCAEIAhKGyEEIApBAWoiCiAHRw0ACyAGQQFrsyAEsiAJspOVIQtBACEEA0AgAiAEQQJ0aiIBIAsgASgCACAJa7KU/AAiATYCACADIAFBAnRqIgEgASgCAEEBajYCACAEQQFqIgQgB0cNAAsLIAZBAk8EQCADKAIAIQlBASEEA0AgAyAEQQJ0aiIBIAEoAgAgCWoiCTYCACAEQQFqIgQgBkcNAAsLIAdBAEoEQCAHIQQDQCAFIAcgAyACIARBAWsiAUECdCIGaigCAEECdGoiCSgCACIIa0ECdGogACAGaigCADYCACAJIAhBAWs2AgAgBEEBSyEGIAEhBCAGDQALCws=',
                 )
                   .split('')
                   .map(e),
               );
-            WebAssembly.instantiate(v, y).then((e) => {
-              (n = e.instance), (i = y.env.memory.buffer), (h = new Int32Array(r));
+            WebAssembly.instantiate(b, v).then((e) => {
+              (n = e.instance), (i = v.env.memory.buffer), (h = new Int32Array(r));
               for (let t = 0; t < r; t++) h[t] = t;
               (o = 0),
                 (u = o + f),
@@ -2108,7 +2108,7 @@
       }
     }
     At.POOL_MAX_IDLE = 7e3;
-    class _t {
+    class yt {
       constructor(t) {
         (this.versionMinor = 0), (this.version = t);
         const e = -1 === t.indexOf('.') ? t.length : t.indexOf('.');
@@ -2117,14 +2117,14 @@
           isNaN(this.versionMinor) && (this.versionMinor = 0);
       }
       newerThan(t) {
-        const e = new _t(t);
+        const e = new yt(t);
         return (
           this.versionMajor > e.versionMajor ||
           (this.versionMajor === e.versionMajor && this.versionMinor > e.versionMinor)
         );
       }
       equalOrHigher(t) {
-        const e = new _t(t);
+        const e = new yt(t);
         return (
           this.versionMajor > e.versionMajor ||
           (this.versionMajor === e.versionMajor && this.versionMinor >= e.versionMinor)
@@ -2134,7 +2134,7 @@
         return !this.newerThan(t);
       }
     }
-    class yt {
+    class vt {
       constructor({
         getUrl: t = (t) => Promise.resolve(t),
         version: e,
@@ -2143,7 +2143,7 @@
         xhrRequest: r,
       }) {
         (this.disposed = !1),
-          (this.version = 'string' == typeof e ? new _t(e) : e),
+          (this.version = 'string' == typeof e ? new yt(e) : e),
           (this.xhrRequest = r),
           (this.getUrl = t),
           (this.boundingBox = n),
@@ -2158,9 +2158,9 @@
           ? Promise.resolve()
           : Promise.resolve(this.getUrl(this.getNodeUrl(t)))
               .then((t) => this.xhrRequest(t, { mode: 'cors' }))
-              .then((t) => v(t))
-              .then((t) => t.arrayBuffer())
               .then((t) => b(t))
+              .then((t) => t.arrayBuffer())
+              .then((t) => _(t))
               .then((e) => new Promise((n) => this.parse(t, e, n)));
       }
       getNodeUrl(t) {
@@ -2170,12 +2170,12 @@
       parse(t, e, n) {
         this.disposed
           ? n()
-          : yt.WORKER_POOL.getWorker().then((i) => {
+          : vt.WORKER_POOL.getWorker().then((i) => {
               const r = t.pcoGeometry.pointAttributes,
                 o = e.byteLength / r.byteSize;
               this.version.upTo('1.5') && (t.numPoints = o),
                 (i.worker.onmessage = (e) => {
-                  if (this.disposed) return n(), void yt.WORKER_POOL.releaseWorker(i);
+                  if (this.disposed) return n(), void vt.WORKER_POOL.releaseWorker(i);
                   const r = e.data,
                     s = (t.geometry = t.geometry || new f.BufferGeometry());
                   (s.boundingBox = t.boundingBox),
@@ -2191,7 +2191,7 @@
                     (t.pcoGeometry.needsUpdate = !0),
                     this.callbacks.forEach((e) => e(t)),
                     n(),
-                    yt.WORKER_POOL.releaseWorker(i);
+                    vt.WORKER_POOL.releaseWorker(i);
                 });
               const s = {
                 buffer: e,
@@ -2241,10 +2241,10 @@
         return parseInt(t, 10) === e;
       }
     }
-    function vt(t, e, n) {
+    function bt(t, e, n) {
       return Promise.resolve(e(t)).then((t) =>
         n(t, { mode: 'cors' })
-          .then((t) => v(t))
+          .then((t) => b(t))
           .then((t) => t.json())
           .then(
             (function (t, e, n) {
@@ -2271,7 +2271,7 @@
                       { offset: o, boundingBox: i, tightBoundingBox: r }
                     );
                   })(i),
-                  a = new yt({
+                  a = new vt({
                     getUrl: e,
                     version: i.version,
                     boundingBox: o,
@@ -2288,7 +2288,7 @@
                   (l.offset = r),
                   (l.pointAttributes = new Q(i.pointAttributes));
                 const u = {},
-                  d = new _t(i.version);
+                  d = new yt(i.version);
                 return (function (t, e, n, i) {
                   const r = new et('r', t, t.boundingBox);
                   return (
@@ -2305,7 +2305,7 @@
                       (function (t, e, n) {
                         for (let i = 1; i < e.hierarchy.length; i++) {
                           const [r, o] = e.hierarchy[i],
-                            { index: s, parentName: a, level: l } = bt(r),
+                            { index: s, parentName: a, level: l } = _t(r),
                             u = n[a],
                             d = tt(u.boundingBox, s),
                             c = new et(r, t, d);
@@ -2325,11 +2325,11 @@
           ),
       );
     }
-    function bt(t) {
-      return { index: _(t), parentName: t.substring(0, t.length - 1), level: t.length - 1 };
+    function _t(t) {
+      return { index: y(t), parentName: t.substring(0, t.length - 1), level: t.length - 1 };
     }
     var Tt;
-    (yt.WORKER_POOL = new At(32, i(91).A)),
+    (vt.WORKER_POOL = new At(32, i(91).A)),
       (function (t) {
         (t.DECODER_WORKER = 'DECODER_WORKER'),
           (t.DECODER_WORKER_GLTF = 'DECODER_WORKER_GLTF'),
@@ -2357,7 +2357,7 @@
               case Tt.DECODER_WORKER_SPLATS:
                 return new (0, i(852).A)();
               case Tt.DECODER_WORKER_SPLATS_COMPRESSED:
-                return new (0, i(146).A)();
+                return new (0, i(290).A)();
               default:
                 throw new Error('Unknown worker type');
             }
@@ -2460,10 +2460,10 @@
     function It(t) {
       return t.substring(0, t.lastIndexOf('/') + 1);
     }
-    function St(t, e) {
+    function Et(t, e) {
       return `${t}${e}`;
     }
-    function Et(t, e) {
+    function St(t, e) {
       var n = new Uint8Array(t.byteLength + e.byteLength);
       return n.set(new Uint8Array(t), 0), n.set(new Uint8Array(e), t.byteLength), n.buffer;
     }
@@ -2488,7 +2488,7 @@
             a = await e.arrayBuffer(),
             l = { Range: `bytes=${4n * n}-${4n * n + 4n * i - 1n}` },
             u = await this.xhrRequest(o, { headers: l });
-          r = Et(a, await u.arrayBuffer());
+          r = St(a, await u.arrayBuffer());
         }
         const a = t.octreeGeometry.pointAttributes,
           l = t.octreeGeometry.scale,
@@ -2511,32 +2511,32 @@
           };
         e.postMessage(g, [g.buffer]);
         const A = (await new Promise((t) => (e.onmessage = t))).data,
-          _ = A.attributeBuffers,
-          y = new f.BufferGeometry();
-        for (const t in _) {
-          const e = _[t].buffer;
+          y = A.attributeBuffers,
+          v = new f.BufferGeometry();
+        for (const t in y) {
+          const e = y[t].buffer;
           if ('position' === t)
-            y.setAttribute('position', new f.BufferAttribute(new Float32Array(e), 3));
+            v.setAttribute('position', new f.BufferAttribute(new Float32Array(e), 3));
           else if ('rgba' === t)
-            y.setAttribute('rgba', new f.BufferAttribute(new Uint8Array(e), 4, !0));
+            v.setAttribute('rgba', new f.BufferAttribute(new Uint8Array(e), 4, !0));
           else if ('NORMAL' === t)
-            y.setAttribute('normal', new f.BufferAttribute(new Float32Array(e), 3));
+            v.setAttribute('normal', new f.BufferAttribute(new Float32Array(e), 3));
           else if ('INDICES' === t) {
             const t = new f.BufferAttribute(new Uint8Array(e), 4);
-            (t.normalized = !0), y.setAttribute('indices', t);
+            (t.normalized = !0), v.setAttribute('indices', t);
           } else {
             const n = new f.BufferAttribute(new Float32Array(e), 1),
-              i = _[t].attribute;
+              i = y[t].attribute;
             (n.potree = {
-              offset: _[t].offset,
-              scale: _[t].scale,
-              preciseBuffer: _[t].preciseBuffer,
+              offset: y[t].offset,
+              scale: y[t].scale,
+              preciseBuffer: y[t].preciseBuffer,
               range: i.range,
             }),
-              y.setAttribute(t, n);
+              v.setAttribute(t, n);
           }
         }
-        return { buffer: r, geometry: y, data: A };
+        return { buffer: r, geometry: v, data: A };
       }
       get gltfColorsPath() {
         return this.context.gltfColorsPath;
@@ -2553,9 +2553,11 @@
     }
     class Ct {
       constructor(t, e) {
-        (this.metadata = t), (this.context = e), (this.compressed = !1), (this._metadata = t);
-        const n = t.attributes.filter((t) => 'scale' == t.name)[0];
-        (this.compressed = 2 == n.numElements),
+        (this.metadata = t),
+          (this.context = e),
+          (this.compressed = !1),
+          (this._metadata = t),
+          (this.compressed = !0),
           (this.workerType = this.compressed
             ? Tt.DECODER_WORKER_SPLATS_COMPRESSED
             : Tt.DECODER_WORKER_SPLATS);
@@ -2563,174 +2565,82 @@
       async decode(t, e) {
         const { byteOffset: n, byteSize: i } = t;
         if (void 0 === n || void 0 === i) throw new Error('byteOffset and byteSize are required');
-        let r,
-          o,
-          s = this.metadata,
-          a = function (t) {
-            return s.attributes.filter((e) => e.name === t)[0].bufferView.uri;
-          };
-        (r = {
-          positions: await this.getUrl(a('position')),
-          colors: await this.getUrl(a('sh_band_0')),
-          opacities: await this.getUrl(a('opacity')),
-          scales: await this.getUrl(a('scale')),
-          rotations: await this.getUrl(a('rotation')),
-        }),
+        let r, o;
+        (r = { core: await this.getUrl('core.glbin') }),
           this.harmonicsEnabled &&
             (r = {
-              positions: await this.getUrl(a('position')),
-              colors: await this.getUrl(a('sh_band_0')),
-              opacities: await this.getUrl(a('opacity')),
-              scales: await this.getUrl(a('scale')),
-              rotations: await this.getUrl(a('rotation')),
-              shBand1_0: await this.getUrl(a('sh_band_1_triplet_0')),
-              shBand1_1: await this.getUrl(a('sh_band_1_triplet_1')),
-              shBand1_2: await this.getUrl(a('sh_band_1_triplet_2')),
-              shBand2_0: await this.getUrl(a('sh_band_2_triplet_0')),
-              shBand2_1: await this.getUrl(a('sh_band_2_triplet_1')),
-              shBand2_2: await this.getUrl(a('sh_band_2_triplet_2')),
-              shBand2_3: await this.getUrl(a('sh_band_2_triplet_3')),
-              shBand2_4: await this.getUrl(a('sh_band_2_triplet_4')),
-              shBand3_0: await this.getUrl(a('sh_band_3_triplet_0')),
-              shBand3_1: await this.getUrl(a('sh_band_3_triplet_1')),
-              shBand3_2: await this.getUrl(a('sh_band_3_triplet_2')),
-              shBand3_3: await this.getUrl(a('sh_band_3_triplet_3')),
-              shBand3_4: await this.getUrl(a('sh_band_3_triplet_4')),
-              shBand3_5: await this.getUrl(a('sh_band_3_triplet_5')),
-              shBand3_6: await this.getUrl(a('sh_band_3_triplet_6')),
+              core: await this.getUrl('core.glbin'),
+              harmonics: await this.getUrl('sh_bands_123.glbin'),
             });
-        const l = {
-            positions: 3n,
-            colors: 3n,
-            opacities: 1n,
-            scales: this.compressed ? 2n : 3n,
-            rotations: 4n,
-            shBand1_0: 3n,
-            shBand1_1: 3n,
-            shBand1_2: 3n,
-            shBand2_0: 3n,
-            shBand2_1: 3n,
-            shBand2_2: 3n,
-            shBand2_3: 3n,
-            shBand2_4: 3n,
-            shBand3_0: 3n,
-            shBand3_1: 3n,
-            shBand3_2: 3n,
-            shBand3_3: 3n,
-            shBand3_4: 3n,
-            shBand3_5: 3n,
-            shBand3_6: 3n,
-          },
-          u = this.compressed ? 1n : 4n,
-          d = {
-            positions: 4n,
-            colors: u,
-            opacities: u,
-            scales: 4n,
-            rotations: u,
-            shBand1_0: u,
-            shBand1_1: u,
-            shBand1_2: u,
-            shBand2_0: u,
-            shBand2_1: u,
-            shBand2_2: u,
-            shBand2_3: u,
-            shBand2_4: u,
-            shBand3_0: u,
-            shBand3_1: u,
-            shBand3_2: u,
-            shBand3_3: u,
-            shBand3_4: u,
-            shBand3_5: u,
-            shBand3_6: u,
-          };
+        const s = { core: 28n, harmonics: 45n };
         if (i === BigInt(0)) return;
         {
-          const t = async (t, e, r) => {
-              const o = n * r * e,
-                s = {
-                  Range: `bytes=${o}-${o + i * r * e - 1n}`,
+          const t = async (t, e) => {
+              const r = n * e,
+                o = {
+                  Range: `bytes=${r}-${r + i * e - 1n}`,
                   'Transfer-Encoding': 'compress',
                   'Accept-Encoding': 'compress',
                 };
-              return (await this.xhrRequest(t, { headers: s })).arrayBuffer();
+              return (await this.xhrRequest(t, { headers: o })).arrayBuffer();
             },
-            e = Object.entries(r).map(([e, n]) => t(n, l[e], d[e])),
-            [s, a, u, c, h, f, p, m, g, A, _, y, v, b, T, x, w, I, S, E] = await Promise.all(e);
-          (o = Et(s, a)),
-            (o = Et(o, u)),
-            (o = Et(o, c)),
-            (o = Et(o, h)),
-            this.harmonicsEnabled &&
-              ((o = Et(o, f)),
-              (o = Et(o, p)),
-              (o = Et(o, m)),
-              (o = Et(o, g)),
-              (o = Et(o, A)),
-              (o = Et(o, _)),
-              (o = Et(o, y)),
-              (o = Et(o, v)),
-              (o = Et(o, b)),
-              (o = Et(o, T)),
-              (o = Et(o, x)),
-              (o = Et(o, w)),
-              (o = Et(o, I)),
-              (o = Et(o, S)),
-              (o = Et(o, E)));
+            e = Object.entries(r).map(([e, n]) => t(n, s[e])),
+            [a, l] = await Promise.all(e);
+          (o = a), this.harmonicsEnabled && (o = St(o, l));
         }
-        const c = t.octreeGeometry.pointAttributes,
-          h = t.octreeGeometry.scale,
-          p = t.boundingBox,
-          m = t.octreeGeometry.offset.clone().add(p.min),
-          g = p.max.clone().sub(p.min),
-          A = m.clone().add(g),
-          _ = t.numPoints,
-          y = this._metadata.offset,
-          v = {
+        const a = t.octreeGeometry.pointAttributes,
+          l = t.octreeGeometry.scale,
+          u = t.boundingBox,
+          d = t.octreeGeometry.offset.clone().add(u.min),
+          c = u.max.clone().sub(u.min),
+          h = d.clone().add(c),
+          p = t.numPoints,
+          m = this._metadata.offset,
+          g = {
             name: t.name,
             buffer: o,
-            pointAttributes: c,
-            scale: h,
-            min: m,
-            max: A,
-            size: g,
-            offset: y,
-            numPoints: _,
+            pointAttributes: a,
+            scale: l,
+            min: d,
+            max: h,
+            size: c,
+            offset: m,
+            numPoints: p,
             harmonicsEnabled: this.harmonicsEnabled,
           };
-        e.postMessage(v, [v.buffer]);
-        const b = (await new Promise((t) => (e.onmessage = t))).data,
-          T = b.attributeBuffers,
-          x = new f.BufferGeometry();
-        x.drawRange.count = t.numPoints;
-        for (const t in T) {
-          const e = T[t].buffer;
+        e.postMessage(g, [g.buffer]);
+        const A = (await new Promise((t) => (e.onmessage = t))).data,
+          y = A.attributeBuffers,
+          v = new f.BufferGeometry();
+        v.drawRange.count = t.numPoints;
+        for (const t in y) {
+          const e = y[t].buffer;
           'position' === t &&
-            x.setAttribute('centers', new f.BufferAttribute(new Float32Array(e), 4)),
-            'scale' === t && x.setAttribute('scale', new f.BufferAttribute(new Float32Array(e), 3)),
+            v.setAttribute('centers', new f.BufferAttribute(new Float32Array(e), 4)),
+            'scale' === t && v.setAttribute('scale', new f.BufferAttribute(new Float32Array(e), 3)),
             'orientation' === t &&
-              x.setAttribute('orientation', new f.BufferAttribute(new Float32Array(e), 4)),
+              v.setAttribute('orientation', new f.BufferAttribute(new Float32Array(e), 4)),
             'raw_position' === t
-              ? x.setAttribute('raw_position', new f.BufferAttribute(new Float32Array(e), 4))
+              ? v.setAttribute('raw_position', new f.BufferAttribute(new Float32Array(e), 4))
               : 'COVARIANCE0' === t
-                ? x.setAttribute('COVARIANCE0', new f.BufferAttribute(new Float32Array(e), 4))
+                ? v.setAttribute('COVARIANCE0', new f.BufferAttribute(new Float32Array(e), 4))
                 : 'COVARIANCE1' === t
-                  ? x.setAttribute('COVARIANCE1', new f.BufferAttribute(new Float32Array(e), 2))
+                  ? v.setAttribute('COVARIANCE1', new f.BufferAttribute(new Float32Array(e), 2))
                   : 'POS_COLOR' === t &&
-                    x.setAttribute('POS_COLOR', new f.BufferAttribute(new Uint32Array(e), 4)),
+                    v.setAttribute('POS_COLOR', new f.BufferAttribute(new Uint32Array(e), 4)),
             this.harmonicsEnabled &&
               ('HARMONICS1' === t
-                ? x.setAttribute('HARMONICS1', new f.BufferAttribute(new Uint32Array(e), 3))
+                ? v.setAttribute('HARMONICS1', new f.BufferAttribute(new Uint32Array(e), 3))
                 : 'HARMONICS2' === t
-                  ? x.setAttribute('HARMONICS2', new f.BufferAttribute(new Uint32Array(e), 5))
+                  ? v.setAttribute('HARMONICS2', new f.BufferAttribute(new Uint32Array(e), 5))
                   : 'HARMONICS3' === t &&
-                    x.setAttribute('HARMONICS3', new f.BufferAttribute(new Uint32Array(e), 7)));
+                    v.setAttribute('HARMONICS3', new f.BufferAttribute(new Uint32Array(e), 7)));
         }
         return (
-          (x.userData.maxDepth = this._metadata.hierarchy.depth + 1),
-          (x.userData.totalSplats = this._metadata.points),
-          (x.userData.offset = new f.Vector3(...y).sub(m)),
-          { data: b, buffer: o, geometry: x }
+          (v.userData.maxDepth = this._metadata.hierarchy.depth + 1),
+          (v.userData.totalSplats = this._metadata.points),
+          (v.userData.offset = new f.Vector3(...m).sub(d)),
+          { data: A, buffer: o, geometry: v }
         );
       }
       get getUrl() {
@@ -2831,7 +2741,7 @@
           (this.description = '');
       }
     }
-    const Bt = {
+    const Mt = {
       POSITION_CARTESIAN: new Rt('POSITION_CARTESIAN', Pt.DATA_TYPE_FLOAT, 3),
       RGBA_PACKED: new Rt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 4),
       COLOR_PACKED: new Rt('COLOR_PACKED', Pt.DATA_TYPE_INT8, 4),
@@ -2849,7 +2759,7 @@
       SPACING: new Rt('SPACING', Pt.DATA_TYPE_FLOAT, 1),
       GPS_TIME: new Rt('GPS_TIME', Pt.DATA_TYPE_DOUBLE, 1),
     };
-    class Mt {
+    class Bt {
       constructor(t, e = [], n = 0, i = 0, r = []) {
         if (
           ((this.attributes = e),
@@ -2860,7 +2770,7 @@
         )
           for (let e = 0; e < t.length; e++) {
             const n = t[e],
-              i = Bt[n];
+              i = Mt[n];
             this.attributes.push(i), (this.byteSize += i.byteSize), this.size++;
           }
       }
@@ -2874,10 +2784,10 @@
         for (const t in this.attributes) {
           const e = this.attributes[t];
           if (
-            e === Bt.NORMAL_SPHEREMAPPED ||
-            e === Bt.NORMAL_FLOATS ||
-            e === Bt.NORMAL ||
-            e === Bt.NORMAL_OCT16
+            e === Mt.NORMAL_SPHEREMAPPED ||
+            e === Mt.NORMAL_FLOATS ||
+            e === Mt.NORMAL ||
+            e === Mt.NORMAL_OCT16
           )
             return !0;
         }
@@ -2894,7 +2804,7 @@
           (this.loadingContext = n),
           'GLTF' !== this.metadata.encoding
             ? (this.decoder = new wt(e, n))
-            : e.attributes.some((t) => 'sh_band_0' === t.name)
+            : e.attributes.some((t) => 'core' === t.name)
               ? (this.decoder = new Ct(e, n))
               : (this.decoder = new Nt(e, n));
       }
@@ -3030,14 +2940,14 @@
           (this.getUrl = t),
           (this.xhrRequest = n),
           (this.basePath = It(e)),
-          (this.hierarchyPath = St(this.basePath, 'hierarchy.bin')),
-          (this.octreePath = St(this.basePath, 'octree.bin')),
+          (this.hierarchyPath = Et(this.basePath, 'hierarchy.bin')),
+          (this.octreePath = Et(this.basePath, 'octree.bin')),
           (this.harmonicsEnabled = i),
-          (this.gltfColorsPath = St(this.basePath, 'colors.glbin')),
-          (this.gltfPositionsPath = St(this.basePath, 'positions.glbin'));
+          (this.gltfColorsPath = Et(this.basePath, 'colors.glbin')),
+          (this.gltfPositionsPath = Et(this.basePath, 'positions.glbin'));
       }
       static parseAttributes(t) {
-        const e = new Mt(),
+        const e = new Bt(),
           n = { rgb: 'rgba' };
         for (const i of t) {
           const { name: t, numElements: r, min: o, max: s, bufferView: a } = i,
@@ -3065,7 +2975,7 @@
       async load(t) {
         const e = await this.fetchMetadata(t);
         try {
-          const n = await this.fetchPCL(St(It(t), 'pcl.gltf'));
+          const n = await this.fetchPCL(Et(It(t), 'pcl.gltf'));
           e.compressed = Number(n.asset.extensions.ext_pix4d_gltf_gs_version.version) >= 2;
         } catch (t) {
           console.warn('there is no pcl.gltf file to define the compression of the splats');
@@ -3330,7 +3240,7 @@
         (this.pointCloudIndex = t), (this.weight = e), (this.node = n), (this.parent = i);
       }
     }
-    const qt = { v1: vt, v2: Yt };
+    const qt = { v1: bt, v2: Yt };
     class Qt {
       constructor(t = 'v1') {
         (this._pointBudget = 3e6),
@@ -3404,10 +3314,10 @@
           this.lru.freeMemory(this.memoryScale));
       }
       static set maxLoaderWorkers(t) {
-        yt.WORKER_POOL.maxWorkers = t;
+        vt.WORKER_POOL.maxWorkers = t;
       }
       static get maxLoaderWorkers() {
-        return yt.WORKER_POOL.maxWorkers;
+        return vt.WORKER_POOL.maxWorkers;
       }
       updateVisibility(t, e, n) {
         let i = 0;
@@ -3446,8 +3356,8 @@
               f.loaded && d >= 50 && (c = !0), o.push(f), m.visibleGeometry.push(f);
             }
           Gt(f) && (this.updateTreeNodeVisibility(m, f, r), m.visibleGeometry.push(f.geometryNode));
-          const _ = 0.5 * n.getSize(this._rendererSize).height * n.getPixelRatio();
-          this.updateChildVisibility(u, l, m, f, a[p], e, _);
+          const y = 0.5 * n.getSize(this._rendererSize).height * n.getPixelRatio();
+          this.updateChildVisibility(u, l, m, f, a[p], e, y);
         }
         const f = Math.min(this.maxNumNodesLoading, o.length),
           p = [];
