@@ -202,9 +202,10 @@ onmessage = function (event) {
         colors[c2] = clamp(Math.floor(colors[c2]), 0, 255);
 
         // opacity
-        let a = view.getUint8(opacityOffset, true) / 255;
-        a = (1 / (1 + Math.exp(-a))) * 255;
-        a = clamp(Math.floor(a), 0, 255);
+        let a = view.getUint8(opacityOffset, true);
+        //a = Math.log(a / (1 - a)) * 255;
+        //a = (1 / (1 + Math.exp(-a))) * 255;
+        a = clamp(a, 0, 255);
         colors[c3] = a;
       }
     } else if (['scale'].includes(pointAttribute.name)) {
