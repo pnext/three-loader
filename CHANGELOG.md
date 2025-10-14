@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.20](https://github.com/pnext/three-loader/compare/v0.5.19...v0.5.20) (2025-10-14)
+
+
+### Features
+
+* filter by classification ([#215](https://github.com/pnext/three-loader/issues/215)) ([9877b31](https://github.com/pnext/three-loader/commit/9877b3135c6380fa7a3572a3bd9c9d73db35f7e2))
+
 ### [0.5.19](https://github.com/pnext/three-loader/compare/v0.5.18...v0.5.19) (2025-08-27)
 
 
