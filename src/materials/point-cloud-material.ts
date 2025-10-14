@@ -100,6 +100,7 @@ export interface IPointCloudMaterialUniforms {
   wSourceID: IUniform<number>;
   opacityAttenuation: IUniform<number>;
   filterByNormalThreshold: IUniform<number>;
+  classificationFilter: IUniform<boolean[]>;
   highlightedPointCoordinate: IUniform<Vector3>;
   highlightedPointColor: IUniform<Vector4>;
   enablePointHighlighting: IUniform<boolean>;
@@ -236,6 +237,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     wSourceID: makeUniform('f', 0),
     opacityAttenuation: makeUniform('f', 1),
     filterByNormalThreshold: makeUniform('f', 0),
+    classificationFilter: makeUniform('iv', new Array(256).fill(false)),
     highlightedPointCoordinate: makeUniform('fv', new Vector3()),
     highlightedPointColor: makeUniform('fv', DEFAULT_HIGHLIGHT_COLOR.clone()),
     enablePointHighlighting: makeUniform('b', true),
@@ -283,6 +285,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @uniform('wSourceID') weightSourceID!: number;
   @uniform('opacityAttenuation') opacityAttenuation!: number;
   @uniform('filterByNormalThreshold') filterByNormalThreshold!: number;
+  @uniform('classificationFilter') classificationFilter!: boolean[];
   @uniform('highlightedPointCoordinate') highlightedPointCoordinate!: Vector3;
   @uniform('highlightedPointColor') highlightedPointColor!: Vector4;
   @uniform('enablePointHighlighting') enablePointHighlighting!: boolean;
@@ -308,6 +311,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
   @requiresShaderUpdate() treeType: TreeType = TreeType.OCTREE;
   @requiresShaderUpdate() pointOpacityType: PointOpacityType = PointOpacityType.FIXED;
   @requiresShaderUpdate() useFilterByNormal: boolean = false;
+  @requiresShaderUpdate() useFilterByClassification: boolean = false;
   @requiresShaderUpdate() useTextureBlending: boolean = false;
   @requiresShaderUpdate() usePointCloudMixing: boolean = false;
   @requiresShaderUpdate() highlightPoint: boolean = false;
@@ -441,6 +445,10 @@ export class PointCloudMaterial extends RawShaderMaterial {
 
     if (this.useFilterByNormal) {
       define('use_filter_by_normal');
+    }
+
+    if (this.useFilterByClassification) {
+      define('use_filter_by_classification');
     }
 
     if (this.useEDL) {
