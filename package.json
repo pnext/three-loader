@@ -25,6 +25,7 @@
     "clean": "rimraf build",
     "start": "webpack --mode development --watch --progress",
     "start:example": "webpack-dev-server --config webpack.config.example.js --mode development --progress",
+    "start:example2": "webpack-dev-server --config webpack.config.example2.js --mode development --progress",
     "build": "npm run clean && webpack --mode production --progress --config webpack.config.prod.js",
     "lint": "tslint --project tsconfig.json",
     "test": "jest",
