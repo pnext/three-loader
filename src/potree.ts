@@ -289,7 +289,7 @@ export class Potree implements IPotree {
 
       if (camera.type === PERSPECTIVE_CAMERA) {
         const perspective = camera as PerspectiveCamera;
-        const fov = (perspective.fov * Math.PI) / 180.0;
+        const fov = (perspective.getEffectiveFOV() * Math.PI) / 180.0;
         const slope = Math.tan(fov / 2.0);
         projectionFactor = halfHeight / (slope * distance);
       } else {
