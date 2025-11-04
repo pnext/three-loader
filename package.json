@@ -4,6 +4,9 @@
   "version": "0.5.4",
   "author": "",
   "homepage": "https://github.com/pnext/three-loader#readme",
+  "engines": {
+    "node": ">=18.20.8"
+  },
   "description": "Potree loader for ThreeJS, converted and adapted to Typescript.",
   "contributors": [
     "Hugo Campos <hugo.campos@pix4d.com>"
@@ -48,7 +51,7 @@
     "@commitlint/cz-commitlint": "^19.8.1",
     "@commitlint/types": "^19.8.1",
     "@jest/globals": "^30.0.2",
-    "@types/node": "^17.0.23",
+    "@types/node": "^18.19.130",
     "@types/three": "~0.160.0",
     "babel-loader": "^8.3.0",
     "circular-dependency-plugin": "^5.2.2",
