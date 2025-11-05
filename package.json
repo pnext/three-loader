@@ -50,7 +50,7 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/cz-commitlint": "^19.8.1",
-    "@commitlint/types": "^19.8.1",
+    "@commitlint/types": "^20.0.0",
     "@jest/globals": "^30.0.2",
     "@types/node": "^22.19.0",
     "@types/three": "~0.160.0",
