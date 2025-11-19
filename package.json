@@ -49,7 +49,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
-    "@commitlint/cz-commitlint": "^19.8.1",
+    "@commitlint/cz-commitlint": "^20.1.0",
     "@commitlint/types": "^19.8.1",
     "@jest/globals": "^30.0.2",
     "@types/node": "^22.19.0",
