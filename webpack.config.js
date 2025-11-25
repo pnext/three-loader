@@ -1,5 +1,4 @@
 const path = require('path');
-const SizePlugin = require('size-plugin');
 
 module.exports = {
   entry: './src/index.ts',
@@ -37,5 +36,5 @@ module.exports = {
       { test: /\.(vs|fs|glsl|vert|frag)$/, loader: 'raw-loader' },
     ],
   },
-  plugins: [new SizePlugin()],
+  plugins: [],
 };
