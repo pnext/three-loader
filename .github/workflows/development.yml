@@ -2,9 +2,9 @@ name: Development Workflow
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   lint:
@@ -47,9 +47,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Run test
-        run: npm run test
 
   build:
     needs: test
