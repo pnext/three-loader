@@ -37,7 +37,7 @@ import {
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
-import { LasLazLoader } from 'loading/laslaz/las-laz-loader';
+import { LasLazLoader } from './loading/laslaz/las-laz-loader';
 
 export class QueueItem {
   constructor(
