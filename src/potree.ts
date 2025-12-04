@@ -37,6 +37,7 @@ import {
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
+import { LasLazLoader } from 'loading/laslaz/las-laz-loader';
 
 export class QueueItem {
   constructor(
@@ -143,6 +144,7 @@ export class Potree implements IPotree {
 
   static set maxLoaderWorkers(value: number) {
     BinaryLoader.WORKER_POOL.maxWorkers = value;
+    LasLazLoader.WORKER_POOL.maxWorkers = value;
   }
 
   static get maxLoaderWorkers(): number {
