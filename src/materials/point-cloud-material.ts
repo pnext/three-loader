@@ -618,7 +618,7 @@ export class PointCloudMaterial extends RawShaderMaterial {
     const pixelRatio = renderer.getPixelRatio();
 
     if (camera.type === PERSPECTIVE_CAMERA) {
-      this.fov = (camera as PerspectiveCamera).fov * (Math.PI / 180);
+      this.fov = (camera as PerspectiveCamera).getEffectiveFOV() * (Math.PI / 180);
     } else {
       this.fov = Math.PI / 2; // will result in slope = 1 in the shader
     }
