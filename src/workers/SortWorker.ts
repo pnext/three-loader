@@ -23,30 +23,36 @@ function sortWorker(self: any) {
   let centersOffset: number;
   let modelViewProjOffset: number;
   let countsZero: any;
-  let distanceMapRange = 1 << DefaultSplatSortDistanceMapPrecision;
+  const distanceMapRange = 1 << DefaultSplatSortDistanceMapPrecision;
   let indices: any;
 
   self.onmessage = (e: any) => {
-    if (e.data.init) startWasmModule(e.data.splatCount);
-    if (e.data.sort) sort(e);
+    if (e.data.init) {
+      startWasmModule(e.data.splatCount);
+    }
+    if (e.data.sort) {
+      sort(e);
+    }
   };
 
   function sort(e: any) {
-    let centers = e.data.sort.centers;
-    let splats = e.data.sort.totalSplats;
-    let modelViewProj = e.data.sort.modelViewProj;
+    const centers = e.data.sort.centers;
+    const splats = e.data.sort.totalSplats;
+    const modelViewProj = e.data.sort.modelViewProj;
 
-    //pass the centers to the memory
+    // pass the centers to the memory
     new Float32Array(wasmMemory, centersOffset, centers.byteLength / BytesPerFloat).set(
       new Float32Array(centers),
     );
 
-    //pass the indices
+    // pass the indices
     new Int32Array(wasmMemory, 0, e.data.sort.indices.byteLength / BytesPerFloat).set(
       e.data.sort.indices,
     );
 
-    if (!countsZero) countsZero = new Uint32Array(distanceMapRange);
+    if (!countsZero) {
+      countsZero = new Uint32Array(distanceMapRange);
+    }
     new Float32Array(wasmMemory, modelViewProjOffset, 16).set(modelViewProj);
     new Uint32Array(wasmMemory, frequenciesOffset, distanceMapRange).set(countsZero);
 
@@ -71,7 +77,7 @@ function sortWorker(self: any) {
   function startWasmModule(_splatCount: number) {
     splatCount = _splatCount;
 
-    //Memory setup
+    // Memory setup
     const CENTERS_BYTES_PER_ENTRY = BytesPerFloat * 4;
     const matrixSize = 16 * BytesPerFloat;
 
@@ -94,7 +100,7 @@ function sortWorker(self: any) {
 
     const totalPagesRequired = Math.floor(totalRequiredMemory / MemoryPageSize) + 1;
 
-    //Memory used to the sorter
+    // Memory used to the sorter
     const sorterWasmImport = {
       module: {},
       env: {
@@ -109,21 +115,19 @@ function sortWorker(self: any) {
 
         USED WASM2JS (https://github.com/thlorenz/wasm2js) to extract the base64 file required for the sorter.
 
-
                     The process goes as follows
                                 |
                                 |
                                 v
-           sorter_test.cpp file (original C sorter file) 
+           sorter_test.cpp file (original C sorter file)
                                 |
                                 |
-                                v   
+                                v
       sorter_test.wasm file (compiled WASM file from the original C file)
                                 |
                                 |
                                 v
       buffer string with base64 (obtained from sorter_test.wasm using WASM2JS)
-
 
         */
 
@@ -132,10 +136,10 @@ function sortWorker(self: any) {
     );
 
     WebAssembly.instantiate(buffer, sorterWasmImport).then((result) => {
-      //Save the instance of the WASM to use
+      // Save the instance of the WASM to use
       wasmInstance = result.instance;
 
-      //Retrieve the memory used in the C module.
+      // Retrieve the memory used in the C module.
       wasmMemory = sorterWasmImport.env.memory.buffer;
 
       indices = new Int32Array(splatCount);
@@ -143,7 +147,7 @@ function sortWorker(self: any) {
         indices[i] = i;
       }
 
-      //Define the offsets used to allocate the data inside memory.
+      // Define the offsets used to allocate the data inside memory.
       indexesToSortOffset = 0;
       centersOffset = indexesToSortOffset + memoryRequiredForIndexesToSort;
       modelViewProjOffset = centersOffset + memoryRequiredForCenters;
@@ -168,14 +172,14 @@ export function createSortWorker(splatCount: number): Promise<Worker> {
       ),
     );
 
-    //Setup the WASM module
+    // Setup the WASM module
     worker.postMessage({
       init: true,
       splatCount,
     });
 
     worker.onmessage = (e: any) => {
-      //pass the centers information
+      // pass the centers information
       if (e.data.sorterReady) {
         resolve(worker);
       }

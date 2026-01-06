@@ -27,9 +27,9 @@ export class GltfSplatDecoder implements GeometryDecoder {
     let urls: Record<string, string>;
     let buffer: ArrayBuffer;
 
-    let dataUri = this.metadata;
-    let retrieveURL = function (name: string) {
-      let el = dataUri.attributes.filter((att: any) => att.name === name)[0];
+    const dataUri = this.metadata;
+    const retrieveURL = function (name: string) {
+      const el = dataUri.attributes.filter((att: any) => att.name === name)[0];
       return el.bufferView.uri;
     };
 

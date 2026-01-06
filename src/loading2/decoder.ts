@@ -1,9 +1,9 @@
 import { BufferAttribute, BufferGeometry } from 'three';
+import { XhrRequest } from '../loading/types';
 import { GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { LoadingContext, Metadata } from './octree-loader';
 import { WorkerType } from './worker-pool';
-import { XhrRequest } from '../loading/types';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';

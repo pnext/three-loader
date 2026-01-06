@@ -12,11 +12,11 @@ import {
 } from 'three';
 import {
   DEFAULT_POINT_BUDGET,
+  MAX_AMOUNT_OF_SPLATS,
   MAX_LOADS_TO_GPU,
   MAX_NUM_NODES_LOADING,
-  MAX_AMOUNT_OF_SPLATS,
-  PERSPECTIVE_CAMERA,
   MEMORY_SCALE,
+  PERSPECTIVE_CAMERA,
 } from './constants';
 import { FEATURES } from './features';
 import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
@@ -108,7 +108,7 @@ export class Potree implements IPotree {
       pointCloud.updateVisibleBounds();
       pointCloud.updateBoundingBoxes();
 
-      //For the splats
+      // For the splats
       renderer.getSize(this._rendererSize);
       pointCloud.updateSplats(camera, this._rendererSize, callback);
     }
@@ -294,7 +294,8 @@ export class Potree implements IPotree {
         projectionFactor = halfHeight / (slope * distance);
       } else {
         const orthographic = camera as OrthographicCamera;
-        projectionFactor = (2 * halfHeight * orthographic.zoom) / (orthographic.top - orthographic.bottom);
+        projectionFactor =
+          (2 * halfHeight * orthographic.zoom) / (orthographic.top - orthographic.bottom);
       }
 
       const screenPixelRadius = radius * projectionFactor;

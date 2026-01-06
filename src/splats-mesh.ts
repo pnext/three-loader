@@ -1,32 +1,32 @@
 import {
-  Mesh,
-  Vector2,
-  RawShaderMaterial,
-  InstancedBufferGeometry,
-  BufferGeometry,
   BufferAttribute,
-  Matrix4,
-  Vector3,
+  BufferGeometry,
   Camera,
-  Quaternion,
-  ShaderMaterial,
-  DoubleSide,
-  GLSL3,
-  Object3D,
-  Vector4,
-  NearestFilter,
-  RGBAIntegerFormat,
-  UnsignedIntType,
   DataTexture,
-  RGBAFormat,
+  DoubleSide,
   FloatType,
-  RGFormat,
+  GLSL3,
+  InstancedBufferGeometry,
+  Matrix4,
+  Mesh,
+  NearestFilter,
+  Object3D,
+  Quaternion,
+  RawShaderMaterial,
   RedIntegerFormat,
+  RGBAFormat,
+  RGBAIntegerFormat,
+  RGFormat,
+  ShaderMaterial,
   Texture,
+  UnsignedIntType,
+  Vector2,
+  Vector3,
+  Vector4,
 } from 'three';
 
-import { createSortWorker } from './workers/SortWorker';
 import { PointCloudMaterial } from './materials';
+import { createSortWorker } from './workers/SortWorker';
 
 const DELAYED_FRAMES = 2;
 export class SplatsMesh extends Object3D {
@@ -95,20 +95,20 @@ export class SplatsMesh extends Object3D {
     this.maxPointBudget = maxPointBudget;
 
     this.indexesBuffer = new Int32Array(maxPointBudget);
-    let indexesToSort = new Int32Array(maxPointBudget);
+    const indexesToSort = new Int32Array(maxPointBudget);
 
     for (let i = 0; i < maxPointBudget; i++) {
       this.indexesBuffer[i] = i;
       indexesToSort[i] = i;
     }
 
-    //Create the global textures
-    let size = Math.ceil(Math.sqrt(maxPointBudget));
+    // Create the global textures
+    const size = Math.ceil(Math.sqrt(maxPointBudget));
 
-    //For the harmonics
-    let degree1Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 3)) : 1;
-    let degree2Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 5)) : 1;
-    let degree3Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 7)) : 1;
+    // For the harmonics
+    const degree1Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 3)) : 1;
+    const degree2Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 5)) : 1;
+    const degree3Size = renderHamonics ? Math.ceil(Math.sqrt(maxPointBudget * 7)) : 1;
 
     this.bufferCenters = new Float32Array(size * size * 4);
     this.bufferPositions = new Float32Array(size * size * 4);
@@ -128,7 +128,7 @@ export class SplatsMesh extends Object3D {
     this.bufferHarmonics2 = new Uint32Array(degree2Size * degree2Size);
     this.bufferHarmonics3 = new Uint32Array(degree3Size * degree3Size);
 
-    //This should be able to save up to 10000 nodes
+    // This should be able to save up to 10000 nodes
     this.textureNode = new DataTexture(this.bufferNodes, 100, 100, RGBAFormat, FloatType);
     this.textureNode2 = new DataTexture(this.bufferNodes2, 100, 100, RGBAFormat, FloatType);
 
@@ -227,8 +227,8 @@ export class SplatsMesh extends Object3D {
       const quadVertices = new Float32Array([-1, -1, 0.0, 1, -1, 0.0, -1, 1, 0.0, 1, 1, 0.0]);
       const quadIndices = new Uint16Array([0, 1, 2, 2, 1, 3]);
 
-      //Global mesh used to setup the global rendering of the points
-      let shader = new ShaderMaterial({
+      // Global mesh used to setup the global rendering of the points
+      const shader = new ShaderMaterial({
         glslVersion: GLSL3,
         vertexShader: require('./materials/shaders/splats.vert').default,
         fragmentShader: require('./materials/shaders/splats.frag').default,
@@ -278,7 +278,7 @@ export class SplatsMesh extends Object3D {
       this.material = shader;
       this.instanceCount = 0;
 
-      //Create the global textures
+      // Create the global textures
       if (this.material) {
         this.material.uniforms['sortedTexture'].value = this.textureSorted;
         this.material.uniforms['posColorTexture'].value = this.texturePosColor;
@@ -293,7 +293,7 @@ export class SplatsMesh extends Object3D {
         this.material.uniforms.visibleNodes.value = this.textureVisibilityNodes;
       }
 
-      let geom = new InstancedBufferGeometry();
+      const geom = new InstancedBufferGeometry();
 
       geom.setAttribute('position', new BufferAttribute(quadVertices, 3));
       geom.setIndex(new BufferAttribute(quadIndices, 1));
@@ -307,28 +307,32 @@ export class SplatsMesh extends Object3D {
   }
 
   renderSplatsIDs(status: boolean) {
-    if (this.material == null) return;
+    if (this.material == null) {
+      return;
+    }
 
     this.material.uniforms['renderIds'].value = status;
     this.material.transparent = !status;
   }
 
   update(mesh: Mesh, camera: Camera, size: Vector2, callback = () => {}) {
-    if (this.material == null) return;
+    if (this.material == null) {
+      return;
+    }
 
     this.material.uniforms['cameraPosition'].value = camera.position;
 
-    let mat = mesh.material as RawShaderMaterial;
+    const mat = mesh.material as RawShaderMaterial;
     mat.visible = false;
 
-    //Passing the uniforms from the point cloud material to the splats material.
+    // Passing the uniforms from the point cloud material to the splats material.
     this.material.uniforms.octreeSize.value = mat.uniforms.octreeSize.value;
     this.material.uniforms.fov.value = mat.uniforms.fov.value;
     this.material.uniforms.spacing.value = mat.uniforms.spacing.value;
     this.material.uniforms.screenHeight.value = mat.uniforms.screenHeight.value;
     this.material.uniforms.screenWidth.value = mat.uniforms.screenWidth.value;
 
-    let material = this.material as RawShaderMaterial;
+    const material = this.material as RawShaderMaterial;
 
     material.uniforms.basisViewport.value.set(1.0 / size.x, 1.0 / size.y);
 
@@ -346,8 +350,8 @@ export class SplatsMesh extends Object3D {
     let totalMemoryInDisplay = 0;
 
     mesh.traverse((el) => {
-      let m = el as Mesh;
-      let g = m.geometry as BufferGeometry;
+      const m = el as Mesh;
+      const g = m.geometry as BufferGeometry;
       instanceCount += g.drawRange.count;
     });
 
@@ -365,13 +369,13 @@ export class SplatsMesh extends Object3D {
       instanceCount = 0;
       nodesCount = 0;
 
-      //Copy the data from the visibility nodes, it uses a separated texture to sync when
-      //it is updated in relationship with the other textures.
+      // Copy the data from the visibility nodes, it uses a separated texture to sync when
+      // it is updated in relationship with the other textures.
       this.bufferVisibilityNodes.set(mat.uniforms.visibleNodes.value.image.data);
 
       mesh.traverseVisible((el) => {
-        let m = el as Mesh;
-        let g = m.geometry as BufferGeometry;
+        const m = el as Mesh;
+        const g = m.geometry as BufferGeometry;
 
         if (this.material) {
           if (m.name === 'r') {
@@ -383,13 +387,13 @@ export class SplatsMesh extends Object3D {
           this.totalSplats = g.userData.totalSplats;
         }
 
-        let pointCloudMaterial = mesh.material as PointCloudMaterial;
+        const pointCloudMaterial = mesh.material as PointCloudMaterial;
         const vnStart = pointCloudMaterial.visibleNodeTextureOffsets.get(el.name)!;
         const level = m.name.length - 1;
 
-        let offset = g.userData.offset;
-        let nodeInfo = [m.position.x, m.position.y, m.position.z, offset.x];
-        let nodeInfo2 = [vnStart, level, offset.y, offset.z];
+        const offset = g.userData.offset;
+        const nodeInfo = [m.position.x, m.position.y, m.position.z, offset.x];
+        const nodeInfo2 = [vnStart, level, offset.y, offset.z];
         this.bufferNodes.set(nodeInfo, nodesCount * 4);
         this.bufferNodes2.set(nodeInfo2, nodesCount * 4);
 
@@ -398,15 +402,15 @@ export class SplatsMesh extends Object3D {
           instanceCount,
         );
 
-        //Used for sorting
+        // Used for sorting
         this.bufferCenters.set(g.getAttribute('raw_position').array, instanceCount * 4);
 
-        //Used for raycasting
+        // Used for raycasting
         this.bufferPositions.set(g.getAttribute('centers').array, instanceCount * 4);
         this.bufferScale.set(g.getAttribute('scale').array, instanceCount * 3);
         this.bufferOrientation.set(g.getAttribute('orientation').array, instanceCount * 4);
 
-        //Used for rendering
+        // Used for rendering
         this.bufferCovariance0.set(g.getAttribute('COVARIANCE0').array, instanceCount * 4);
         this.bufferCovariance1.set(g.getAttribute('COVARIANCE1').array, instanceCount * 2);
         this.bufferPosColor.set(g.getAttribute('POS_COLOR').array, instanceCount * 4);
@@ -442,11 +446,11 @@ export class SplatsMesh extends Object3D {
   }
 
   defer() {
-    let promise = new Promise((resolve) => {
+    const promise = new Promise((resolve) => {
       let counter = 0;
 
-      let frameCounter = () => {
-        let anim = requestAnimationFrame(frameCounter);
+      const frameCounter = () => {
+        const anim = requestAnimationFrame(frameCounter);
         if (counter == DELAYED_FRAMES) {
           resolve('true');
           cancelAnimationFrame(anim);
@@ -461,9 +465,11 @@ export class SplatsMesh extends Object3D {
   }
 
   sortSplats(camera: Camera, callback = () => {}) {
-    if (this.mesh == null || this.instanceCount == 0) return;
+    if (this.mesh == null || this.instanceCount == 0) {
+      return;
+    }
 
-    let mvpMatrix = new Matrix4();
+    const mvpMatrix = new Matrix4();
     camera.updateMatrixWorld();
     mvpMatrix.copy(camera.matrixWorld).invert();
     mvpMatrix.premultiply(camera.projectionMatrix);
@@ -480,7 +486,7 @@ export class SplatsMesh extends Object3D {
       (this.continuousSorting || this.forceSorting || angleDiff <= 0.99 || positionDiff >= 1.0) &&
       this.enableSorting
     ) {
-      let sortMessage = {
+      const sortMessage = {
         indices: this.indexesBuffer,
         centers: this.bufferCenters,
         modelViewProj: mvpMatrix.elements,
@@ -518,13 +524,15 @@ export class SplatsMesh extends Object3D {
   }
 
   getSplatData(globalID: any, nodeID: any) {
-    if (this.mesh == null) return null;
+    if (this.mesh == null) {
+      return null;
+    }
 
-    let center = new Vector3();
-    let offset = new Vector3();
+    const center = new Vector3();
+    const offset = new Vector3();
 
-    let scale = new Vector3();
-    let orientation = new Quaternion();
+    const scale = new Vector3();
+    const orientation = new Quaternion();
 
     center.x = this.bufferPositions[4 * globalID + 0];
     center.y = this.bufferPositions[4 * globalID + 1];
@@ -545,7 +553,7 @@ export class SplatsMesh extends Object3D {
 
     center.add(offset);
 
-    let result = this.mesh.localToWorld(center);
+    const result = this.mesh.localToWorld(center);
 
     return {
       position: result,
@@ -555,19 +563,21 @@ export class SplatsMesh extends Object3D {
   }
 
   dispose() {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
 
-    //Terminate the sorter
+    // Terminate the sorter
     this.sorter.terminate();
     this.sorter = null;
 
-    //Removing attributes
+    // Removing attributes
     this.mesh.geometry.dispose();
 
-    //Remove the shader
+    // Remove the shader
     this.material?.dispose();
 
-    //Remove textures and buffers
+    // Remove textures and buffers
     this.textures.forEach((texture) => {
       texture.dispose();
       (texture as any) = null;
@@ -575,7 +585,7 @@ export class SplatsMesh extends Object3D {
 
     this.textures = [];
 
-    //Set to 0 the length of the arrays
+    // Set to 0 the length of the arrays
     this.bufferCenters = new Float32Array(0);
     this.bufferPositions = new Float32Array(0);
     this.bufferScale = new Float32Array(0);
@@ -594,7 +604,7 @@ export class SplatsMesh extends Object3D {
     this.bufferHarmonics2 = new Uint32Array(0);
     this.bufferHarmonics3 = new Uint32Array(0);
 
-    //kill the mesh
+    // kill the mesh
     this.mesh = null;
 
     this.enabled = false;
