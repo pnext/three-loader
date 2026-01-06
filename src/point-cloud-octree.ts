@@ -1,15 +1,15 @@
 import {
   Box3,
+  BufferGeometry,
   Camera,
+  Mesh,
   Object3D,
   Points,
   Ray,
   Sphere,
-  Vector3,
   Vector2,
+  Vector3,
   WebGLRenderer,
-  Mesh,
-  BufferGeometry,
 } from 'three';
 import { DEFAULT_MIN_NODE_PIXEL_SIZE, MAX_AMOUNT_OF_SPLATS } from './constants';
 import { OctreeGeometry } from './loading2/octree-geometry';
@@ -17,6 +17,7 @@ import { PointCloudMaterial, PointSizeType } from './materials';
 import { PointCloudOctreeNode } from './point-cloud-octree-node';
 import { PickParams, PointCloudOctreePicker } from './point-cloud-octree-picker';
 import { PointCloudTree } from './point-cloud-tree';
+import { SplatsMesh } from './splats-mesh';
 import {
   IPointCloudGeometryNode,
   IPointCloudTreeNode,
@@ -25,7 +26,6 @@ import {
   PickPoint,
 } from './types';
 import { computeTransformedBoundingBox } from './utils/bounds';
-import { SplatsMesh } from './splats-mesh';
 
 const DEBUG_MODE = false;
 export class PointCloudOctree extends PointCloudTree {
@@ -160,19 +160,23 @@ export class PointCloudOctree extends PointCloudTree {
   }
 
   updateSplats(camera: Camera, size: Vector2, callback = () => {}) {
-    let mesh = this.children[0] as Mesh;
-    if (!mesh) return;
+    const mesh = this.children[0] as Mesh;
+    if (!mesh) {
+      return;
+    }
 
-    //Parse the nodes to see if they contain splats information.
+    // Parse the nodes to see if they contain splats information.
     if (this.renderAsSplats === null || !this.renderAsSplats) {
       this.renderAsSplats = false;
       mesh.traverse((el) => {
-        let m = el as Mesh;
-        let g = m.geometry as BufferGeometry;
-        if (g.hasAttribute('COVARIANCE0')) this.renderAsSplats = true;
+        const m = el as Mesh;
+        const g = m.geometry as BufferGeometry;
+        if (g.hasAttribute('COVARIANCE0')) {
+          this.renderAsSplats = true;
+        }
       });
 
-      //Initialise the splats mesh if the nodes contain splats information
+      // Initialise the splats mesh if the nodes contain splats information
       if (this.renderAsSplats && this.splatsMesh === null) {
         this.splatsMesh = new SplatsMesh(DEBUG_MODE, this.maxAmountOfSplats, this.loadHarmonics);
         this.add(this.splatsMesh);
@@ -181,9 +185,10 @@ export class PointCloudOctree extends PointCloudTree {
 
     if (this.splatsMesh !== null) {
       if (this.renderAsSplats && this.splatsMesh.splatsEnabled) {
-        let runSort = this.splatsMesh.update(mesh, camera, size, callback);
-        if (this.splatsMesh.splatsEnabled && this.progress > 0.99 && runSort)
+        const runSort = this.splatsMesh.update(mesh, camera, size, callback);
+        if (this.splatsMesh.splatsEnabled && this.progress > 0.99 && runSort) {
           this.splatsMesh.sortSplats(camera, callback);
+        }
       }
     }
   }

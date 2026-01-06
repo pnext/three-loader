@@ -3,8 +3,8 @@ import { GetUrlFn, XhrRequest } from '../loading/types';
 import { DecodedGeometry, GeometryDecoder } from './geometry-decoder';
 import { OctreeGeometryNode } from './octree-geometry-node';
 import { LoadingContext, Metadata } from './octree-loader';
-import { WorkerType } from './worker-pool';
 import { appendBuffer } from './utils';
+import { WorkerType } from './worker-pool';
 
 // Buffer files for DEFAULT encoding
 export const HIERARCHY_FILE = 'hierarchy.bin';
