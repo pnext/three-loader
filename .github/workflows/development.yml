@@ -1,5 +1,8 @@
 name: Development Workflow
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [master]
