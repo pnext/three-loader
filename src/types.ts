@@ -38,6 +38,7 @@ export interface IPointCloudGeometryNode extends IPointCloudTreeNode {
 export interface IVisibilityUpdateResult {
   visibleNodes: IPointCloudTreeNode[];
   numVisiblePoints: number;
+  numUnloadedGeometry: number;
   /**
    * True when a node has been loaded but was not added to the scene yet.
    * Make sure to call updatePointClouds() again on the next frame.
