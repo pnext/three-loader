@@ -20,8 +20,6 @@ import {
 } from './constants';
 import { FEATURES } from './features';
 import { BinaryLoader, GetUrlFn, loadPOC } from './loading';
-import { LasLazLoader } from './loading/laslaz/las-laz-loader';
-import { LAZLoader } from './loading/laslaz/LAZLoader';
 import { loadOctree } from './loading2/load-octree';
 import { ClipMode } from './materials';
 import { PointCloudOctree } from './point-cloud-octree';
@@ -39,6 +37,8 @@ import {
 import { BinaryHeap } from './utils/binary-heap';
 import { Box3Helper } from './utils/box3-helper';
 import { LRU } from './utils/lru';
+import { LasLazLoader } from './loading/laslaz/las-laz-loader';
+import { LAZLoader } from './loading/laslaz/LAZLoader';
 
 export class QueueItem {
   constructor(
@@ -244,7 +244,6 @@ export class Potree implements IPotree {
     return {
       visibleNodes: visibleNodes,
       numVisiblePoints: numVisiblePoints,
-      numUnloadedGeometry: unloadedGeometry.length,
       exceededMaxLoadsToGPU: exceededMaxLoadsToGPU,
       nodeLoadFailed: nodeLoadFailed,
       nodeLoadPromises: nodeLoadPromises,
