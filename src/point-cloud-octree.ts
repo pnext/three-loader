@@ -1,6 +1,5 @@
 import {
   Box3,
-  BufferGeometry,
   Camera,
   Mesh,
   Object3D,
@@ -170,7 +169,7 @@ export class PointCloudOctree extends PointCloudTree {
       this.renderAsSplats = false;
       mesh.traverse((el) => {
         const m = el as Mesh;
-        const g = m.geometry as BufferGeometry;
+        const g = m.geometry;
         if (g.hasAttribute('COVARIANCE0')) {
           this.renderAsSplats = true;
         }

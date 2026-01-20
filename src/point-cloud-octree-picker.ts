@@ -225,7 +225,7 @@ export class PointCloudOctreePicker {
       pixels,
     );
     renderer.setScissorTest(false);
-    renderer.setRenderTarget(null!);
+    renderer.setRenderTarget(null);
     return pixels;
   }
 
