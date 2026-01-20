@@ -1,6 +1,5 @@
 import {
   BufferAttribute,
-  BufferGeometry,
   Camera,
   DataTexture,
   DoubleSide,
@@ -351,7 +350,7 @@ export class SplatsMesh extends Object3D {
 
     mesh.traverse((el) => {
       const m = el as Mesh;
-      const g = m.geometry as BufferGeometry;
+      const g = m.geometry;
       instanceCount += g.drawRange.count;
     });
 
@@ -375,7 +374,7 @@ export class SplatsMesh extends Object3D {
 
       mesh.traverseVisible((el) => {
         const m = el as Mesh;
-        const g = m.geometry as BufferGeometry;
+        const g = m.geometry;
 
         if (this.material) {
           if (m.name === 'r') {
@@ -428,9 +427,9 @@ export class SplatsMesh extends Object3D {
       totalMemoryInDisplay = instanceCount * (this.harmonicsEnabled ? 236 : 56);
 
       if (this.debugMode) {
-        console.log('total memory in usage: ' + Math.ceil(totalMemoryUsed / 1000000) + ' MB');
-        console.log('total memory displayed: ' + Math.ceil(totalMemoryInDisplay / 1000000) + ' MB');
-        console.log('levels displayed: ' + nodesAsString);
+        console.log(`total memory in usage: ${Math.ceil(totalMemoryUsed / 1000000)} MB`);
+        console.log(`total memory displayed: ${Math.ceil(totalMemoryInDisplay / 1000000)} MB`);
+        console.log(`levels displayed: ${nodesAsString}`);
       }
 
       this.instanceCount = instanceCount;
