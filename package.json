@@ -96,6 +96,11 @@
     "gis",
     "photogrammetry"
   ],
+  "overrides": {
+    "commitizen": {
+      "lodash": "^4.17.23"
+    }
+  },
   "config": {
     "commitizen": {
       "path": "@commitlint/cz-commitlint"
