@@ -18,11 +18,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.worker\.js$/,
-        loader: 'worker-loader',
-        options: { inline: 'no-fallback' },
-      },
-      {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'babel-loader',
