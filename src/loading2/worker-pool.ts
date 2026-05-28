@@ -2,6 +2,7 @@
 export enum WorkerType {
   DECODER_WORKER = 'DECODER_WORKER',
   DECODER_WORKER_GLTF = 'DECODER_WORKER_GLTF',
+  DECODER_WORKER_BROTLI = 'DECODER_WORKER_BROTLI',
   DECODER_WORKER_SPLATS = 'DECODER_WORKER_SPLATS',
 }
 
@@ -18,6 +19,10 @@ function createWorker(type: WorkerType): Worker {
       const DecoderWorker_GLTF = require('./gltf-decoder.worker.js').default;
       return new DecoderWorker_GLTF();
     }
+    case WorkerType.DECODER_WORKER_BROTLI: {
+      const DecoderWorker_Brotli = require('./brotli-decoder.worker.js').default;
+      return new DecoderWorker_Brotli();
+    }
     case WorkerType.DECODER_WORKER_SPLATS: {
       const DecoderWorker_GLTF = require('./gltf-splats-decoder.worker.js').default;
       return new DecoderWorker_GLTF();
@@ -32,6 +37,7 @@ export class WorkerPool {
   private workers: { [key in WorkerType]: Worker[] } = {
     DECODER_WORKER: [],
     DECODER_WORKER_GLTF: [],
+    DECODER_WORKER_BROTLI: [],
     DECODER_WORKER_SPLATS: [],
   };
 

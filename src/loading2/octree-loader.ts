@@ -1,5 +1,6 @@
 import { Box3, Sphere, Vector3 } from 'three';
 import { GetUrlFn, XhrRequest } from '../loading/types';
+import { BrotliDecoder } from './brotli-decoder';
 import { Decoder } from './decoder';
 import { GeometryDecoder } from './geometry-decoder';
 import { GltfDecoder } from './gltf-decoder';
@@ -25,12 +26,16 @@ export class NodeLoader {
     public metadata: Metadata,
     private loadingContext: LoadingContext,
   ) {
-    if (this.metadata.encoding !== 'GLTF') {
-      this.decoder = new Decoder(metadata, loadingContext);
-    } else if (metadata.attributes.some((attr) => attr.name === 'sh_band_0')) {
-      this.decoder = new GltfSplatDecoder(metadata, loadingContext);
+    if (this.metadata.encoding === 'GLTF') {
+      if (metadata.attributes.some((attr) => attr.name === 'sh_band_0')) {
+        this.decoder = new GltfSplatDecoder(metadata, loadingContext);
+      } else {
+        this.decoder = new GltfDecoder(metadata, loadingContext);
+      }
+    } else if (this.metadata.encoding === 'BROTLI') {
+      this.decoder = new BrotliDecoder(metadata, loadingContext);
     } else {
-      this.decoder = new GltfDecoder(metadata, loadingContext);
+      this.decoder = new Decoder(metadata, loadingContext);
     }
   }
 
