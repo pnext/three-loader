@@ -42,6 +42,9 @@ uniform vec3 bbSize;
 uniform vec3 uColor;
 uniform float opacity;
 uniform float clipBoxCount;
+uniform vec3 clipHighlightColor;
+uniform float clipHighlightColorBoost;
+uniform bool clipHighlightColorEnabled;
 uniform float level;
 uniform float vnStart;
 uniform bool isLeafNode;
@@ -614,7 +617,11 @@ void main() {
 			#endif
 		} else {
 			#if defined clip_highlight_inside
-				vColor.r += 0.5;
+				if (clipHighlightColorEnabled) {
+					vColor = clamp(clipHighlightColor * clipHighlightColorBoost, vec3(0.0), vec3(1.0));
+				} else {
+					vColor.r += 0.5;
+				}
 			#elif defined clip_inside
 				gl_Position = vec4(1000.0, 1000.0, 1000.0, 1.0);
 			#endif
